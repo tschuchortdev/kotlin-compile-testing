@@ -26,48 +26,102 @@ import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.config.Services
+import java.io.FileOutputStream
 import java.io.ObjectOutputStream
 import java.io.PrintStream
 import java.net.URLClassLoader
 import java.net.URLDecoder
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
-private fun findJavaHome(): File {
+internal fun findJavaHome(): File {
 	val path = System.getProperty("java.home")
 				?: throw IllegalStateException("no java home found")
 
 	return File(path).also { check(it.isDirectory) }
 }
 
-private fun findToolsJar(javaHome: File): File
-		=  File(javaHome.absolutePath + "/../lib/tools.jar").also { check(it.isFile) }
+internal fun findToolsJar(jdkHome: File): File
+		=  File(jdkHome.absolutePath + "/../lib/tools.jar").also { check(it.isFile) }
 
-
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 class KotlinCompilation(
-	val dir: File,
+	/** Working directory for the compilation */
+	val workingDir: File,
+	/** Arbitrary arguments to be passed to kotlinc */
 	val args: List<String> = emptyList(),
+	/** Arbitrary arguments to be passed to kapt */
 	val kaptArgs: Map<String, String> = emptyMap(),
-	classpaths: List<String> = emptyList(),
+	/**
+	 * Paths to directories or .jar files that contain classes
+	 * to be made available in the compilation (i.e. added to
+	 * the classpath)
+	 */
+	classpaths: List<File> = emptyList(),
+	/** Source files to be compiled */
 	val sources: List<SourceFile> = emptyList(),
-	private val jdkHome: File = findJavaHome(),
-	toolsJar: File = findToolsJar(jdkHome),
+	/** Services to be passed to kapt */
+	val services: List<Service<*,*>> = emptyList(),
+	/**
+	 * Path to the JDK to be used
+	 *
+	 * null if no JDK is to be used (option -no-jdk)
+	 * */
+	val jdkHome: File? = findJavaHome(),
+	/** Search path for Kotlin runtime libraries */
+	val kotlinHome: File? = null,
+	/**
+	 * Don't look for kotlin-stdlib.jar, kotlin-script-runtime.jar
+	 * and kotlin-reflect.jar in the [kotlinHome] directory. They
+	 * need to be provided by [classpaths] or will be unavailable.
+	 * */
+	val noStdLib: Boolean = kotlinHome == null,
+	/**
+	 * Don't look for kotlin-reflect.jar in the [kotlinHome] directory.
+	 * It has to be provided by [classpaths] or will be unavailable.
+	 *
+	 * Setting it to false has no effect when [noStdLib] is true.
+	 */
+	val noReflect: Boolean = noStdLib,
+	/** Path to the tools.jar file needed for kapt */
+	toolsJar: File = findToolsJar(findJavaHome()),
+	/** Inherit classpath from calling process */
 	inheritClassPath: Boolean = false,
 	correctErrorTypes: Boolean = false,
-	private val skipRuntimeVersionCheck: Boolean = false
+	val skipRuntimeVersionCheck: Boolean = false,
+	val verbose: Boolean = false,
+	val suppressWarnings: Boolean = false,
+	val allWarningsAsErrors: Boolean = false,
+	val reportOutputFiles: Boolean = false
 ) {
-	val sourcesDir = File(dir, "sources")
-	val classesDir = File(dir, "classes")
-
-    private val services = Services.Builder()
-
-    fun <T : Any> addService(serviceClass: KClass<T>, implementation: T) {
-        services.register(serviceClass.java, implementation)
-    }
-
-	//private val servicesGroupedByClass = services.groupBy({ it.serviceClass }, { it.implementation })
+	val sourcesDir = File(workingDir, "sources")
+	val classesDir = File(workingDir, "classes")
 
 	/**
-	 * A Kotlin source file to be compiled
+	 * Generate a .jar file that holds ServiceManager registrations. Necessary because AutoService's
+	 * results might not be visible to this test.
 	 */
+	val servicesJar = File(workingDir, "services.jar").apply {
+		val servicesGroupedByClass = services.groupBy({ it.serviceClass }, { it.implementationClass })
+
+		ZipOutputStream(FileOutputStream(this)).use { zipOutputStream ->
+			for (serviceEntry in servicesGroupedByClass) {
+				zipOutputStream.putNextEntry(
+					ZipEntry("META-INF/services/${serviceEntry.key.qualifiedName}")
+				)
+				val serviceFile = zipOutputStream.sink().buffer()
+				for (implementation in serviceEntry.value) {
+					serviceFile.writeUtf8(implementation.qualifiedName!!)
+					serviceFile.writeUtf8("\n")
+				}
+				serviceFile.emit() // Don't close the entry; that closes the file.
+				zipOutputStream.closeEntry()
+			}
+		}
+	}
+
+
+	/** A Kotlin source file to be compiled */
 	data class SourceFile(val path: String, val contents: String) {
 		/**
 		 * Writes the source file to the location and returns the
@@ -82,10 +136,16 @@ class KotlinCompilation(
 			}
 	}
 
+	/** Result of the compilation */
 	data class Result(val messages: String, val exitCode: ExitCode)
 
+	/** A service that will be passed to kapt */
+	data class Service<S : Any, T : S>(val serviceClass: KClass<S>, val implementationClass: KClass<T>)
+
 	val allClasspaths: List<String> = mutableListOf<String>().apply {
-		addAll(classpaths)
+		addAll(classpaths.map(File::getAbsolutePath))
+
+		add(servicesJar.absolutePath)
 
 		if(inheritClassPath)
 			addAll(getHostProcessClasspathFiles().map(File::getAbsolutePath))
@@ -93,20 +153,19 @@ class KotlinCompilation(
 
     /** Returns arguments necessary to enable and configure kapt3. */
     private val annotationProcessorArgs = object {
-        private val kaptSourceDir = File(dir, "kapt/sources")
-        private val kaptStubsDir = File(dir, "kapt/stubs")
+        private val kaptSourceDir = File(workingDir, "kapt/sources")
+        private val kaptStubsDir = File(workingDir, "kapt/stubs")
 
         val pluginClassPaths = arrayOf(getKapt3Jar().absolutePath, toolsJar.absolutePath)
         val pluginOptions = arrayOf(
             "plugin:org.jetbrains.kotlin.kapt3:sources=$kaptSourceDir",
             "plugin:org.jetbrains.kotlin.kapt3:classes=$classesDir",
             "plugin:org.jetbrains.kotlin.kapt3:stubs=$kaptStubsDir",
-            "plugin:org.jetbrains.kotlin.kapt3:apclasspath=$sourcesDir",
+            "plugin:org.jetbrains.kotlin.kapt3:apclasspath=$servicesJar",
             "plugin:org.jetbrains.kotlin.kapt3:correctErrorTypes=$correctErrorTypes",
             // Don't forget aptMode! Without it, the compiler will crash with an obscure error about
             // write unsafe context
             "plugin:org.jetbrains.kotlin.kapt3:aptMode=stubsAndApt",
-			"plugin:org.jetbrains.kotlin.kapt3:processors=com.tschuchort.kotlinelements.TestProcessor",
 			*if (kaptArgs.isNotEmpty())
 				arrayOf("plugin:org.jetbrains.kotlin.kapt3:apoptions=${encodeOptions(kaptArgs)}")
 			else
@@ -120,18 +179,36 @@ class KotlinCompilation(
         }
 
         val k2jvmArgs = K2JVMCompilerArguments().apply {
-            freeArgs = sourcesDir.listFiles().map { it.absolutePath }
+            freeArgs = sourcesDir.listFiles().map { it.absolutePath } + args
             pluginOptions = annotationProcessorArgs.pluginOptions
             pluginClasspaths = annotationProcessorArgs.pluginClassPaths
             loadBuiltInsFromDependencies = true
             destination = classesDir.absolutePath
             classpath = allClasspaths.joinToString(separator = File.pathSeparator)
-            noStdlib = true
-            noReflect = true
+            //noStdlib = true
+            //noReflect = true
             skipRuntimeVersionCheck = this@KotlinCompilation.skipRuntimeVersionCheck
             reportPerf = false
 			reportOutputFiles = true
-			jdkHome = this@KotlinCompilation.jdkHome.absolutePath
+
+			if(this@KotlinCompilation.jdkHome != null) {
+				jdkHome = this@KotlinCompilation.jdkHome.absolutePath
+			}
+			else {
+				noJdk = true
+			}
+
+			noStdlib = this@KotlinCompilation.noStdLib
+			noReflect = this@KotlinCompilation.noReflect
+
+			this@KotlinCompilation.kotlinHome?.let {
+				kotlinHome = it.absolutePath
+			}
+
+			verbose = this@KotlinCompilation.verbose
+			suppressWarnings = this@KotlinCompilation.suppressWarnings
+			allWarningsAsErrors = this@KotlinCompilation.allWarningsAsErrors
+			reportOutputFiles = this@KotlinCompilation.reportOutputFiles
         }
 
         val compilerOutputbuffer = Buffer()
@@ -139,7 +216,7 @@ class KotlinCompilation(
         val exitCode = K2JVMCompiler().execImpl(
             PrintingMessageCollector(PrintStream(compilerOutputbuffer.outputStream()),
                 MessageRenderer.WITHOUT_PATHS, true),
-            Services.EMPTY,//services.build(),
+            Services.EMPTY,
             k2jvmArgs
         )
 

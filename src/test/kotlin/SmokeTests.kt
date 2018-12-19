@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.cli.common.ExitCode
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import javax.annotation.processing.Processor
 
 @InspectionRoot
@@ -24,13 +25,14 @@ class SmokeTests {
 		)
 
 		val result = KotlinCompilation(
-				dir = temporaryFolder.root,
+				workingDir = temporaryFolder.root,
 				sources = listOf(source),
+				services = listOf(KotlinCompilation.Service(Processor::class, TestProcessor::class)),
+				jdkHome = findJavaHome().parentFile,
 				inheritClassPath = true,
-				skipRuntimeVersionCheck = true
-		).apply {
-            addService(Processor::class, TestProcessor())
-        }.run()
+				skipRuntimeVersionCheck = true,
+				verbose = true
+		).run()
 
         print(result.messages)
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
