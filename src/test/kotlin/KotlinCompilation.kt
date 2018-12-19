@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.tschuchort.kotlinelements
+package com.tschuchort.compiletest
 
 import okio.Buffer
 import okio.buffer
@@ -61,7 +61,7 @@ class KotlinCompilation(
 	/** Source files to be compiled */
 	val sources: List<SourceFile> = emptyList(),
 	/** Services to be passed to kapt */
-	val services: List<Service<*,*>> = emptyList(),
+	val services: List<Service<*, *>> = emptyList(),
 	/**
 	 * Path to the JDK to be used
 	 *
@@ -87,7 +87,8 @@ class KotlinCompilation(
 	toolsJar: File = findToolsJar(findJavaHome()),
 	/** Inherit classpath from calling process */
 	inheritClassPath: Boolean = false,
-	correctErrorTypes: Boolean = false,
+	val jvmTarget: String? = null,
+	correctErrorTypes: Boolean = true,
 	val skipRuntimeVersionCheck: Boolean = false,
 	val verbose: Boolean = false,
 	val suppressWarnings: Boolean = false,
@@ -147,8 +148,11 @@ class KotlinCompilation(
 
 		add(servicesJar.absolutePath)
 
-		if(inheritClassPath)
-			addAll(getHostProcessClasspathFiles().map(File::getAbsolutePath))
+		if(inheritClassPath) {
+			val hostClasspaths = getHostProcessClasspaths().map(File::getAbsolutePath)
+			addAll(hostClasspaths)
+		}
+
 	}
 
     /** Returns arguments necessary to enable and configure kapt3. */
@@ -205,6 +209,10 @@ class KotlinCompilation(
 				kotlinHome = it.absolutePath
 			}
 
+			this@KotlinCompilation.jvmTarget?.let {
+				jvmTarget = it
+			}
+
 			verbose = this@KotlinCompilation.verbose
 			suppressWarnings = this@KotlinCompilation.suppressWarnings
 			allWarningsAsErrors = this@KotlinCompilation.allWarningsAsErrors
@@ -225,29 +233,52 @@ class KotlinCompilation(
 
 
 	/** Returns the files on the host process' classpath. */
-	private fun getHostProcessClasspathFiles(): List<File> {
-		val classLoader: ClassLoader = SmokeTests::class.java.classLoader
-		if (classLoader !is URLClassLoader) {
-			throw UnsupportedOperationException("unable to extract classpath from $classLoader")
-		}
+	private fun getHostProcessClasspaths(): List<File> {
+		val classLoader: ClassLoader = this::class.java.classLoader
+		if (classLoader is URLClassLoader) {
+            return classLoader.urLs.map { url ->
+                if (url.protocol != "file") {
+                    throw UnsupportedOperationException("unable to handle classpath element $url")
+                }
 
-		return classLoader.urLs.map { url ->
-			if (url.protocol != "file") {
-				throw UnsupportedOperationException("unable to handle classpath element $url")
+                File(URLDecoder.decode(url.path, "UTF-8"))
+            }
+		}
+        else {
+            val jarsOrZips = classLoader.getResources("META-INF").toList().mapNotNull {
+				if(it.path.matches(Regex("file:/.*?(\\.jar|\\.zip)!/META-INF")))
+					it.path.removeSurrounding("file:/", "!/META-INF")
+				else
+					null
 			}
 
-			File(URLDecoder.decode(url.path, "UTF-8"))
-		}
+            val dirs = classLoader.getResources("").toList().map { it.path }
+            val wildcards = classLoader.getResources("*").toList().map { it.path }
+
+			val result = (jarsOrZips + dirs + wildcards).map {
+				// paths may contain percent-encoded characters like %20 for space
+				File(URLDecoder.decode(it, "UTF-8"))
+			}
+
+			return result
+
+            /*val x = this::class.java.classLoader.run {
+                unnamedModule.packages.map {
+                    val res = getResource(it)
+                    res
+                }
+            }*/
+        }
 	}
 
 	/** Returns the path to the kotlin-annotation-processing .jar file. */
 	private fun getKapt3Jar(): File {
-		return getHostProcessClasspathFiles().firstOrNull { file ->
+		return getHostProcessClasspaths().firstOrNull { file ->
 			file.name.startsWith("kotlin-annotation-processing-embeddable")
 		}
 			   ?: throw IllegalStateException(
 				"no kotlin-annotation-processing-embeddable jar on classpath:\n  " +
-				"${getHostProcessClasspathFiles().joinToString(separator = "\n  ")}}")
+				"${getHostProcessClasspaths().joinToString(separator = "\n  ")}}")
 	}
 
 	/**
