@@ -26,7 +26,8 @@ class SmokeTests {
 		val result = KotlinCompilation(
 				dir = temporaryFolder.root,
 				sources = listOf(source),
-				inheritClassPath = true
+				inheritClassPath = true,
+				skipRuntimeVersionCheck = true
 		).apply {
             addService(Processor::class, TestProcessor())
         }.run()
