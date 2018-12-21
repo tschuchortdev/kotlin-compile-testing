@@ -10,8 +10,6 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.PrintStream
 import javax.annotation.processing.Processor
-import java.util.logging.Filter
-import java.util.logging.LogRecord
 
 class SmokeTests {
 	@Rule @JvmField val temporaryFolder = TemporaryFolder()
@@ -21,12 +19,12 @@ class SmokeTests {
 
 
 		val source = KotlinCompilation.SourceFile("source.kt",
-				"""//import com.tschuchort.compiletest.InspectionRoot
+				"""import com.tschuchort.compiletest.InspectionRoot
 					import javax.lang.model.SourceVersion
 					import java.io.File
 
-                    //@InspectionRoot
-					fun main(args: Array<String>) {
+                    @InspectionRoot
+					fun main(freeArgs: Array<String>) {
 						File("")
 						println("hello")
 					}
@@ -40,7 +38,6 @@ class SmokeTests {
 			sources = listOf(source),
 			services = listOf(KotlinCompilation.Service(Processor::class, TestProcessor::class)),
 			//jdkHome = File("D:\\Program Files\\Java\\jdk1.8.0_25"),//getJavaHome(),
-			//kotlinHome = File("C:\\kotlin-compiler"),
 			//toolsJar = File("D:\\Program Files\\Java\\jdk1.8.0_25\\lib\\tools.jar"),
 			inheritClassPath = true,
 			skipRuntimeVersionCheck = true,

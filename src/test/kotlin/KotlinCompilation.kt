@@ -21,88 +21,110 @@ import okio.buffer
 import okio.sink
 import kotlin.reflect.KClass
 import org.jetbrains.kotlin.cli.common.ExitCode
-import org.jetbrains.kotlin.cli.common.arguments.InternalArgument
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.config.Services
 import java.io.*
-import java.net.URLClassLoader
-import java.net.URLDecoder
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.lang.model.SourceVersion
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-class KotlinCompilation(
-    /** Working directory for the compilation */
+open class KotlinCompilation(
+	/** Working directory for the compilation */
 	val workingDir: File,
-    /** Arbitrary arguments to be passed to kotlinc */
-	val args: List<String> = emptyList(),
-    /** Arbitrary arguments to be passed to kapt */
+	/** Free arguments to be passed to kotlinc */
+	val freeArgs: List<String> = emptyList(),
+	/** Arbitrary arguments to be passed to kapt */
 	val kaptArgs: Map<String, String> = emptyMap(),
-    /**
+	/**
 	 * Paths to directories or .jar files that contain classes
 	 * to be made available in the compilation (i.e. added to
 	 * the classpath)
 	 */
 	classpaths: List<File> = emptyList(),
-    /** Source files to be compiled */
+	/** Source files to be compiled */
 	val sources: List<SourceFile> = emptyList(),
-    /** Services to be passed to kapt */
+	/** Services to be passed to kapt */
 	val services: List<Service<*, *>> = emptyList(),
-    /**
+	/**
 	 * Path to the JDK to be used
 	 *
 	 * null if no JDK is to be used (option -no-jdk)
 	 * */
 	val jdkHome: File? = null,
-    /** Search path for Kotlin runtime libraries */
-	val kotlinHome: File? = null,
-    /**
-	 * Don't look for kotlin-stdlib.jar, kotlin-script-runtime.jar
-	 * and kotlin-reflect.jar in the [kotlinHome] directory. They
-	 * need to be provided by [classpaths] or will be unavailable.
-	 * */
-	val noStdLib: Boolean = kotlinHome == null,
-    /**
-	 * Don't look for kotlin-reflect.jar in the [kotlinHome] directory.
-	 * It has to be provided by [classpaths] or will be unavailable.
-	 *
-	 * Setting it to false has no effect when [noStdLib] is true.
+	/**
+	 * Path to the kotlin-stdlib.jar
+	 * If none is given, it will be searched for in the host
+	 * process' classpaths
 	 */
-	val noReflect: Boolean = noStdLib,
-    /**
+	val kotlinStdLibJar: File? = findKtStdLib(
+		log = { if(verbose) systemOut.log(it) }
+	),
+	/**
+	 * Path to the kotlin-stdlib-jdk*.jar
+	 * If none is given, it will be searched for in the host
+	 * process' classpaths
+	 */
+	val kotlinStdLibJdkJar: File? = findKtStdLibJdk(
+		log = { if(verbose) systemOut.log(it) }
+	),
+	/**
+	 * Path to the kotlin-reflect.jar
+	 * If none is given, it will be searched for in the host
+	 * process' classpaths
+	 */
+	val kotlinReflectJar: File? = findKtReflect(
+		log = { if(verbose) systemOut.log(it) }
+	),
+	/**
+	 * Path to the kotlin-script-runtime.jar
+	 * If none is given, it will be searched for in the host
+	 * process' classpaths
+	 */
+	val kotlinScriptRuntimeJar: File? = findKtScriptRt(
+		log = { if(verbose) systemOut.log(it) }
+	),
+	/**
+	 * Path to the kotlin-stdlib-common.jar
+	 * If none is given, it will be searched for in the host
+	 * process' classpaths
+	 */
+	val kotlinStdLibCommonJar: File? = findKtStdLibCommon(
+		log = { if(verbose) systemOut.log(it) }
+	),
+	/**
 	 * Path to the tools.jar file needed for kapt when using a JDK 8.
 	 *
 	 * Note: Using a tools.jar file with a JDK 9 or later leads to an
 	 * internal compiler error!
 	 */
-	val toolsJar: File? = findToolsJarInHostClasspath(
+	val toolsJar: File? = findToolsInHostClasspath(
         log = { if(verbose) systemOut.log(it) }
     ),
-    /**
+	/**
      * Path to the kotlin-annotation-processing-embeddable*.jar that
      * contains kapt3.
      *
      * Only needed when [services] is not empty.
      */
-    val kapt3Jar: File? = findKapt3JarInHostClasspath(
+    val kapt3Jar: File? = findKapt3(
 		log = { if(verbose) systemOut.log(it) }
     ),
-    /** Inherit classpath from calling process */
+	/** Inherit classpath from calling process */
 	val inheritClassPath: Boolean = false,
-    val jvmTarget: String? = null,
-    val correctErrorTypes: Boolean = true,
-    val skipRuntimeVersionCheck: Boolean = false,
-    val verbose: Boolean = false,
-    val suppressWarnings: Boolean = false,
-    val allWarningsAsErrors: Boolean = false,
-    val reportOutputFiles: Boolean = false,
-    val reportPerformance: Boolean = false,
-    val loadBuiltInsFromDependencies: Boolean = false,
-    /**
+	val jvmTarget: String? = null,
+	val correctErrorTypes: Boolean = true,
+	val skipRuntimeVersionCheck: Boolean = false,
+	val verbose: Boolean = false,
+	val suppressWarnings: Boolean = false,
+	val allWarningsAsErrors: Boolean = false,
+	val reportOutputFiles: Boolean = false,
+	val reportPerformance: Boolean = false,
+	val loadBuiltInsFromDependencies: Boolean = false,
+	/**
 	 * Helpful information (if [verbose] = true) and the compiler
 	 * system output will be written to this stream
 	 */
@@ -159,14 +181,17 @@ class KotlinCompilation(
 	val allClasspaths: List<String> = mutableListOf<String>().apply {
 		addAll(classpaths.map(File::getAbsolutePath))
 
+		addAll(listOfNotNull(kotlinStdLibJar, kotlinReflectJar, kotlinScriptRuntimeJar)
+			.map(File::getAbsolutePath))
+
 		if(inheritClassPath) {
-			val hostClasspaths = getClasspaths().map(File::getAbsolutePath)
+			val hostClasspaths = getHostClasspaths().map(File::getAbsolutePath)
 			addAll(hostClasspaths)
 
 			if(verbose)
 				systemOut.log("Inheriting classpaths:  " + hostClasspaths.joinToString(File.pathSeparator))
 		}
-	}
+	}.distinct()
 
     /** Returns arguments necessary to enable and configure kapt3. */
     private fun annotationProcessorArgs() = object {
@@ -195,66 +220,63 @@ class KotlinCompilation(
         )
     }
 
+	// setup arguments for the compiler call
+	protected open fun parseK2JVMArgs() = K2JVMCompilerArguments().also { k2JvmArgs ->
+		k2JvmArgs.freeArgs = sourcesDir.listFiles().map { it.absolutePath } + freeArgs
+
+		// only add kapt stuff if there are services that may use it
+		if(services.isNotEmpty()) {
+			val annotationProcArgs = annotationProcessorArgs()
+
+			k2JvmArgs.pluginOptions = if(k2JvmArgs.pluginOptions != null)
+				k2JvmArgs.pluginOptions!!.plus(annotationProcArgs.pluginOptions)
+			else
+				annotationProcArgs.pluginOptions
+
+			k2JvmArgs.pluginClasspaths = if(k2JvmArgs.pluginClasspaths != null)
+				k2JvmArgs.pluginClasspaths!!.plus(annotationProcArgs.pluginClassPaths)
+			else
+				annotationProcArgs.pluginClassPaths
+		}
+		else if(verbose) {
+			systemOut.log("No services were given. Not including kapt in the compiler's plugins.")
+		}
+
+		k2JvmArgs.destination = classesDir.absolutePath
+		k2JvmArgs.classpath = allClasspaths.joinToString(separator = File.pathSeparator)
+
+		if(jdkHome != null) {
+			k2JvmArgs.jdkHome = jdkHome.absolutePath
+		}
+		else {
+			if(verbose)
+				systemOut.log("Using option -no-jdk. Kotlinc won't look for a JDK.")
+
+			k2JvmArgs.noJdk = true
+		}
+
+		// the compiler should never look for stdlib or reflect in the
+		// kotlinHome directory (which is null anyway). We will put them
+		// in the classpath manually if they're needed
+		k2JvmArgs.noStdlib = true
+		k2JvmArgs.noReflect = true
+
+		jvmTarget?.let { k2JvmArgs.jvmTarget = it }
+
+		k2JvmArgs.verbose = verbose
+		k2JvmArgs.skipRuntimeVersionCheck = skipRuntimeVersionCheck
+		k2JvmArgs.suppressWarnings = suppressWarnings
+		k2JvmArgs.allWarningsAsErrors = allWarningsAsErrors
+		k2JvmArgs.reportOutputFiles = reportOutputFiles
+		k2JvmArgs.reportPerf = reportPerformance
+		k2JvmArgs.reportOutputFiles = reportOutputFiles
+		k2JvmArgs.loadBuiltInsFromDependencies = loadBuiltInsFromDependencies
+	}
+
 	/** Runs the compilation task */
 	fun run(): Result {
         // write given sources to working directory
 		sources.forEach { it.writeTo(sourcesDir) }
-
-        // setup arguments for the compiler call
-        val k2jvmArgs = K2JVMCompilerArguments().also { k2JvmArgs ->
-            k2JvmArgs.freeArgs = sourcesDir.listFiles().map { it.absolutePath } + args
-
-			// only add kapt stuff if there are services that may use it
-			if(services.isNotEmpty()) {
-                val annotationProcArgs = annotationProcessorArgs()
-
-                k2JvmArgs.pluginOptions = if(k2JvmArgs.pluginOptions != null)
-                    k2JvmArgs.pluginOptions!!.plus(annotationProcArgs.pluginOptions)
-				else
-					annotationProcArgs.pluginOptions
-
-                k2JvmArgs.pluginClasspaths = if(k2JvmArgs.pluginClasspaths != null)
-                    k2JvmArgs.pluginClasspaths!!.plus(annotationProcArgs.pluginClassPaths)
-				else
-                    annotationProcArgs.pluginClassPaths
-			}
-			else if(verbose) {
-				systemOut.log("No services were given. Not including kapt in the compiler's plugins.")
-			}
-
-            k2JvmArgs.destination = classesDir.absolutePath
-            k2JvmArgs.classpath = allClasspaths.joinToString(separator = File.pathSeparator)
-
-			if(jdkHome != null) {
-                k2JvmArgs.jdkHome = jdkHome.absolutePath
-			}
-			else {
-                if(verbose)
-                    systemOut.log("Using option -no-jdk. Kotlinc won't look for a JDK.")
-
-                k2JvmArgs.noJdk = true
-			}
-
-            k2JvmArgs.noStdlib = noStdLib
-            k2JvmArgs.noReflect = noReflect
-
-			kotlinHome?.let { k2JvmArgs.kotlinHome = it.absolutePath }
-
-			jvmTarget?.let { k2JvmArgs.jvmTarget = it }
-
-            k2JvmArgs.verbose = verbose
-            k2JvmArgs.skipRuntimeVersionCheck = skipRuntimeVersionCheck
-            k2JvmArgs.suppressWarnings = suppressWarnings
-            k2JvmArgs.allWarningsAsErrors = allWarningsAsErrors
-            k2JvmArgs.reportOutputFiles = reportOutputFiles
-            k2JvmArgs.reportPerf = reportPerformance
-            k2JvmArgs.reportOutputFiles = reportOutputFiles
-            k2JvmArgs.loadBuiltInsFromDependencies = loadBuiltInsFromDependencies
-
-
-			k2JvmArgs.additionalJavaModules=arrayOf()
-			k2JvmArgs.javaModulePath=""
-        }
 
         val compilerSystemOutBuffer = Buffer()  // Buffer for capturing compiler's logging output
 
@@ -264,7 +286,7 @@ class KotlinCompilation(
                     TeeOutputStream(systemOut, compilerSystemOutBuffer.outputStream())),
                 MessageRenderer.WITHOUT_PATHS, true),
             Services.EMPTY,
-            k2jvmArgs
+            parseK2JVMArgs()
         )
 
         // check for known errors that are hard to debug for the user
@@ -285,7 +307,7 @@ class KotlinCompilation(
 
 
 	/**
-	 * Base64 encodes a mapping of annotation processor args for kapt, as specified by
+	 * Base64 encodes a mapping of annotation processor freeArgs for kapt, as specified by
 	 * https://kotlinlang.org/docs/reference/kapt.html#apjavac-options-encoding
 	 */
 	private fun encodeOptionsForKapt(options: Map<String, String>): String {
@@ -301,38 +323,58 @@ class KotlinCompilation(
 	}
 
     companion object {
-        /** Tries to find the kapt 3 jar in the host classpath */
-        fun findKapt3JarInHostClasspath(log: ((String) -> Unit)? = null): File? {
-            val jarFile = getClasspaths().firstOrNull { classpath ->
-                classpath.name.matches(Regex("kotlin-annotation-processing-embeddable.*?\\.jar"))
-                //TODO("check that jar file actually contains the right classes")
-            }
+		/** Tries to find a file matching the given [regex] in the host process' classpath */
+		fun findInHostClasspath(shortName: String, regex: Regex, log: ((String) -> Unit)? = null): File? {
+			val jarFile = getHostClasspaths().firstOrNull { classpath ->
+				classpath.name.matches(regex)
+				//TODO("check that jar file actually contains the right classes")
+			}
 
-            if(jarFile == null && log != null)
-                log("Searched classpath for kotlin-annotation-processing-embeddable*.jar but didn't find anything.")
-            else if(log != null)
-                log("Searched classpath for kapt3 jar and found: $jarFile")
+			if(jarFile == null && log != null)
+				log("Searched classpath for $shortName but didn't find anything.")
+			else if(log != null)
+				log("Searched classpath for $shortName and found: $jarFile")
 
-            return jarFile
-        }
+			return jarFile
+		}
 
-        /** Tries to find the tools.jar needed for kapt in the host classpath */
-        fun findToolsJarInHostClasspath(log: ((String) -> Unit)? = null): File? {
-            val jarFile = getClasspaths().firstOrNull { classpath ->
-                classpath.name.matches(Regex("tools.jar"))
-                //TODO("check that jar file actually contains the right classes")
-            }
+		/** Tries to find the kotlin-stdlib.jar in the host process' classpath */
+		fun findKtStdLib(log: ((String) -> Unit)? = null)
+				= findInHostClasspath("kotlin-stdlib.jar",
+			Regex("kotlin-stdlib(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
 
-            if(jarFile == null && log != null)
-                log("Searched classpath for tools.jar but didn't find anything.")
-            else if(log != null)
-                log("Searched classpath for tools.jar and found: $jarFile")
+		/** Tries to find the kotlin-stdlib-jdk*.jar in the host process' classpath */
+		fun findKtStdLibJdk(log: ((String) -> Unit)? = null)
+				= findInHostClasspath("kotlin-stdlib-jdk*.jar",
+			Regex("kotlin-stdlib-jdk[0-9]+(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
 
-            return jarFile
-        }
+		/** Tries to find the kotlin-stdlib-common.jar in the host process' classpath */
+		fun findKtStdLibCommon(log: ((String) -> Unit)? = null)
+				= findInHostClasspath("kotlin-stdlib-common.jar",
+			Regex("kotlin-stdlib-common(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+
+		/** Tries to find the kotlin-reflect.jar in the host process' classpath */
+		fun findKtReflect(log: ((String) -> Unit)? = null)
+				= findInHostClasspath("kotlin-reflect.jar",
+			Regex("kotlin-reflect(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+
+		/** Tries to find the kotlin-script-runtime.jar in the host process' classpath */
+		fun findKtScriptRt(log: ((String) -> Unit)? = null)
+				= findInHostClasspath("kotlin-script-runtime.jar",
+			Regex("kotlin-script-runtime(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+
+        /** Tries to find the kapt 3 jar in the host process' classpath */
+        fun findKapt3(log: ((String) -> Unit)? = null)
+				= findInHostClasspath("kotlin-annotation-processing(-embeddable).jar",
+			Regex("kotlin-annotation-processing(-embeddable)?(-[0-9]+\\.[0-9]+\\.[0-9]+)?\\.jar"), log)
+
+
+        /** Tries to find the tools.jar needed for kapt in the host process' classpath */
+        fun findToolsInHostClasspath(log: ((String) -> Unit)? = null)
+				= findInHostClasspath("tools.jar", Regex("tools.jar"), log)
 
         /** Returns the files on the classloader's classpath and modulepath */
-        fun getClasspaths(): List<File> {
+        fun getHostClasspaths(): List<File> {
 			val classGraph = ClassGraph()
 				.enableSystemJarsAndModules()
 				.removeTemporaryFilesAfterScan()
