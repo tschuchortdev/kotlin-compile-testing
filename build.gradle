@@ -50,7 +50,8 @@ dependencies {
 
     compile "me.eugeniomarletti.kotlin.metadata:kotlin-metadata:1.4.0"
 
-    testCompile "com.squareup.okio:okio:2.1.0"
+    testImplementation "com.squareup.okio:okio:2.1.0"
+    testImplementation 'io.github.classgraph:classgraph:4.6.10'
 
     // the Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava

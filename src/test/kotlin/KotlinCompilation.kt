@@ -15,11 +15,13 @@
  */
 package com.tschuchort.compiletest
 
+import io.github.classgraph.ClassGraph
 import okio.Buffer
 import okio.buffer
 import okio.sink
 import kotlin.reflect.KClass
 import org.jetbrains.kotlin.cli.common.ExitCode
+import org.jetbrains.kotlin.cli.common.arguments.InternalArgument
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
@@ -71,11 +73,6 @@ class KotlinCompilation(
 	 * Setting it to false has no effect when [noStdLib] is true.
 	 */
 	val noReflect: Boolean = noStdLib,
-	/**
-	 * The classloader that should be used for the discovery of
-	 * the host process' classpath
-	 */
-	val hostClassLoader: ClassLoader = this::class.java.classLoader,
     /**
 	 * Path to the tools.jar file needed for kapt when using a JDK 8.
 	 *
@@ -83,7 +80,6 @@ class KotlinCompilation(
 	 * internal compiler error!
 	 */
 	val toolsJar: File? = findToolsJarInHostClasspath(
-		hostClassLoader = hostClassLoader,
         log = { if(verbose) systemOut.log(it) }
     ),
     /**
@@ -93,7 +89,6 @@ class KotlinCompilation(
      * Only needed when [services] is not empty.
      */
     val kapt3Jar: File? = findKapt3JarInHostClasspath(
-		hostClassLoader = hostClassLoader,
 		log = { if(verbose) systemOut.log(it) }
     ),
     /** Inherit classpath from calling process */
@@ -165,8 +160,11 @@ class KotlinCompilation(
 		addAll(classpaths.map(File::getAbsolutePath))
 
 		if(inheritClassPath) {
-			val hostClasspaths = getClasspaths(hostClassLoader).map(File::getAbsolutePath)
+			val hostClasspaths = getClasspaths().map(File::getAbsolutePath)
 			addAll(hostClasspaths)
+
+			if(verbose)
+				systemOut.log("Inheriting classpaths:  " + hostClasspaths.joinToString(File.pathSeparator))
 		}
 	}
 
@@ -199,24 +197,24 @@ class KotlinCompilation(
 
 	/** Runs the compilation task */
 	fun run(): Result {
-		sources.forEach {
-            it.writeTo(sourcesDir)
-        }
+        // write given sources to working directory
+		sources.forEach { it.writeTo(sourcesDir) }
 
-        val k2jvmArgs = K2JVMCompilerArguments().apply {
-            freeArgs = sourcesDir.listFiles().map { it.absolutePath } + args
+        // setup arguments for the compiler call
+        val k2jvmArgs = K2JVMCompilerArguments().also { k2JvmArgs ->
+            k2JvmArgs.freeArgs = sourcesDir.listFiles().map { it.absolutePath } + args
 
 			// only add kapt stuff if there are services that may use it
 			if(services.isNotEmpty()) {
                 val annotationProcArgs = annotationProcessorArgs()
 
-				pluginOptions = if(pluginOptions != null)
-					pluginOptions!!.plus(annotationProcArgs.pluginOptions)
+                k2JvmArgs.pluginOptions = if(k2JvmArgs.pluginOptions != null)
+                    k2JvmArgs.pluginOptions!!.plus(annotationProcArgs.pluginOptions)
 				else
 					annotationProcArgs.pluginOptions
 
-				pluginClasspaths = if(pluginClasspaths != null)
-					pluginClasspaths!!.plus(annotationProcArgs.pluginClassPaths)
+                k2JvmArgs.pluginClasspaths = if(k2JvmArgs.pluginClasspaths != null)
+                    k2JvmArgs.pluginClasspaths!!.plus(annotationProcArgs.pluginClassPaths)
 				else
                     annotationProcArgs.pluginClassPaths
 			}
@@ -224,34 +222,41 @@ class KotlinCompilation(
 				systemOut.log("No services were given. Not including kapt in the compiler's plugins.")
 			}
 
-            destination = classesDir.absolutePath
-            classpath = allClasspaths.joinToString(separator = File.pathSeparator)
+            k2JvmArgs.destination = classesDir.absolutePath
+            k2JvmArgs.classpath = allClasspaths.joinToString(separator = File.pathSeparator)
 
-			if(this@KotlinCompilation.jdkHome != null) {
-				jdkHome = this@KotlinCompilation.jdkHome.absolutePath
+			if(jdkHome != null) {
+                k2JvmArgs.jdkHome = jdkHome.absolutePath
 			}
 			else {
-				noJdk = true
+                if(verbose)
+                    systemOut.log("Using option -no-jdk. Kotlinc won't look for a JDK.")
+
+                k2JvmArgs.noJdk = true
 			}
 
-			noStdlib = this@KotlinCompilation.noStdLib
-			noReflect = this@KotlinCompilation.noReflect
+            k2JvmArgs.noStdlib = noStdLib
+            k2JvmArgs.noReflect = noReflect
 
-			this@KotlinCompilation.kotlinHome?.let { kotlinHome = it.absolutePath }
+			kotlinHome?.let { k2JvmArgs.kotlinHome = it.absolutePath }
 
-			this@KotlinCompilation.jvmTarget?.let { jvmTarget = it }
+			jvmTarget?.let { k2JvmArgs.jvmTarget = it }
 
-			verbose = this@KotlinCompilation.verbose
-			skipRuntimeVersionCheck = this@KotlinCompilation.skipRuntimeVersionCheck
-			suppressWarnings = this@KotlinCompilation.suppressWarnings
-			allWarningsAsErrors = this@KotlinCompilation.allWarningsAsErrors
-			reportOutputFiles = this@KotlinCompilation.reportOutputFiles
-			reportPerf = this@KotlinCompilation.reportPerformance
-			reportOutputFiles = this@KotlinCompilation.reportOutputFiles
-			loadBuiltInsFromDependencies = this@KotlinCompilation.loadBuiltInsFromDependencies
+            k2JvmArgs.verbose = verbose
+            k2JvmArgs.skipRuntimeVersionCheck = skipRuntimeVersionCheck
+            k2JvmArgs.suppressWarnings = suppressWarnings
+            k2JvmArgs.allWarningsAsErrors = allWarningsAsErrors
+            k2JvmArgs.reportOutputFiles = reportOutputFiles
+            k2JvmArgs.reportPerf = reportPerformance
+            k2JvmArgs.reportOutputFiles = reportOutputFiles
+            k2JvmArgs.loadBuiltInsFromDependencies = loadBuiltInsFromDependencies
+
+
+			k2JvmArgs.additionalJavaModules=arrayOf()
+			k2JvmArgs.javaModulePath=""
         }
 
-        val compilerSystemOutBuffer = Buffer()
+        val compilerSystemOutBuffer = Buffer()  // Buffer for capturing compiler's logging output
 
         val exitCode = K2JVMCompiler().execImpl(
             PrintingMessageCollector(
@@ -262,6 +267,7 @@ class KotlinCompilation(
             k2jvmArgs
         )
 
+        // check for known errors that are hard to debug for the user
 		if (exitCode == ExitCode.INTERNAL_ERROR && compilerSystemOutBuffer.readUtf8()
 				.contains("No enum constant com.sun.tools.javac.main.Option.BOOT_CLASS_PATH")) {
 
@@ -296,62 +302,45 @@ class KotlinCompilation(
 
     companion object {
         /** Tries to find the kapt 3 jar in the host classpath */
-        fun findKapt3JarInHostClasspath(hostClassLoader: ClassLoader,
-										log: ((String) -> Unit)? = null): File? {
-
-            val jarFile = getClasspaths(hostClassLoader).firstOrNull { classpath ->
+        fun findKapt3JarInHostClasspath(log: ((String) -> Unit)? = null): File? {
+            val jarFile = getClasspaths().firstOrNull { classpath ->
                 classpath.name.matches(Regex("kotlin-annotation-processing-embeddable.*?\\.jar"))
                 //TODO("check that jar file actually contains the right classes")
             }
 
             if(jarFile == null && log != null)
                 log("Searched classpath for kotlin-annotation-processing-embeddable*.jar but didn't find anything.")
+            else if(log != null)
+                log("Searched classpath for kapt3 jar and found: $jarFile")
 
             return jarFile
         }
 
         /** Tries to find the tools.jar needed for kapt in the host classpath */
-        fun findToolsJarInHostClasspath(hostClassLoader: ClassLoader, 
-										log: ((String) -> Unit)? = null): File? {
-			
-            val jarFile = getClasspaths(hostClassLoader).firstOrNull { classpath ->
+        fun findToolsJarInHostClasspath(log: ((String) -> Unit)? = null): File? {
+            val jarFile = getClasspaths().firstOrNull { classpath ->
                 classpath.name.matches(Regex("tools.jar"))
                 //TODO("check that jar file actually contains the right classes")
             }
 
             if(jarFile == null && log != null)
                 log("Searched classpath for tools.jar but didn't find anything.")
+            else if(log != null)
+                log("Searched classpath for tools.jar and found: $jarFile")
 
             return jarFile
         }
 
-        /** Returns the files on the classloader's classpath. */
-        fun getClasspaths(classLoader: ClassLoader): List<File> {
-            if (classLoader is URLClassLoader) {
-                return classLoader.urLs.map { url ->
-                    if (url.protocol != "file")
-                        throw UnsupportedOperationException("unable to handle classpath element $url")
+        /** Returns the files on the classloader's classpath and modulepath */
+        fun getClasspaths(): List<File> {
+			val classGraph = ClassGraph()
+				.enableSystemJarsAndModules()
+				.removeTemporaryFilesAfterScan()
 
-                    // paths may contain percent-encoded characters like %20 for space
-                    File(URLDecoder.decode(url.path, "UTF-8"))
-                }
-            }
-            else {
-                val jarsOrZips = classLoader.getResources("META-INF").toList().mapNotNull {
-                    if(it.path.matches(Regex("file:/.*?(\\.jar|\\.zip)!/META-INF")))
-                        it.path.removeSurrounding("file:/", "!/META-INF")
-                    else
-                        null
-                }
+			val classpaths = classGraph.classpathFiles
+			val modules = classGraph.modules.mapNotNull { it.locationFile }
 
-                val dirs = classLoader.getResources("").toList().map { it.path }
-                val wildcards = classLoader.getResources("*").toList().map { it.path }
-
-                return (jarsOrZips + dirs + wildcards).map {
-                    // paths may contain percent-encoded characters like %20 for space
-                    File(URLDecoder.decode(it, "UTF-8"))
-                }
-            }
+			return (classpaths + modules).distinctBy(File::getAbsolutePath)
         }
 
         /** Finds the tools.jar given a path to a JDK 8 or earlier */
