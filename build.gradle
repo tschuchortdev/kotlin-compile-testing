@@ -45,6 +45,8 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     testCompile "org.assertj:assertj-core:3.11.1"
+    testImplementation "org.mockito:mockito-core:2.23.4"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
 
     compile "me.eugeniomarletti.kotlin.metadata:kotlin-metadata:1.4.0"
 
@@ -62,4 +64,5 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
 }

@@ -1,4 +1,4 @@
-package com.tschuchort.kotlinelements
+package com.tschuchort.compiletest
 
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
