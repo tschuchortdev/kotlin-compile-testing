@@ -1,10 +1,8 @@
-package com.tschuchort.compiletest
-
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import com.tschuchort.compiletest.TeeOutputStream
 import okio.Buffer
 import org.assertj.core.api.Assertions
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.OutputStream
 import java.io.PrintStream

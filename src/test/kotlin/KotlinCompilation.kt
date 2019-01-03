@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.tschuchort.compiletest
 
+import com.tschuchort.compiletest.NullStream
+import com.tschuchort.compiletest.TeeOutputStream
 import io.github.classgraph.ClassGraph
 import okio.Buffer
 import okio.buffer
@@ -65,7 +66,7 @@ open class KotlinCompilation(
 	 * process' classpaths
 	 */
 	val kotlinStdLibJar: File? = findKtStdLib(
-		log = { if(verbose) systemOut.log(it) }
+		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
 	 * Path to the kotlin-stdlib-jdk*.jar
@@ -73,7 +74,7 @@ open class KotlinCompilation(
 	 * process' classpaths
 	 */
 	val kotlinStdLibJdkJar: File? = findKtStdLibJdk(
-		log = { if(verbose) systemOut.log(it) }
+		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
 	 * Path to the kotlin-reflect.jar
@@ -81,7 +82,7 @@ open class KotlinCompilation(
 	 * process' classpaths
 	 */
 	val kotlinReflectJar: File? = findKtReflect(
-		log = { if(verbose) systemOut.log(it) }
+		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
 	 * Path to the kotlin-script-runtime.jar
@@ -89,7 +90,7 @@ open class KotlinCompilation(
 	 * process' classpaths
 	 */
 	val kotlinScriptRuntimeJar: File? = findKtScriptRt(
-		log = { if(verbose) systemOut.log(it) }
+		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
 	 * Path to the kotlin-stdlib-common.jar
@@ -97,7 +98,7 @@ open class KotlinCompilation(
 	 * process' classpaths
 	 */
 	val kotlinStdLibCommonJar: File? = findKtStdLibCommon(
-		log = { if(verbose) systemOut.log(it) }
+		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
 	 * Path to the tools.jar file needed for kapt when using a JDK 8.
@@ -106,8 +107,8 @@ open class KotlinCompilation(
 	 * internal compiler error!
 	 */
 	val toolsJar: File? = findToolsInHostClasspath(
-        log = { if(verbose) systemOut.log(it) }
-    ),
+		log = { if (verbose) systemOut.log(it) }
+	),
 	/**
      * Path to the kotlin-annotation-processing-embeddable*.jar that
      * contains kapt3.
@@ -115,8 +116,8 @@ open class KotlinCompilation(
      * Only needed when [services] is not empty.
      */
     val kapt3Jar: File? = findKapt3(
-		log = { if(verbose) systemOut.log(it) }
-    ),
+		log = { if (verbose) systemOut.log(it) }
+	),
 	/** Inherit classpath from calling process */
 	val inheritClassPath: Boolean = false,
 	val jvmTarget: String? = null,
@@ -272,6 +273,7 @@ open class KotlinCompilation(
 			// Don't forget aptMode! Without it, the compiler will crash with an obscure error about
 			// write unsafe context
 			"plugin:org.jetbrains.kotlin.kapt3:aptMode=stubsAndApt",
+			"plugin:org.jetbrains.kotlin.kapt3:mapDiagnosticLocations=true",
 			*if (verbose)
 				arrayOf("plugin:org.jetbrains.kotlin.kapt3:verbose=true")
 			else
@@ -370,7 +372,8 @@ open class KotlinCompilation(
 		val compilerSystemOutBuffer = Buffer()  // Buffer for capturing compiler's logging output
 		val compilerMessageCollector = PrintingMessageCollector(
 			PrintStream(
-				TeeOutputStream(systemOut, compilerSystemOutBuffer.outputStream())),
+				TeeOutputStream(systemOut, compilerSystemOutBuffer.outputStream())
+			),
 			MessageRenderer.WITHOUT_PATHS, true)
 
 		/*
@@ -462,34 +465,46 @@ open class KotlinCompilation(
 
 		/** Tries to find the kotlin-stdlib.jar in the host process' classpath */
 		fun findKtStdLib(log: ((String) -> Unit)? = null)
-				= findInHostClasspath("kotlin-stdlib.jar",
-			Regex("(kotlin-stdlib|kotlin-runtime)(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+				= findInHostClasspath(
+			"kotlin-stdlib.jar",
+			Regex("(kotlin-stdlib|kotlin-runtime)(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log
+		)
 			// kotlin-stdlib.jar used to be kotlin-runtime.jar in <1.1
 
 		/** Tries to find the kotlin-stdlib-jdk*.jar in the host process' classpath */
 		fun findKtStdLibJdk(log: ((String) -> Unit)? = null)
-				= findInHostClasspath("kotlin-stdlib-jdk*.jar",
-			Regex("kotlin-stdlib-jdk[0-9]+(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+				= findInHostClasspath(
+			"kotlin-stdlib-jdk*.jar",
+			Regex("kotlin-stdlib-jdk[0-9]+(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log
+		)
 
 		/** Tries to find the kotlin-stdlib-common.jar in the host process' classpath */
 		fun findKtStdLibCommon(log: ((String) -> Unit)? = null)
-				= findInHostClasspath("kotlin-stdlib-common.jar",
-			Regex("kotlin-stdlib-common(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+				= findInHostClasspath(
+			"kotlin-stdlib-common.jar",
+			Regex("kotlin-stdlib-common(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log
+		)
 
 		/** Tries to find the kotlin-reflect.jar in the host process' classpath */
 		fun findKtReflect(log: ((String) -> Unit)? = null)
-				= findInHostClasspath("kotlin-reflect.jar",
-			Regex("kotlin-reflect(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+				= findInHostClasspath(
+			"kotlin-reflect.jar",
+			Regex("kotlin-reflect(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log
+		)
 
 		/** Tries to find the kotlin-script-runtime.jar in the host process' classpath */
 		fun findKtScriptRt(log: ((String) -> Unit)? = null)
-				= findInHostClasspath("kotlin-script-runtime.jar",
-			Regex("kotlin-script-runtime(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log)
+				= findInHostClasspath(
+			"kotlin-script-runtime.jar",
+			Regex("kotlin-script-runtime(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"), log
+		)
 
         /** Tries to find the kapt 3 jar in the host process' classpath */
         fun findKapt3(log: ((String) -> Unit)? = null)
-				= findInHostClasspath("kotlin-annotation-processing(-embeddable).jar",
-			Regex("kotlin-annotation-processing(-(embeddable|gradle|maven))?(-[0-9]+\\.[0-9]+\\.[0-9]+)?\\.jar"), log)
+				= findInHostClasspath(
+			"kotlin-annotation-processing(-embeddable).jar",
+			Regex("kotlin-annotation-processing(-(embeddable|gradle|maven))?(-[0-9]+\\.[0-9]+\\.[0-9]+)?\\.jar"), log
+		)
 
 
         /** Tries to find the tools.jar needed for kapt in the host process' classpath */

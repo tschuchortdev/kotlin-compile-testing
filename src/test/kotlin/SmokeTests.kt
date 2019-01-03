@@ -1,5 +1,3 @@
-package com.tschuchort.compiletest
-
 import okio.Buffer
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.cli.common.ExitCode
@@ -15,11 +13,13 @@ class SmokeTests {
 
 	@Test
 	fun `compilation succeeds`() {
-		val kSource = KotlinCompilation.SourceFile("kSource.kt",
-				"""import com.tschuchort.compiletest.Marker
+		val kSource = KotlinCompilation.SourceFile(
+			"kSource.kt",
+			"""//import Marker
 					import javax.lang.model.SourceVersion
 					import java.io.File
-					import com.tschuchort.compiletest.GeneratedClass
+					//import com.tschuchort.compiletest.KotlinGeneratedKotlinClass
+					//import com.tschuchort.compiletest.JavaGeneratedKotlinClass
 
 					class KotClass {
 						fun brr() {}
@@ -33,27 +33,44 @@ class SmokeTests {
 					fun main(freeArgs: Array<String>) {
 						File("")
 						println("hello")
-						GeneratedClass().foo()
+						KotlinGeneratedKotlinClass().foo()
+						KotlinGeneratedKotlinClass().bar()
+						JavaGeneratedKotlinClass().foo()
+						JavaGeneratedKotlinClass().bar()
 					}
 				""".trimIndent()
 		)
 
-		val jSource = KotlinCompilation.SourceFile("JSource.java",
-				"""
-    			import com.tschuchort.compiletest.Marker;
+		val jSource = KotlinCompilation.SourceFile(
+			"JSource.java",
+			"""
+                //import com.tschuchort.compiletest.KotlinGeneratedKotlinClass;
+                //import com.tschuchort.compiletest.JavaGeneratedKotlinClass;
+
     			public class JSource {
+                    public JSource() {
+                        (new KotlinGeneratedKotlinClass()).foo();
+						(new KotlinGeneratedKotlinClass()).bar();
+						(new JavaGeneratedKotlinClass()).foo();
+						(new JavaGeneratedKotlinClass()).bar();
+                    }
+
     				@Marker public void bar() {
     					(new KotClass()).brr();
     				}
                 }
-				""".trimIndent())
+				""".trimIndent()
+		)
 
 		val systemOutBuffer = Buffer()
 
 		val result = KotlinCompilation(
 			workingDir = File("C:\\compile-testing"),
 			sources = listOf(kSource, jSource),
-			services = listOf(KotlinCompilation.Service(Processor::class, TestProcessor::class)),
+			services = listOf(
+				KotlinCompilation.Service(Processor::class, KotlinTestProcessor::class),
+				KotlinCompilation.Service(Processor::class, JavaTestProcessor::class)
+			),
 			jdkHome = File("D:\\Program Files\\Java\\jdk1.8.0_25"),//getJavaHome(),
 			//toolsJar = File("D:\\Program Files\\Java\\jdk1.8.0_25\\lib\\tools.jar"),
 			inheritClassPath = true,

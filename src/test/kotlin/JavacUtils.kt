@@ -1,9 +1,5 @@
-package com.tschuchort.compiletest
-
-import org.jetbrains.kotlin.incremental.isJavaFile
 import java.io.*
 import java.net.URI
-import java.net.URL
 import java.nio.charset.Charset
 import javax.tools.JavaCompiler
 import javax.tools.JavaFileObject
