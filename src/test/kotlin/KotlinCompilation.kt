@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import com.tschuchort.compiletest.NullStream
-import com.tschuchort.compiletest.TeeOutputStream
 import io.github.classgraph.ClassGraph
 import okio.Buffer
 import okio.buffer
@@ -321,7 +319,7 @@ open class KotlinCompilation(
 		val javac = ToolProvider.getSystemJavaCompiler()
 		val javaFileManager = javac.getStandardFileManager(null, null, null)
 
-		val javaSources = sourcesDir.listFilesRecursively()
+		val javaSources = (sourcesDir.listFilesRecursively() + kaptSourceDir.listFilesRecursively())
 			.filterNot<File>(File::isKotlinFile)
 			.map { FileJavaFileObject(it) }
 			.filter { it.kind == JavaFileObject.Kind.SOURCE }

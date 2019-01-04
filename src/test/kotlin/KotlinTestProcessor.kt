@@ -1,3 +1,5 @@
+import com.squareup.javapoet.JavaFile
+import com.squareup.javapoet.TypeSpec as JavaTypeSpec
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -38,17 +40,24 @@ class KotlinTestProcessor : AbstractProcessor() {
 	override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
 		processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "kotlin processor was called")
 
-		if(annotations.isNotEmpty())
+		if(annotations.isNotEmpty()) {
 			FileSpec.builder("", "KotlinGeneratedKotlinClass.kt")
-				.addType(TypeSpec.classBuilder("KotlinGeneratedKotlinClass").apply {
-						for(annotatedElem in roundEnv.getElementsAnnotatedWith(Marker::class.java)) {
-							addFunction(FunSpec.builder(annotatedElem.simpleName.toString())
-								.build()
+				.addType(
+					TypeSpec.classBuilder("KotlinGeneratedKotlinClass").apply {
+						for (annotatedElem in roundEnv.getElementsAnnotatedWith(Marker::class.java)) {
+							addFunction(
+								FunSpec.builder(annotatedElem.simpleName.toString())
+									.build()
 							)
 						}
 					}.build()
 				).build()
 				.let { writeKotlinFile(it) }
+
+		JavaFile.builder("", JavaTypeSpec.classBuilder("KotlinGeneratedJavaClass").build())
+				.build().writeTo(processingEnv.filer)
+
+		}
 
 		return false
 	}

@@ -1,6 +1,5 @@
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import com.tschuchort.compiletest.TeeOutputStream
 import okio.Buffer
 import org.assertj.core.api.Assertions
 import org.junit.Test

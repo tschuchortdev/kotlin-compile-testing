@@ -1,3 +1,4 @@
+import com.squareup.javapoet.JavaFile;
 import com.squareup.kotlinpoet.FileSpec;
 import com.squareup.kotlinpoet.FunSpec;
 import com.squareup.kotlinpoet.TypeSpec;
@@ -49,7 +50,7 @@ public class JavaTestProcessor extends AbstractProcessor {
         if(!annotations.isEmpty()) {
             TypeSpec.Builder typeSpecBuilder = TypeSpec.classBuilder("JavaGeneratedKotlinClass");
 
-            for(Element annotatedElement : roundEnv.getElementsAnnotatedWith(Marker.class)) {
+            for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(Marker.class)) {
                 typeSpecBuilder.addFunction(FunSpec.builder(annotatedElement.getSimpleName().toString()
                         ).build()
                 ).build();
@@ -60,6 +61,12 @@ public class JavaTestProcessor extends AbstractProcessor {
                     .build();
 
             writeKotlinFile(fileSpec, fileSpec.getName(), fileSpec.getPackageName());
+
+            try {
+                JavaFile.builder("", com.squareup.javapoet.TypeSpec.classBuilder("JavaGeneratedJavaClass").build())
+                        .build().writeTo(processingEnv.getFiler());
+            } catch (Exception e) {
+            }
         }
 
         return false;
@@ -78,7 +85,6 @@ public class JavaTestProcessor extends AbstractProcessor {
             (new FileOutputStream(new File(outputFolder, fileName))).write(fileSpec.toString().getBytes(Charsets.UTF_8));
         }
         catch(Exception e) {
-
         }
     }
 }

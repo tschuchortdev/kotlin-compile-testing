@@ -32,11 +32,12 @@ class SmokeTests {
 
 					fun main(freeArgs: Array<String>) {
 						File("")
-						println("hello")
 						KotlinGeneratedKotlinClass().foo()
 						KotlinGeneratedKotlinClass().bar()
 						JavaGeneratedKotlinClass().foo()
 						JavaGeneratedKotlinClass().bar()
+						KotlinGeneratedJavaClass()
+						JavaGeneratedJavaClass()
 					}
 				""".trimIndent()
 		)
@@ -49,10 +50,12 @@ class SmokeTests {
 
     			public class JSource {
                     public JSource() {
+                    	(new KotlinGeneratedKotlinClass()).bar();
                         (new KotlinGeneratedKotlinClass()).foo();
-						(new KotlinGeneratedKotlinClass()).bar();
 						(new JavaGeneratedKotlinClass()).foo();
 						(new JavaGeneratedKotlinClass()).bar();
+						KotlinGeneratedJavaClass c = new KotlinGeneratedJavaClass();
+						JavaGeneratedJavaClass c2 = new JavaGeneratedJavaClass();
                     }
 
     				@Marker public void bar() {
@@ -65,7 +68,7 @@ class SmokeTests {
 		val systemOutBuffer = Buffer()
 
 		val result = KotlinCompilation(
-			workingDir = File("C:\\compile-testing"),
+			workingDir = temporaryFolder.root,
 			sources = listOf(kSource, jSource),
 			services = listOf(
 				KotlinCompilation.Service(Processor::class, KotlinTestProcessor::class),

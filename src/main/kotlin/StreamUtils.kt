@@ -1,5 +1,3 @@
-package com.tschuchort.compiletest
-
 import java.io.IOException
 import java.io.OutputStream
 
