@@ -1,3 +1,5 @@
+package com.tschuchort.compiletesting
+
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import okio.Buffer
@@ -15,7 +17,12 @@ class StreamUtilTests {
 
         val s = "test test \ntest\n"
 
-        PrintStream(TeeOutputStream(PrintStream(buf1.outputStream()), buf2.outputStream())).print(s)
+        PrintStream(
+            TeeOutputStream(
+                PrintStream(buf1.outputStream()),
+                buf2.outputStream()
+            )
+        ).print(s)
 
         Assertions.assertThat(buf1.readUtf8()).isEqualTo(s)
         Assertions.assertThat(buf2.readUtf8()).isEqualTo(s)

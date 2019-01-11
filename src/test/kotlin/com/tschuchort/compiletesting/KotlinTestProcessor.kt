@@ -1,3 +1,5 @@
+package com.tschuchort.compiletesting
+
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.TypeSpec as JavaTypeSpec
 import com.squareup.kotlinpoet.FileSpec
@@ -14,7 +16,7 @@ annotation class Marker
 class KotlinTestProcessor : AbstractProcessor() {
 	companion object {
 		const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
-		const val GENERATE_KOTLIN_CODE_OPTION = "generate.kotlin.code"
+		const val GENERATE_KOTLIN_CODE_OPTION = "generate.kotlin.value"
 		const val GENERATE_ERRORS_OPTION = "generate.error"
 		const val FILE_SUFFIX_OPTION = "suffix"
 	}
@@ -41,7 +43,7 @@ class KotlinTestProcessor : AbstractProcessor() {
 		processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "kotlin processor was called")
 
 		if(annotations.isNotEmpty()) {
-			FileSpec.builder("", "KotlinGeneratedKotlinClass.kt")
+			FileSpec.builder("com.tschuchort.compiletesting", "KotlinGeneratedKotlinClass.kt")
 				.addType(
 					TypeSpec.classBuilder("KotlinGeneratedKotlinClass").apply {
 						for (annotatedElem in roundEnv.getElementsAnnotatedWith(Marker::class.java)) {
@@ -54,7 +56,7 @@ class KotlinTestProcessor : AbstractProcessor() {
 				).build()
 				.let { writeKotlinFile(it) }
 
-		JavaFile.builder("", JavaTypeSpec.classBuilder("KotlinGeneratedJavaClass").build())
+		JavaFile.builder("com.tschuchort.compiletesting", JavaTypeSpec.classBuilder("KotlinGeneratedJavaClass").build())
 				.build().writeTo(processingEnv.filer)
 
 		}

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package com.tschuchort.compiletesting
+
 import io.github.classgraph.ClassGraph
 import okio.Buffer
 import okio.buffer
@@ -26,44 +28,66 @@ import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.config.Services
 import java.io.*
-import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.lang.model.SourceVersion
+import javax.tools.Diagnostic
+import javax.tools.DiagnosticCollector
 import javax.tools.JavaFileObject
 import javax.tools.ToolProvider
 
+
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-open class KotlinCompilation(
+data class KotlinCompilation(
 	/** Working directory for the compilation */
-	val workingDir: File,
-	/** Free arguments to be passed to kotlinc */
-	val freeArgs: List<String> = emptyList(),
+	var workingDir: File,
+	/**
+	 * Additional arguments to be passed to kotlinc
+	 *
+	 * Options and their parameters that would usually be separated
+	 * by whitespace in the CLI need to be passed in separate strings.
+	 * */
+	var addKotlincArgs: List<String> = emptyList(),
+	/**
+	 * Additional arguments to be passed to javac
+	 *
+	 * Options and their parameters that would usually be separated
+	 * by whitespace in the CLI need to be passed in separate strings.
+	 * */
+	var addJavacArgs: List<String> = emptyList(),
 	/** Arbitrary arguments to be passed to kapt */
-	kaptArgs: Map<String, String> = emptyMap(),
+	var kaptArgs: Map<String, String> = emptyMap(),
 	/**
 	 * Paths to directories or .jar files that contain classes
 	 * to be made available in the compilation (i.e. added to
 	 * the classpath)
 	 */
-	classpaths: List<File> = emptyList(),
+	var classpaths: List<File> = emptyList(),
 	/** Source files to be compiled */
-	val sources: List<SourceFile> = emptyList(),
+	var sources: List<KotlinCompilation.SourceFile> = emptyList(),
 	/** Services to be passed to kapt */
-	val services: List<Service<*, *>> = emptyList(),
+	var services: List<KotlinCompilation.Service<*, *>> = emptyList(),
 	/**
 	 * Path to the JDK to be used
 	 *
-	 * null if no JDK is to be used (option -no-jdk)
+     * If null, no JDK will be used with kotlinc (option -no-jdk)
+     * and the system java compiler will be used with empty bootclasspath
+     * (on JDK8) or --system none (on JDK9+). This can be useful if all
+     * the JDK classes you need are already on the (inherited) classpath.
 	 * */
-	val jdkHome: File? = null,
+	var jdkHome: File? = null,
+	/**
+	 * Helpful information (if [verbose] = true) and the compiler
+	 * system output will be written to this stream
+	 */
+	var systemOut: PrintStream = PrintStream(NullStream),
 	/**
 	 * Path to the kotlin-stdlib.jar
 	 * If none is given, it will be searched for in the host
 	 * process' classpaths
 	 */
-	val kotlinStdLibJar: File? = findKtStdLib(
+	var kotlinStdLibJar: File? = KotlinCompilation.findKtStdLib(
 		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
@@ -71,7 +95,7 @@ open class KotlinCompilation(
 	 * If none is given, it will be searched for in the host
 	 * process' classpaths
 	 */
-	val kotlinStdLibJdkJar: File? = findKtStdLibJdk(
+	var kotlinStdLibJdkJar: File? = KotlinCompilation.findKtStdLibJdk(
 		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
@@ -79,7 +103,7 @@ open class KotlinCompilation(
 	 * If none is given, it will be searched for in the host
 	 * process' classpaths
 	 */
-	val kotlinReflectJar: File? = findKtReflect(
+	var kotlinReflectJar: File? = KotlinCompilation.findKtReflect(
 		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
@@ -87,7 +111,7 @@ open class KotlinCompilation(
 	 * If none is given, it will be searched for in the host
 	 * process' classpaths
 	 */
-	val kotlinScriptRuntimeJar: File? = findKtScriptRt(
+	var kotlinScriptRuntimeJar: File? = KotlinCompilation.findKtScriptRt(
 		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
@@ -95,7 +119,7 @@ open class KotlinCompilation(
 	 * If none is given, it will be searched for in the host
 	 * process' classpaths
 	 */
-	val kotlinStdLibCommonJar: File? = findKtStdLibCommon(
+	var kotlinStdLibCommonJar: File? = KotlinCompilation.findKtStdLibCommon(
 		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
@@ -104,60 +128,55 @@ open class KotlinCompilation(
 	 * Note: Using a tools.jar file with a JDK 9 or later leads to an
 	 * internal compiler error!
 	 */
-	val toolsJar: File? = findToolsInHostClasspath(
+	var toolsJar: File? = KotlinCompilation.findToolsInHostClasspath(
 		log = { if (verbose) systemOut.log(it) }
 	),
 	/**
-     * Path to the kotlin-annotation-processing-embeddable*.jar that
-     * contains kapt3.
-     *
-     * Only needed when [services] is not empty.
-     */
-    val kapt3Jar: File? = findKapt3(
+	 * Path to the kotlin-annotation-processing-embeddable*.jar that
+	 * contains kapt3.
+	 *
+	 * Only needed when [services] is not empty.
+	 */
+	var kapt3Jar: File? = KotlinCompilation.findKapt3(
 		log = { if (verbose) systemOut.log(it) }
 	),
 	/** Inherit classpath from calling process */
-	val inheritClassPath: Boolean = false,
-	val jvmTarget: String? = null,
-	val correctErrorTypes: Boolean = true,
-	val skipRuntimeVersionCheck: Boolean = false,
-	val verbose: Boolean = false,
-	val suppressWarnings: Boolean = false,
-	val allWarningsAsErrors: Boolean = false,
-	val reportOutputFiles: Boolean = false,
-	val reportPerformance: Boolean = false,
-	val loadBuiltInsFromDependencies: Boolean = false,
-	/**
-	 * Helpful information (if [verbose] = true) and the compiler
-	 * system output will be written to this stream
-	 */
-	val systemOut: PrintStream = PrintStream(NullStream)
+	var inheritClassPath: Boolean = false,
+	var jvmTarget: String? = null,
+	var correctErrorTypes: Boolean = true,
+	var skipRuntimeVersionCheck: Boolean = false,
+	var verbose: Boolean = false,
+	var suppressWarnings: Boolean = false,
+	var allWarningsAsErrors: Boolean = false,
+	var reportOutputFiles: Boolean = false,
+	var reportPerformance: Boolean = false,
+	var loadBuiltInsFromDependencies: Boolean = false
 ) {
-	val kaptArgs: Map<String, String> = kaptArgs.toMutableMap().apply {
-		putIfAbsent(OPTION_KAPT_KOTLIN_GENERATED, File(workingDir, "kapt/kotlinGenerated").absolutePath)
-	}
 
 	// Directory for input source files
-	val sourcesDir = File(workingDir, "sources").apply { mkdirs() }
+	private val sourcesDir get() = File(workingDir, "sources")
 
 	// *.class files, Jars and resources (non-temporary) that are created by the
 	// compilation will land here
-	val classesDir = File(workingDir, "classes").apply { mkdirs() }
+	val classesDir get() = File(workingDir, "classes")
 
-	// Java annotation processors that are run by kapt will put their generated files here
-	val kaptSourceDir = File(workingDir, "kapt/sources").apply { mkdirs() }
+	// Java annotation processors that are compile by kapt will put their generated files here
+	val kaptSourceDir get() = File(workingDir, "kapt/sources")
 
 	// Output directory for Kotlin source files generated by kapt
-	val kaptKotlinGeneratedDir get() = File(kaptArgs[OPTION_KAPT_KOTLIN_GENERATED]).apply {
-		require(isDirectory) { "$OPTION_KAPT_KOTLIN_GENERATED must be a directory" }
-		mkdirs()
-	}
+	val kaptKotlinGeneratedDir get() = kaptArgs[OPTION_KAPT_KOTLIN_GENERATED]
+		?.let { path ->
+			require(File(path).isDirectory) { "$OPTION_KAPT_KOTLIN_GENERATED must be a directory" }
+			File(path)
+		}
+		?: File(workingDir, "kapt/kotlinGenerated")
+
 
 	/**
 	 * Generate a .jar file that holds ServiceManager registrations. Necessary because AutoService's
 	 * results might not be visible to this test.
 	 */
-	val servicesJar = File(workingDir, "services.jar").apply {
+	private fun writeServicesJar() = File(workingDir, "services.jar").apply {
 		val servicesGroupedByClass = services.groupBy({ it.serviceClass }, { it.implementationClass })
 
 		ZipOutputStream(FileOutputStream(this)).use { zipOutputStream ->
@@ -176,12 +195,6 @@ open class KotlinCompilation(
 		}
 	}
 
-	init {
-		// write given sources to working directory
-		sources.forEach { it.writeTo(sourcesDir) }
-	}
-
-
 	/** A Kotlin source file to be compiled */
 	data class SourceFile(val path: String, val contents: String) {
 		/**
@@ -197,35 +210,26 @@ open class KotlinCompilation(
 			}
 	}
 
+    /** ExitCode of the entire Kotlin compilation process */
+    enum class ExitCode {
+        OK, INTERNAL_ERROR, COMPILATION_ERROR, SCRIPT_EXECUTION_ERROR
+    }
+
 	/** Result of the compilation */
-	data class Result(val exitCode: ExitCode, val generatedFiles: Collection<File>)
+	data class Result(val exitCode: ExitCode, val outputDirectory: File) {
+		val generatedFiles: Collection<File> = outputDirectory.listFilesRecursively()
+	}
 
 	/** A service that will be passed to kapt */
 	data class Service<S : Any, T : S>(val serviceClass: KClass<S>, val implementationClass: KClass<T>)
 
-	val allClasspaths: List<String> = mutableListOf<String>().apply {
-		addAll(classpaths.map(File::getAbsolutePath))
-
-		addAll(listOfNotNull(kotlinStdLibJar, kotlinReflectJar, kotlinScriptRuntimeJar)
-			.map(File::getAbsolutePath))
-
-		if(inheritClassPath) {
-			val hostClasspaths = getHostClasspaths().map(File::getAbsolutePath)
-			addAll(hostClasspaths)
-
-			if(verbose)
-				systemOut.log("Inheriting classpaths:  " + hostClasspaths.joinToString(File.pathSeparator))
-		}
-	}.distinct()
-
-
 	// setup common arguments for the two kotlinc calls
-	protected open fun parseK2JVMArgs() = K2JVMCompilerArguments().also { it ->
+	private fun commonK2JVMArgs() = K2JVMCompilerArguments().also { it ->
 		it.destination = classesDir.absolutePath
-		it.classpath = allClasspaths.joinToString(separator = File.pathSeparator)
+		it.classpath = allClasspaths().joinToString(separator = File.pathSeparator)
 
 		if(jdkHome != null) {
-			it.jdkHome = jdkHome.absolutePath
+			it.jdkHome = jdkHome!!.absolutePath
 		}
 		else {
 			if(verbose)
@@ -259,14 +263,18 @@ open class KotlinCompilation(
 
 		require(kapt3Jar != null) { "kapt3Jar has to be non-null if annotation processing is used" }
 
-		val kaptPluginClassPaths = listOfNotNull(kapt3Jar.absolutePath, toolsJar?.absolutePath).toTypedArray()
+		val kaptPluginClassPaths = listOfNotNull(kapt3Jar!!.absolutePath, toolsJar?.absolutePath).toTypedArray()
+
+		val encodedKaptArgs = encodeOptionsForKapt(kaptArgs.toMutableMap().apply {
+			putIfAbsent(OPTION_KAPT_KOTLIN_GENERATED, kaptKotlinGeneratedDir.absolutePath)
+		})
 
 		val kaptPluginOptions = arrayOf(
 			"plugin:org.jetbrains.kotlin.kapt3:sources=${kaptSourceDir.absolutePath}",
 			"plugin:org.jetbrains.kotlin.kapt3:classes=${classesDir.absolutePath}",
 			"plugin:org.jetbrains.kotlin.kapt3:stubs=${kaptStubsDir.absolutePath}",
 			"plugin:org.jetbrains.kotlin.kapt3:incrementalData=${kaptIncrementalDataDir.absolutePath}",
-			"plugin:org.jetbrains.kotlin.kapt3:apclasspath=${servicesJar.absolutePath}",
+			"plugin:org.jetbrains.kotlin.kapt3:apclasspath=${writeServicesJar().absolutePath}",
 			"plugin:org.jetbrains.kotlin.kapt3:correctErrorTypes=$correctErrorTypes",
 			// Don't forget aptMode! Without it, the compiler will crash with an obscure error about
 			// write unsafe context
@@ -277,14 +285,14 @@ open class KotlinCompilation(
 			else
 				emptyArray(),
 			*if (kaptArgs.isNotEmpty())
-				arrayOf("plugin:org.jetbrains.kotlin.kapt3:apoptions=${encodeOptionsForKapt(kaptArgs)}")
+				arrayOf("plugin:org.jetbrains.kotlin.kapt3:apoptions=$encodedKaptArgs")
 			else
 				emptyArray()
 		)
 		
-		val k2JvmArgs = parseK2JVMArgs().also {
+		val k2JvmArgs = commonK2JVMArgs().also {
 			it.freeArgs = sourcesDir.listFilesRecursively()
-				.map(File::getAbsolutePath).distinct() + freeArgs
+				.map(File::getAbsolutePath).distinct() + addKotlincArgs
 
 			it.pluginOptions = if(it.pluginOptions != null)
 				it.pluginOptions!!.plus(kaptPluginOptions)
@@ -297,81 +305,172 @@ open class KotlinCompilation(
 				kaptPluginClassPaths
 		}
 
-		return K2JVMCompiler().execImpl(messageCollector, Services.EMPTY, k2JvmArgs)
+		return convertKotlinExitCode(
+            K2JVMCompiler().execImpl(messageCollector, Services.EMPTY, k2JvmArgs))
 	}
 
 	/** Performs the 3rd compilation step to compile Kotlin source files */
 	private fun compileKotlin(messageCollector: PrintingMessageCollector): ExitCode {
+		val sources = (sourcesDir.listFilesRecursively() +
+				kaptKotlinGeneratedDir.listFilesRecursively() +
+				kaptSourceDir.listFilesRecursively())
+
+		if(sources.filter<File>(File::isKotlinFile).isEmpty())
+			return ExitCode.OK
+
 		// in this step also include source files generated by kapt in the previous step
-		val k2JvmArgs = parseK2JVMArgs().also {
-			it.freeArgs = (sourcesDir.listFilesRecursively() +
-					kaptKotlinGeneratedDir.listFilesRecursively() +
-					kaptSourceDir.listFilesRecursively())
-				.map(File::getAbsolutePath)
-				.distinct() + freeArgs
+		val k2JvmArgs = commonK2JVMArgs().also {
+			it.freeArgs = sources.map(File::getAbsolutePath)
+				.distinct() + addKotlincArgs
 		}
 
-		return K2JVMCompiler().execImpl(messageCollector, Services.EMPTY, k2JvmArgs)
+        return convertKotlinExitCode(
+            K2JVMCompiler().execImpl(messageCollector, Services.EMPTY, k2JvmArgs))
 	}
+
+	/**
+	 * 	Base javac arguments that only depend on the the arguments given by the user
+	 *  Depending on which compiler implementation is actually used, more arguments
+	 *  may be added
+	 */
+	private fun baseJavacArgs(isJavac9OrLater: Boolean) = mutableListOf<String>().apply {
+		if(verbose) {
+			add("-verbose")
+			add("-Xlint:path") // warn about invalid paths in CLI
+			add("-Xlint:options") // warn about invalid options in CLI
+
+			if(isJavac9OrLater)
+				add("-Xlint:module") // warn about issues with the module system
+		}
+
+		addAll("-d", classesDir.absolutePath)
+
+		add("-proc:none") // disable annotation processing
+
+		if(allWarningsAsErrors)
+			add("-Werror")
+
+		// also add class output path to javac classpath so it can discover
+		// already compiled Kotlin classes
+		addAll("-cp", (allClasspaths() + classesDir)
+			.joinToString(File.pathSeparator, transform = File::getAbsolutePath))
+
+		addAll(addJavacArgs)
+	}
+
 
 	/** Performs the 4th compilation step to compile Java source files */
 	private fun compileJava(): ExitCode {
-		val javac = ToolProvider.getSystemJavaCompiler()
-		val javaFileManager = javac.getStandardFileManager(null, null, null)
-
 		val javaSources = (sourcesDir.listFilesRecursively() + kaptSourceDir.listFilesRecursively())
 			.filterNot<File>(File::isKotlinFile)
-			.map { FileJavaFileObject(it) }
-			.filter { it.kind == JavaFileObject.Kind.SOURCE }
 
-		val javacArgs = mutableListOf<String>().apply {
-			if(verbose)
-				add("-verbose")
+		if(javaSources.isEmpty())
+			return ExitCode.OK
 
-			add("-d")
-			add(classesDir.absolutePath)
+        if(jdkHome != null) {
+            /* If a JDK home is given, try to run javac from there so it uses the same JDK
+               as K2JVMCompiler. Changing the JDK of the system java compiler via the
+               "--system" and "-bootclasspath" options is not so easy. */
 
-			add("-proc:none") // disable annotation processing
+            val jdkBinFile = File(jdkHome, "bin")
+            check(jdkBinFile.exists()) { "No JDK bin folder found at: ${jdkBinFile.toPath()}" }
 
-			if(allWarningsAsErrors)
-				add("-Werror")
+			val javacCommand = jdkBinFile.absolutePath + File.separatorChar + "javac"
 
-			if(allClasspaths.isNotEmpty()) {
-				add("-cp")
-				// also add class output path to javac classpath so it can discover
-				// already compiled Kotlin classes
-				add((allClasspaths + classesDir.absolutePath).joinToString(File.pathSeparator))
+			val isJavac9OrLater = isJavac9OrLater(getJavacVersionString(javacCommand))
+			val javacArgs = baseJavacArgs(isJavac9OrLater)
+
+            val javacProc = ProcessBuilder(listOf(javacCommand) + javacArgs + javaSources.map(File::getAbsolutePath))
+                .directory(workingDir)
+                .redirectErrorStream(true)
+				.start()
+
+			javacProc.inputStream.copyTo(systemOut)
+			javacProc.errorStream.copyTo(systemOut)
+
+            return when(javacProc.waitFor()) {
+                0 -> ExitCode.OK
+                1 -> ExitCode.COMPILATION_ERROR
+                else -> ExitCode.INTERNAL_ERROR
+            }
+        }
+        else {
+            /*  If no JDK is given, we will use the host process' system java compiler
+                and erase the bootclasspath. The user is then on their own to somehow
+                provide the JDK classes via the regular classpath because javac won't
+                work at all without them */
+
+			val isJavac9OrLater = isJdk9OrLater()
+			val javacArgs = baseJavacArgs(isJavac9OrLater).apply {
+				// erase bootclasspath or JDK path because no JDK was specified
+				if (isJavac9OrLater)
+					addAll("--system", "none")
+				else
+					addAll("-bootclasspath", "")
 			}
-		}
 
-		try {
-			val noErrors = javac.getTask(
-				OutputStreamWriter(systemOut), javaFileManager,
-				/* diagnosticListener */ null, javacArgs,
-				/* classes to be annotation processed */ null, javaSources
-			).call()
+            if(verbose)
+                systemOut.log("jdkHome is null. Using system java compiler of the host process.")
 
-			return if(noErrors)
-				ExitCode.OK
-			else
-				ExitCode.COMPILATION_ERROR
-		} catch (e: Exception) {
-			if(e is RuntimeException || e is IllegalArgumentException) {
-				systemOut.error(e.toString())
-				return ExitCode.INTERNAL_ERROR
-			}
-			else
-				throw e
-		}
+            val javac = ToolProvider.getSystemJavaCompiler()
+            check(javac != null) { "System java compiler is null! Are you running without JDK?" }
+
+            val javaFileManager = javac.getStandardFileManager(null, null, null)
+
+            val diagnosticCollector = DiagnosticCollector<JavaFileObject>()
+
+            fun printDiagnostics() = diagnosticCollector.diagnostics.forEach { diag ->
+                when(diag.kind) {
+                    Diagnostic.Kind.ERROR -> systemOut.error(diag.getMessage(null))
+                    Diagnostic.Kind.WARNING,
+                    Diagnostic.Kind.MANDATORY_WARNING -> systemOut.warning(diag.getMessage(null))
+                    else -> if(verbose) systemOut.log(diag.getMessage(null))
+                }
+            }
+
+            try {
+                val noErrors = javac.getTask(
+                    OutputStreamWriter(systemOut), javaFileManager,
+                    diagnosticCollector, javacArgs,
+                    /* classes to be annotation processed */ null,
+					javaSources.map { FileJavaFileObject(it) }
+						.filter { it.kind == JavaFileObject.Kind.SOURCE }
+                ).call()
+
+                printDiagnostics()
+
+                return if(noErrors)
+                    ExitCode.OK
+                else
+                    ExitCode.COMPILATION_ERROR
+            }
+            catch (e: Exception) {
+                if(e is RuntimeException || e is IllegalArgumentException) {
+                    printDiagnostics()
+                    systemOut.error(e.toString())
+                    return ExitCode.INTERNAL_ERROR
+                }
+                else
+                    throw e
+            }
+        }
 	}
 
 	/** Runs the compilation task */
-	fun run(): Result {
-		val compilerSystemOutBuffer = Buffer()  // Buffer for capturing compiler's logging output
+	fun compile(): Result {
+		// make sure all needed directories exist
+		sourcesDir.mkdirs()
+		classesDir.mkdirs()
+		kaptSourceDir.mkdirs()
+		kaptKotlinGeneratedDir.mkdirs()
+
+		// write given sources to working directory
+		sources.forEach { it.writeTo(sourcesDir) }
+
+		// Buffer for capturing compiler's logging output
+		val compilerSystemOutBuffer = Buffer()
 		val compilerMessageCollector = PrintingMessageCollector(
-			PrintStream(
-				TeeOutputStream(systemOut, compilerSystemOutBuffer.outputStream())
-			),
+			PrintStream(TeeOutputStream(systemOut, compilerSystemOutBuffer.outputStream())),
 			MessageRenderer.WITHOUT_PATHS, true)
 
 		/*
@@ -382,12 +481,12 @@ open class KotlinCompilation(
 		4. Run javac with Java sources and the compiled Kotlin classes
 		 */
 
-		// step 1 and 2: generate stubs and run annotation processors
+		// step 1 and 2: generate stubs and compile annotation processors
 		if(services.isNotEmpty()) {
 			val exitCode = stubsAndApt(compilerMessageCollector)
 			if(exitCode != ExitCode.OK) {
 				searchSystemOutForKnownErrors(compilerSystemOutBuffer.readUtf8())
-				return Result(exitCode, classesDir.listFilesRecursively().toList())
+				return Result(exitCode, classesDir)
 			}
 		}
 		else if(verbose) {
@@ -398,19 +497,32 @@ open class KotlinCompilation(
 		compileKotlin(compilerMessageCollector).let { exitCode ->
 			if(exitCode != ExitCode.OK) {
 				searchSystemOutForKnownErrors(compilerSystemOutBuffer.readUtf8())
-				return Result(exitCode, classesDir.listFilesRecursively().toList())
+				return Result(exitCode, classesDir)
 			}
 		}
 
 		// step 4: compile Java files
 		compileJava().let { exitCode ->
-			if(exitCode != ExitCode.OK) {
+			if(exitCode != ExitCode.OK)
 				searchSystemOutForKnownErrors(compilerSystemOutBuffer.readUtf8())
-			}
 
-			return Result(exitCode, classesDir.listFilesRecursively().toList())
+			return Result(exitCode, classesDir)
 		}
 	}
+
+	private fun allClasspaths() = mutableListOf<File>().apply {
+		addAll(classpaths)
+
+		addAll(listOfNotNull(kotlinStdLibJar, kotlinReflectJar, kotlinScriptRuntimeJar))
+
+		if(inheritClassPath) {
+			val hostClasspaths = getHostClasspaths()
+			addAll(hostClasspaths)
+
+			if(verbose)
+				systemOut.log("Inheriting classpaths:  " + hostClasspaths.joinToString(File.pathSeparator))
+		}
+	}.distinct()
 
 	/** Searches compiler log for known errors that are hard to debug for the user */
 	private fun searchSystemOutForKnownErrors(compilerSystemOut: String) {
@@ -426,29 +538,13 @@ open class KotlinCompilation(
 		}
 	}
 
-
-	/**
-	 * Base64 encodes a mapping of annotation processor freeArgs for kapt, as specified by
-	 * https://kotlinlang.org/docs/reference/kapt.html#apjavac-options-encoding
-	 */
-	private fun encodeOptionsForKapt(options: Map<String, String>): String {
-		val buffer = Buffer()
-		ObjectOutputStream(buffer.outputStream()).use { oos ->
-			oos.writeInt(options.size)
-			for ((key, value) in options.entries) {
-				oos.writeUTF(key)
-				oos.writeUTF(value)
-			}
-		}
-		return buffer.readByteString().base64()
-	}
-
     companion object {
 		const val OPTION_KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated"
 
 		/** Tries to find a file matching the given [regex] in the host process' classpath */
-		fun findInHostClasspath(shortName: String, regex: Regex, log: ((String) -> Unit)? = null): File? {
-			val jarFile = getHostClasspaths().firstOrNull { classpath ->
+		private fun findInHostClasspath(shortName: String, regex: Regex, log: ((String) -> Unit)? = null): File? {
+			val jarFile = getHostClasspaths()
+				.firstOrNull { classpath ->
 				classpath.name.matches(regex)
 				//TODO("check that jar file actually contains the right classes")
 			}
@@ -507,7 +603,8 @@ open class KotlinCompilation(
 
         /** Tries to find the tools.jar needed for kapt in the host process' classpath */
         fun findToolsInHostClasspath(log: ((String) -> Unit)? = null)
-				= findInHostClasspath("tools.jar", Regex("tools.jar"), log)
+				= findInHostClasspath("tools.jar", Regex("tools.jar"), log
+		)
 
         /** Returns the files on the classloader's classpath and modulepath */
         fun getHostClasspaths(): List<File> {
@@ -523,7 +620,7 @@ open class KotlinCompilation(
 
         /** Finds the tools.jar given a path to a JDK 8 or earlier */
         fun findToolsJarFromJdk(jdkHome: File): File
-                =  File(jdkHome.absolutePath + "/../lib/tools.jar").also { check(it.isFile) }
+                = File(jdkHome.absolutePath + "/../lib/tools.jar").also { check(it.isFile) }
 
         private fun PrintStream.log(s: String) = println("logging: $s")
         private fun PrintStream.warning(s: String) = println("warning: $s")
@@ -531,25 +628,28 @@ open class KotlinCompilation(
     }
 }
 
-internal fun getJavaHome(): File {
-    val path = System.getProperty("java.home")
-        ?: throw IllegalStateException("no java home found")
-
-    return File(path).also { check(it.isDirectory) }
-}
-
-/** Checks if the JDK of the host process is version 9 or later */
-internal fun isJdk9OrLater(): Boolean
-        = SourceVersion.latestSupported().compareTo(SourceVersion.RELEASE_8) > 0
-
-private fun File.listFilesRecursively(): List<File> {
-	return listFiles().flatMap { file ->
-		if(file.isDirectory)
-			file.listFilesRecursively()
-		else
-			listOf(file)
+/**
+ * Base64 encodes a mapping of annotation processor addKotlincArgs for kapt, as specified by
+ * https://kotlinlang.org/docs/reference/kapt.html#apjavac-options-encoding
+ */
+private fun encodeOptionsForKapt(options: Map<String, String>): String {
+	val buffer = Buffer()
+	ObjectOutputStream(buffer.outputStream()).use { oos ->
+		oos.writeInt(options.size)
+		for ((key, value) in options.entries) {
+			oos.writeUTF(key)
+			oos.writeUTF(value)
+		}
 	}
+	return buffer.readByteString().base64()
 }
 
-private fun File.isKotlinFile()
-		= listOf("kt", "kts").any{ it.equals(extension, ignoreCase = true) }
+
+private fun convertKotlinExitCode(code: ExitCode) = when(code) {
+    ExitCode.OK -> KotlinCompilation.ExitCode.OK
+    ExitCode.INTERNAL_ERROR -> KotlinCompilation.ExitCode.INTERNAL_ERROR
+    ExitCode.COMPILATION_ERROR -> KotlinCompilation.ExitCode.COMPILATION_ERROR
+    ExitCode.SCRIPT_EXECUTION_ERROR -> KotlinCompilation.ExitCode.SCRIPT_EXECUTION_ERROR
+}
+
+

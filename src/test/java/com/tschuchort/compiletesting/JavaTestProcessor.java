@@ -1,3 +1,5 @@
+package com.tschuchort.compiletesting;
+
 import com.squareup.javapoet.JavaFile;
 import com.squareup.kotlinpoet.FileSpec;
 import com.squareup.kotlinpoet.FunSpec;
@@ -56,14 +58,15 @@ public class JavaTestProcessor extends AbstractProcessor {
                 ).build();
             }
 
-            FileSpec fileSpec = FileSpec.builder("", "JavaGeneratedKotlinClass.kt")
+            FileSpec fileSpec = FileSpec.builder("com.tschuchort.compiletesting", "JavaGeneratedKotlinClass.kt")
                     .addType(typeSpecBuilder.build())
                     .build();
 
             writeKotlinFile(fileSpec, fileSpec.getName(), fileSpec.getPackageName());
 
             try {
-                JavaFile.builder("", com.squareup.javapoet.TypeSpec.classBuilder("JavaGeneratedJavaClass").build())
+                JavaFile.builder("com.tschuchort.compiletesting",
+                        com.squareup.javapoet.TypeSpec.classBuilder("JavaGeneratedJavaClass").build())
                         .build().writeTo(processingEnv.getFiler());
             } catch (Exception e) {
             }

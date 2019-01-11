@@ -1,5 +1,7 @@
-import java.io.IOException
-import java.io.OutputStream
+package com.tschuchort.compiletesting
+
+import java.io.*
+
 
 /** An output stream that does nothing, like /dev/null */
 internal object NullStream : OutputStream() {
