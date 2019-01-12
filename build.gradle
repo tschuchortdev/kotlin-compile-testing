@@ -49,6 +49,7 @@ dependencies {
 
     testCompile "me.eugeniomarletti.kotlin.metadata:kotlin-metadata:1.4.0"
     testCompile 'com.squareup:kotlinpoet:1.0.0-RC1'
+    testCompile 'com.squareup:javapoet:1.11.1'
 
     testImplementation "com.squareup.okio:okio:2.1.0"
     testImplementation 'io.github.classgraph:classgraph:4.6.10'

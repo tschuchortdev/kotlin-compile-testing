@@ -2,7 +2,6 @@ package com.tschuchort.compiletesting
 
 import okio.Buffer
 import org.assertj.core.api.Assertions.assertThat
-import org.jetbrains.kotlin.kapt3.base.util.isJava9OrLater
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
 import org.junit.Rule
 import org.junit.Test
@@ -10,10 +9,14 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
+import javax.annotation.processing.Processor
 
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinCompilationTests {
 	@Rule @JvmField val temporaryFolder = TemporaryFolder()
+
+	val kotlinTestProcService = KotlinCompilation.Service(Processor::class, KotlinTestProcessor::class)
+	val javaTestProcService = KotlinCompilation.Service(Processor::class, JavaTestProcessor::class)
 
 	@Test
 	fun `runs with only kotlin sources`() {
@@ -291,43 +294,234 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java AP sees Kotlin class`() {
+		val kSource = KotlinCompilation.SourceFile(
+			"KSource.kt", """
+    package com.tschuchort.compiletesting
 
+	@ProcessElem
+    class KSource {
+    }
+		""".trimIndent())
+
+		val result = compilationPreset().copy(
+			sources = listOf(kSource),
+			services = listOf(javaTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.systemOut).contains(JavaTestProcessor.ON_INIT_MSG)
+
+		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+			it.elementSimpleName == "KSource"
+		}
 	}
 
 	@Test
 	fun `Java AP sees Java class`() {
+		val jSource = KotlinCompilation.SourceFile(
+			"JSource.java", """
+    package com.tschuchort.compiletesting;
 
+	@ProcessElem
+    class JSource {
+    }
+		""".trimIndent())
+
+		val result = compilationPreset().copy(
+			sources = listOf(jSource),
+			services = listOf(javaTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.systemOut).contains(JavaTestProcessor.ON_INIT_MSG)
+
+		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+			it.elementSimpleName == "JSource"
+		}
 	}
 
 	@Test
 	fun `Kotlin AP sees Kotlin class`() {
+		val kSource = KotlinCompilation.SourceFile(
+			"KSource.kt", """
+    package com.tschuchort.compiletesting
 
+	@ProcessElem
+    class KSource {
+    }
+		""".trimIndent()
+		)
+
+		val result = compilationPreset().copy(
+			sources = listOf(kSource),
+			services = listOf(kotlinTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.systemOut).contains(KotlinTestProcessor.ON_INIT_MSG)
+
+		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+			it.elementSimpleName == "KSource"
+		}
 	}
+
 
 	@Test
 	fun `Kotlin AP sees Java class`() {
+		val jSource = KotlinCompilation.SourceFile(
+			"JSource.kt", """
+    package com.tschuchort.compiletesting;
 
+	@ProcessElem
+    class JSource {
+    }
+		""".trimIndent()
+		)
+
+		val result = compilationPreset().copy(
+			sources = listOf(jSource),
+			services = listOf(kotlinTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.systemOut).contains(KotlinTestProcessor.ON_INIT_MSG)
+
+		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+			it.elementSimpleName == "JSource"
+		}
+	}
+
+	@Test
+	fun `Given only Java sources, Kotlin sources are generated and compiled`() {
+		val jSource = KotlinCompilation.SourceFile(
+			"JSource.java", """
+    package com.tschuchort.compiletesting;
+
+	@ProcessElem
+    class JSource {
+    }
+		""".trimIndent()
+		)
+
+		val result = compilationPreset().copy(
+			sources = listOf(jSource),
+			services = listOf(kotlinTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.systemOut).contains(KotlinTestProcessor.ON_INIT_MSG)
+
+		val clazz = result.classLoader.loadClass(KotlinTestProcessor.GENERATED_PACKAGE +
+				"." + KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME)
+		assertThat(clazz).isNotNull
 	}
 
 	@Test
 	fun `Java can access generated Kotlin class`() {
+		val jSource = KotlinCompilation.SourceFile(
+			"JSource.java", """
+    package com.tschuchort.compiletesting;
+    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME};
 
+	@ProcessElem
+    class JSource {
+    	void foo() {
+    		Class<?> c = ${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}.class;
+		}
+    }
+		""".trimIndent()
+		)
+
+		val result = compilationPreset().copy(
+			sources = listOf(jSource),
+			services = listOf(kotlinTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 	}
 
 	@Test
 	fun `Java can access generated Java class`() {
+		val jSource = KotlinCompilation.SourceFile(
+			"JSource.java", """
+    package com.tschuchort.compiletesting;
+    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME};
 
+	@ProcessElem
+    class JSource {
+    	void foo() {
+    		Class<?> c = ${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}.class;
+		}
+    }
+		""".trimIndent()
+		)
+
+		val result = compilationPreset().copy(
+			sources = listOf(jSource),
+			services = listOf(kotlinTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 	}
 
 	@Test
 	fun `Kotlin can access generated Kotlin class`() {
+		val kSource = KotlinCompilation.SourceFile(
+			"KSource.kt", """
+    package com.tschuchort.compiletesting
+    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}
 
+	@ProcessElem
+    class KSource {
+    	fun foo() {
+    		val c = ${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}::class.java
+		}
+    }
+		""".trimIndent()
+		)
+
+		val result = compilationPreset().copy(
+			sources = listOf(kSource),
+			services = listOf(kotlinTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 	}
 
 	@Test
 	fun `Kotlin can access generated Java class`() {
+		val kSource = KotlinCompilation.SourceFile(
+			"KSource.kt", """
+    package com.tschuchort.compiletesting
+    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}
 
+	@ProcessElem
+    class KSource {
+    	fun foo() {
+    		val c = ${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}::class.java
+		}
+    }
+		""".trimIndent()
+		)
+
+		val result = compilationPreset().copy(
+			sources = listOf(kSource),
+			services = listOf(kotlinTestProcService),
+			inheritClassPath = true
+		).compile_()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 	}
+
+
 
 	private fun compilationPreset(): KotlinCompilation {
 		val jdkHome = getJdkHome()

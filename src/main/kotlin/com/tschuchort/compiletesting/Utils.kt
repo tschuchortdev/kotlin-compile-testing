@@ -33,3 +33,6 @@ internal fun File.listFilesRecursively(): List<File> {
 
 internal fun File.isKotlinFile()
         = listOf("kt", "kts").any{ it.equals(extension, ignoreCase = true) }
+
+internal fun File.isJavaFile()
+        = listOf("java").any{ it.equals(extension, ignoreCase = true) }

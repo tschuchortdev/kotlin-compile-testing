@@ -2,7 +2,6 @@ package com.tschuchort.compiletesting;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.kotlinpoet.FileSpec;
-import com.squareup.kotlinpoet.FunSpec;
 import com.squareup.kotlinpoet.TypeSpec;
 import kotlin.text.Charsets;
 
@@ -20,6 +19,11 @@ import java.util.Set;
 
 public class JavaTestProcessor extends AbstractProcessor {
 
+    public static String ON_INIT_MSG = "java processor init";
+    public static String GENERATED_PACKAGE = "com.tschuchort.compiletesting";
+    public static String GENERATED_JAVA_CLASS_NAME = "JavaGeneratedJavaClass";
+    public static String GENERATED_KOTLIN_CLASS_NAME = "JavaGeneratedKotlinClass";
+
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
@@ -28,7 +32,7 @@ public class JavaTestProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
          LinkedHashSet<String> set = new LinkedHashSet<>();
-         set.add(Marker.class.getCanonicalName());
+         set.add(ProcessElem.class.getCanonicalName());
          return set;
     }
 
@@ -42,31 +46,29 @@ public class JavaTestProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, "java processor init");
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, ON_INIT_MSG);
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, "java processor was called");
 
-        if(!annotations.isEmpty()) {
-            TypeSpec.Builder typeSpecBuilder = TypeSpec.classBuilder("JavaGeneratedKotlinClass");
+        for (Element annotatedElem : roundEnv.getElementsAnnotatedWith(ProcessElem.class)) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
+                    new ProcessedElemMessage(annotatedElem.getSimpleName().toString()).print());
+        }
 
-            for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(Marker.class)) {
-                typeSpecBuilder.addFunction(FunSpec.builder(annotatedElement.getSimpleName().toString()
-                        ).build()
-                ).build();
-            }
+        if(annotations.isEmpty()) {
+            TypeSpec.Builder typeSpecBuilder = TypeSpec.classBuilder(GENERATED_KOTLIN_CLASS_NAME);
 
-            FileSpec fileSpec = FileSpec.builder("com.tschuchort.compiletesting", "JavaGeneratedKotlinClass.kt")
-                    .addType(typeSpecBuilder.build())
-                    .build();
+            FileSpec fileSpec = FileSpec.builder(GENERATED_PACKAGE, GENERATED_KOTLIN_CLASS_NAME + ".kt")
+                    .addType(typeSpecBuilder.build()).build();
 
             writeKotlinFile(fileSpec, fileSpec.getName(), fileSpec.getPackageName());
 
             try {
-                JavaFile.builder("com.tschuchort.compiletesting",
-                        com.squareup.javapoet.TypeSpec.classBuilder("JavaGeneratedJavaClass").build())
+                JavaFile.builder(GENERATED_PACKAGE,
+                        com.squareup.javapoet.TypeSpec.classBuilder(GENERATED_JAVA_CLASS_NAME).build())
                         .build().writeTo(processingEnv.getFiler());
             } catch (Exception e) {
             }
