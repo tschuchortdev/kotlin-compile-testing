@@ -32,7 +32,6 @@ import java.io.*
 import java.lang.RuntimeException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import javax.lang.model.SourceVersion
 import javax.tools.Diagnostic
 import javax.tools.DiagnosticCollector
 import javax.tools.JavaFileObject

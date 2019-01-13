@@ -47,17 +47,17 @@ dependencies {
     testImplementation "org.mockito:mockito-core:2.23.4"
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
 
-    testCompile "me.eugeniomarletti.kotlin.metadata:kotlin-metadata:1.4.0"
+    compile "me.eugeniomarletti.kotlin.metadata:kotlin-metadata:1.4.0"
     testCompile 'com.squareup:kotlinpoet:1.0.0-RC1'
     testCompile 'com.squareup:javapoet:1.11.1'
 
-    testImplementation "com.squareup.okio:okio:2.1.0"
-    testImplementation 'io.github.classgraph:classgraph:4.6.10'
+    implementation "com.squareup.okio:okio:2.1.0"
+    implementation 'io.github.classgraph:classgraph:4.6.10'
 
     // the Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
-    testCompile "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.11"
-    testCompile "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:1.3.11"
+    compile "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.11"
+    compile "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:1.3.11"
 }
 
 compileKotlin {
