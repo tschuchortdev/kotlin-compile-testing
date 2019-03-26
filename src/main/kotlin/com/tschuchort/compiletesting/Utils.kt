@@ -7,6 +7,7 @@ internal fun <E> MutableCollection<E>.addAll(vararg elems: E) = addAll(elems)
 
 internal fun getJavaHome(): File {
     val path = System.getProperty("java.home")
+        ?: System.getenv("JAVA_HOME")
         ?: throw IllegalStateException("no java home found")
 
     return File(path).also { check(it.isDirectory) }

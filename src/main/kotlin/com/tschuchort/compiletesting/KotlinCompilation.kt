@@ -329,7 +329,7 @@ data class KotlinCompilation(
 		}
 
 		return convertKotlinExitCode(
-            K2JVMCompiler().execImpl(messageCollector, Services.EMPTY, k2JvmArgs))
+            K2JVMCompiler().exec(messageCollector, Services.EMPTY, k2JvmArgs))
 	}
 
 	/** Performs the 3rd compilation step to compile Kotlin source files */
@@ -349,7 +349,7 @@ data class KotlinCompilation(
 		}
 
         return convertKotlinExitCode(
-            K2JVMCompiler().execImpl(messageCollector, Services.EMPTY, k2JvmArgs))
+            K2JVMCompiler().exec(messageCollector, Services.EMPTY, k2JvmArgs))
 	}
 
 	/**

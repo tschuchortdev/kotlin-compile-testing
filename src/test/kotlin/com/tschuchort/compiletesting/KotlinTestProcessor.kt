@@ -70,13 +70,13 @@ class KotlinTestProcessor : AbstractProcessor() {
 
 		if(annotations.isEmpty()) {
 			FileSpec.builder(GENERATED_PACKAGE, GENERATED_KOTLIN_CLASS_NAME + ".kt")
-				.addType(
-					TypeSpec.classBuilder(GENERATED_KOTLIN_CLASS_NAME).build()
-				).build()
-				.let { writeKotlinFile(it) }
+					.addType(
+						TypeSpec.classBuilder(GENERATED_KOTLIN_CLASS_NAME).build()
+					).build()
+					.let { writeKotlinFile(it) }
 
-		JavaFile.builder(GENERATED_PACKAGE, JavaTypeSpec.classBuilder(GENERATED_JAVA_CLASS_NAME).build())
-				.build().writeTo(processingEnv.filer)
+			JavaFile.builder(GENERATED_PACKAGE, JavaTypeSpec.classBuilder(GENERATED_JAVA_CLASS_NAME).build())
+					.build().writeTo(processingEnv.filer)
 		}
 
 		return false
