@@ -20,6 +20,9 @@ import io.github.classgraph.ClassGraph
 import okio.Buffer
 import okio.buffer
 import okio.sink
+import org.jetbrains.kotlin.base.kapt3.AptMode
+import org.jetbrains.kotlin.base.kapt3.KaptFlag
+import org.jetbrains.kotlin.base.kapt3.KaptOptions
 import kotlin.reflect.KClass
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
@@ -33,6 +36,7 @@ import java.lang.RuntimeException
 import java.net.URLClassLoader
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import javax.annotation.processing.Processor
 import javax.tools.Diagnostic
 import javax.tools.DiagnosticCollector
 import javax.tools.JavaFileObject
@@ -67,8 +71,8 @@ data class KotlinCompilation(
 	var classpaths: List<File> = emptyList(),
 	/** Source files to be compiled */
 	var sources: List<KotlinCompilation.SourceFile> = emptyList(),
-	/** Services to be passed to kapt */
-	var services: List<KotlinCompilation.Service<*, *>> = emptyList(),
+	/** Annotation processors to be passed to kapt */
+	var annotationProcessors: List<Processor> = emptyList(),
 	/**
 	 * Path to the JDK to be used
 	 *
@@ -176,29 +180,6 @@ data class KotlinCompilation(
 		?: File(kaptDir, "kotlinGenerated")
 
 
-	/**
-	 * Generate a .jar file that holds ServiceManager registrations. Necessary because AutoService's
-	 * results might not be visible to this test.
-	 */
-	private fun writeServicesJar() = File(workingDir, "services.jar").apply {
-		val servicesGroupedByClass = services.groupBy({ it.serviceClass }, { it.implementationClass })
-
-		ZipOutputStream(FileOutputStream(this)).use { zipOutputStream ->
-			for (serviceEntry in servicesGroupedByClass) {
-				zipOutputStream.putNextEntry(
-					ZipEntry("META-INF/services/${serviceEntry.key.qualifiedName}")
-				)
-				val serviceFile = zipOutputStream.sink().buffer()
-				for (implementation in serviceEntry.value) {
-					serviceFile.writeUtf8(implementation.qualifiedName!!)
-					serviceFile.writeUtf8("\n")
-				}
-				serviceFile.emit() // Don't close the entry; that closes the file.
-				zipOutputStream.closeEntry()
-			}
-		}
-	}
-
 	/** A Kotlin source file to be compiled */
 	data class SourceFile(val path: String, val contents: String) {
 		/**
@@ -231,8 +212,6 @@ data class KotlinCompilation(
 			this::class.java.classLoader)
 	}
 
-	/** A service that will be passed to kapt */
-	data class Service<S : Any, T : S>(val serviceClass: KClass<S>, val implementationClass: KClass<T>)
 
 	// setup common arguments for the two kotlinc calls
 	private fun commonK2JVMArgs() = K2JVMCompilerArguments().also { it ->
@@ -273,36 +252,34 @@ data class KotlinCompilation(
 		val kaptIncrementalDataDir = File(kaptDir, "incrementalData").apply { mkdirs() }
 		kaptKotlinGeneratedDir.mkdirs()
 
-		require(kapt3Jar != null) { "kapt3Jar has to be non-null if annotation processing is used" }
+		val kaptOptions = KaptOptions.Builder().also {
+			it.stubsOutputDir = kaptStubsDir
+			it.sourcesOutputDir = kaptSourceDir
+			it.incrementalDataOutputDir = kaptIncrementalDataDir
+			it.classesOutputDir = classesDir
+			it.processingOptions.apply {
+				putAll(kaptArgs)
+				putIfAbsent(OPTION_KAPT_KOTLIN_GENERATED, kaptKotlinGeneratedDir.absolutePath)
+			}
 
-		val kaptPluginClassPaths = listOfNotNull(kapt3Jar!!.absolutePath, toolsJar?.absolutePath).toTypedArray()
+			it.mode = AptMode.STUBS_AND_APT
+			it.flags.add(KaptFlag.MAP_DIAGNOSTIC_LOCATIONS)
+		}
 
-		val encodedKaptArgs = encodeOptionsForKapt(kaptArgs.toMutableMap().apply {
-			putIfAbsent(OPTION_KAPT_KOTLIN_GENERATED, kaptKotlinGeneratedDir.absolutePath)
-		})
-
-		val kaptPluginOptions = arrayOf(
-			"plugin:org.jetbrains.kotlin.kapt3:sources=${kaptSourceDir.absolutePath}",
-			"plugin:org.jetbrains.kotlin.kapt3:classes=${classesDir.absolutePath}",
-			"plugin:org.jetbrains.kotlin.kapt3:stubs=${kaptStubsDir.absolutePath}",
-			"plugin:org.jetbrains.kotlin.kapt3:incrementalData=${kaptIncrementalDataDir.absolutePath}",
-			"plugin:org.jetbrains.kotlin.kapt3:apclasspath=${writeServicesJar().absolutePath}",
-			"plugin:org.jetbrains.kotlin.kapt3:correctErrorTypes=$correctErrorTypes",
-			// Don't forget aptMode! Without it, the compiler will crash with an obscure error about
-			// write unsafe context
-			"plugin:org.jetbrains.kotlin.kapt3:aptMode=stubsAndApt",
-			"plugin:org.jetbrains.kotlin.kapt3:mapDiagnosticLocations=true",
-			"plugin:org.jetbrains.kotlin.kapt3:apoptions=$encodedKaptArgs",
-			*if (verbose)
-				arrayOf("plugin:org.jetbrains.kotlin.kapt3:verbose=true")
-			else
-				emptyArray()
+		/* The kapt compiler plugin (KaptComponentRegistrar)
+		 *  is instantiated by K2JVMCompiler using
+		 *  a service locator. So we can't just pass parameters to it easily.
+		 *  Instead we need to use a thread-local global variable to pass
+		 *  any parameters that change between compilations
+		 */
+		KaptComponentRegistrar.threadLocalParameters.set(
+			KaptComponentRegistrar.Parameters(annotationProcessors, kaptOptions)
 		)
 
 		val kotlinSources = sourcesDir.listFilesRecursively().filter(File::isKotlinFile)
 		val javaSources = sourcesDir.listFilesRecursively().filter(File::isJavaFile)
 
-		val allSourcePaths = mutableListOf<File>().apply {
+		val sourcePaths = mutableListOf<File>().apply {
 			addAll(javaSources)
 
 			if(kotlinSources.isNotEmpty()) {
@@ -310,34 +287,44 @@ data class KotlinCompilation(
 			}
 			else {
 				/* __HACK__: The K2JVMCompiler expects at least one Kotlin source file or it will crash.
-				   We still need kapt to run even if there are no Kotlin sources because it executes APs
-				   on Java sources as well. Alternatively we could call the JavaCompiler instead of kapt
-				   to do annotation processing when there are only Java sources, but that's quite a lot
-				   of work (It can not be done in the compileJava step because annotation processors on
-				   Java files might generate Kotlin files which then need to be compiled in the
-				   compileKotlin step before the compileJava step). So instead we trick K2JVMCompiler
-				   by just including an empty .kt-File. */
+                   We still need kapt to run even if there are no Kotlin sources because it executes APs
+                   on Java sources as well. Alternatively we could call the JavaCompiler instead of kapt
+                   to do annotation processing when there are only Java sources, but that's quite a lot
+                   of work (It can not be done in the compileJava step because annotation processors on
+                   Java files might generate Kotlin files which then need to be compiled in the
+                   compileKotlin step before the compileJava step). So instead we trick K2JVMCompiler
+                   by just including an empty .kt-File. */
 				add(SourceFile("emptyKotlinFile.kt", "").writeTo(kaptDir))
 			}
+		}.map(File::getAbsolutePath).distinct()
 
-		} .map(File::getAbsolutePath).distinct()
+		if(!isJdk9OrLater()) {
+			try {
+				Class.forName("com.sun.tools.javac.util.Context")
+			}
+			catch (e: ClassNotFoundException) {
+				require(toolsJar != null) {
+					"toolsJar must not be null on JDK 8 or earlier if it's classes aren't already on the classpath"
+				}
+
+				(ClassLoader.getSystemClassLoader() as URLClassLoader).addUrl(toolsJar!!.toURI().toURL())
+			}
+		}
+
+		val resourcesPath = this::class.java.classLoader
+				.getResource("META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar").path
+				.removeSuffix("META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
 		
 		val k2JvmArgs = commonK2JVMArgs().also {
-			it.freeArgs = allSourcePaths + addKotlincArgs
+			it.freeArgs = sourcePaths
 
-			it.pluginOptions = if(it.pluginOptions != null)
-				it.pluginOptions!!.plus(kaptPluginOptions)
-			else
-				kaptPluginOptions
-
-			it.pluginClasspaths = if(it.pluginClasspaths != null)
-				it.pluginClasspaths!!.plus(kaptPluginClassPaths)
-			else
-				kaptPluginClassPaths
+			it.pluginClasspaths = (it.pluginClasspaths?.toList() ?: emptyList<String>() + resourcesPath)
+					.distinct().toTypedArray()
 		}
 
 		return convertKotlinExitCode(
-            K2JVMCompiler().exec(messageCollector, Services.EMPTY, k2JvmArgs))
+            K2JVMCompiler().exec(messageCollector, Services.EMPTY, k2JvmArgs)
+		)
 	}
 
 	/** Performs the 3rd compilation step to compile Kotlin source files */
@@ -514,12 +501,16 @@ data class KotlinCompilation(
 		 */
 
 		// step 1 and 2: generate stubs and compile annotation processors
-		if(services.isNotEmpty()) {
-			val exitCode = stubsAndApt(compilerMessageCollector)
-			if(exitCode != ExitCode.OK) {
-				val messages = compilerSystemOutBuffer.readUtf8()
-				searchSystemOutForKnownErrors(messages)
-				return Result(exitCode, classesDir, messages)
+		if(annotationProcessors.isNotEmpty()) {
+			try {
+				val exitCode = stubsAndApt(compilerMessageCollector)
+				if (exitCode != ExitCode.OK) {
+					val messages = compilerSystemOutBuffer.readUtf8()
+					searchSystemOutForKnownErrors(messages)
+					return Result(exitCode, classesDir, messages)
+				}
+			} finally {
+			    KaptComponentRegistrar.threadLocalParameters.remove()
 			}
 		}
 		else if(verbose) {
@@ -548,7 +539,6 @@ data class KotlinCompilation(
 
 	private fun allClasspaths() = mutableListOf<File>().apply {
 		addAll(classpaths)
-
 		addAll(listOfNotNull(kotlinStdLibJar, kotlinReflectJar, kotlinScriptRuntimeJar))
 
 		if(inheritClassPath) {
@@ -563,7 +553,6 @@ data class KotlinCompilation(
 	/** Searches compiler log for known errors that are hard to debug for the user */
 	private fun searchSystemOutForKnownErrors(compilerSystemOut: String) {
 		if(compilerSystemOut.contains("No enum constant com.sun.tools.javac.main.Option.BOOT_CLASS_PATH")) {
-
 			systemOut.warning(
 				"${this::class.simpleName} has detected that the compilation failed with an error that may be " +
 						"caused by including a tools.jar file together with a JDK of version 9 or later. " +
@@ -663,23 +652,6 @@ data class KotlinCompilation(
         private fun PrintStream.error(s: String) = println("error: $s")
     }
 }
-
-/**
- * Base64 encodes a mapping of annotation processor addKotlincArgs for kapt, as specified by
- * https://kotlinlang.org/docs/reference/kapt.html#apjavac-options-encoding
- */
-private fun encodeOptionsForKapt(options: Map<String, String>): String {
-	val buffer = Buffer()
-	ObjectOutputStream(buffer.outputStream()).use { oos ->
-		oos.writeInt(options.size)
-		for ((key, value) in options.entries) {
-			oos.writeUTF(key)
-			oos.writeUTF(value)
-		}
-	}
-	return buffer.readByteString().base64()
-}
-
 
 private fun convertKotlinExitCode(code: ExitCode) = when(code) {
     ExitCode.OK -> KotlinCompilation.ExitCode.OK

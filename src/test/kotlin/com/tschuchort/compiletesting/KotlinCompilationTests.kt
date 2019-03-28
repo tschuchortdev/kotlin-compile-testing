@@ -10,14 +10,17 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.PrintStream
 import java.net.URLClassLoader
+import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Processor
+import javax.annotation.processing.RoundEnvironment
+import javax.lang.model.element.TypeElement
 
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinCompilationTests {
 	@Rule @JvmField val temporaryFolder = TemporaryFolder()
 
-	val kotlinTestProcService = KotlinCompilation.Service(Processor::class, KotlinTestProcessor::class)
-	val javaTestProcService = KotlinCompilation.Service(Processor::class, JavaTestProcessor::class)
+	val kotlinTestProc = KotlinTestProcessor()
+	val javaTestProc = JavaTestProcessor()
 
 	@Test
 	fun `runs with only kotlin sources`() {
@@ -199,7 +202,12 @@ class KotlinCompilationTests {
 
 
 		val result = compilationPreset().copy(
-			sources = listOf(source)
+			sources = listOf(source),
+			annotationProcessors = listOf(object : AbstractProcessor() {
+				override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment?): Boolean {
+					return false
+				}
+			})
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
@@ -314,7 +322,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(kSource),
-			services = listOf(javaTestProcService),
+			annotationProcessors = listOf(javaTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -339,7 +347,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(jSource),
-			services = listOf(javaTestProcService),
+			annotationProcessors = listOf(javaTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -365,7 +373,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(kSource),
-			services = listOf(kotlinTestProcService),
+			annotationProcessors = listOf(kotlinTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -392,7 +400,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(jSource),
-			services = listOf(kotlinTestProcService),
+			annotationProcessors = listOf(kotlinTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -418,7 +426,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(jSource),
-			services = listOf(kotlinTestProcService),
+			annotationProcessors = listOf(kotlinTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -448,7 +456,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(jSource),
-			services = listOf(kotlinTestProcService),
+			annotationProcessors = listOf(kotlinTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -475,7 +483,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(jSource),
-			services = listOf(kotlinTestProcService),
+			annotationProcessors = listOf(kotlinTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -502,7 +510,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(kSource),
-			services = listOf(kotlinTestProcService),
+			annotationProcessors = listOf(kotlinTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -529,7 +537,7 @@ class KotlinCompilationTests {
 
 		val result = compilationPreset().copy(
 			sources = listOf(kSource),
-			services = listOf(kotlinTestProcService),
+			annotationProcessors = listOf(kotlinTestProc),
 			inheritClassPath = true
 		).compile_()
 
@@ -572,4 +580,15 @@ class KotlinCompilationTests {
 	}
 	
 	class InheritedClass {}
+
+	private fun KotlinCompilation.Result.assertClassIsLoadable(className: String) {
+		val classLoader = URLClassLoader(arrayOf(outputDirectory.toURI().toURL()),
+			this::class.java.classLoader)
+
+		val clazz = classLoader.loadClass(className)
+		assertThat(clazz).isNotNull
+
+		val instance = clazz.newInstance()
+		assertThat(instance).isNotNull
+	}
 }

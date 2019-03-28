@@ -1,6 +1,8 @@
 package com.tschuchort.compiletesting
 
 import java.io.File
+import java.net.URL
+import java.net.URLClassLoader
 import javax.lang.model.SourceVersion
 
 internal fun <E> MutableCollection<E>.addAll(vararg elems: E) = addAll(elems)
@@ -37,3 +39,9 @@ internal fun File.isKotlinFile()
 
 internal fun File.isJavaFile()
         = listOf("java").any{ it.equals(extension, ignoreCase = true) }
+
+internal fun URLClassLoader.addUrl(url: URL) {
+    val addUrlMethod = URLClassLoader::class.java.getDeclaredMethod("addURL", URL::class.java)
+    addUrlMethod.isAccessible = true
+    addUrlMethod.invoke(this, url)
+}
