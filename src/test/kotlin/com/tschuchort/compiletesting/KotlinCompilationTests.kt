@@ -3,6 +3,7 @@ package com.tschuchort.compiletesting
 import okio.Buffer
 import org.assertj.core.api.Assertions.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
+import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -21,10 +22,11 @@ class KotlinCompilationTests {
 	@Test
 	fun `runs with only kotlin sources`() {
 		val result = compilationPreset().copy(
-			sources = listOf(KotlinCompilation.SourceFile("kSource.kt", ""))
+			sources = listOf(KotlinCompilation.SourceFile("kSource.kt", "class KSource"))
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "KSource")
 	}
 
 	@Test
@@ -34,6 +36,7 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "JSource")
 	}
 
 	@Test
@@ -62,6 +65,7 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "KSourceKt")
 	}
 
 	@Test
@@ -85,10 +89,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `can compile Kotlin without JDK`() {
-		val source = KotlinCompilation.SourceFile("kSource.kt", """
-    |fun foo() {
-    |}
-			""".trimMargin())
+		val source = KotlinCompilation.SourceFile("kSource.kt", "class KClass")
 
 		val result = compilationPreset().copy(
 			sources = listOf(source),
@@ -96,6 +97,7 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "KClass")
 	}
 
 	@Test
@@ -116,6 +118,7 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "JSource")
 	}
 
 	@Test
@@ -141,10 +144,10 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java inherits classpath`() {
-		val source = KotlinCompilation.SourceFile("Source.java", """
+		val source = KotlinCompilation.SourceFile("JSource.java", """
     package com.tschuchort.compiletesting;
 
-    class Source {
+    class JSource {
     	void foo() {
     		String s = KotlinCompilationTests.InheritedClass.class.getName();
     	}
@@ -157,14 +160,15 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.JSource")
 	}
 
 	@Test
 	fun `Kotlin inherits classpath`() {
-		val source = KotlinCompilation.SourceFile("Source.kt", """
+		val source = KotlinCompilation.SourceFile("KSource.kt", """
     package com.tschuchort.compiletesting
 
-    class Source {
+    class KSource {
     	fun foo() {
     		val s = KotlinCompilationTests.InheritedClass::class.java.name
     	}
@@ -178,6 +182,7 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.KSource")
 	}
 
 	@Test
@@ -263,6 +268,8 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.KSource")
+		assertClassLoadable(result, "com.tschuchort.compiletesting.JSource")
 	}
 
 	@Test
@@ -290,6 +297,8 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.KSource")
+		assertClassLoadable(result, "com.tschuchort.compiletesting.JSource")
 	}
 
 	@Test
@@ -310,9 +319,9 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.systemOut).contains(JavaTestProcessor.ON_INIT_MSG)
+		assertThat(result.messages).contains(JavaTestProcessor.ON_INIT_MSG)
 
-		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+		assertThat(ProcessedElemMessage.parseAllIn(result.messages)).anyMatch {
 			it.elementSimpleName == "KSource"
 		}
 	}
@@ -335,9 +344,9 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.systemOut).contains(JavaTestProcessor.ON_INIT_MSG)
+		assertThat(result.messages).contains(JavaTestProcessor.ON_INIT_MSG)
 
-		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+		assertThat(ProcessedElemMessage.parseAllIn(result.messages)).anyMatch {
 			it.elementSimpleName == "JSource"
 		}
 	}
@@ -361,9 +370,9 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.systemOut).contains(KotlinTestProcessor.ON_INIT_MSG)
+		assertThat(result.messages).contains(KotlinTestProcessor.ON_INIT_MSG)
 
-		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+		assertThat(ProcessedElemMessage.parseAllIn(result.messages)).anyMatch {
 			it.elementSimpleName == "KSource"
 		}
 	}
@@ -388,9 +397,9 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.systemOut).contains(KotlinTestProcessor.ON_INIT_MSG)
+		assertThat(result.messages).contains(KotlinTestProcessor.ON_INIT_MSG)
 
-		assertThat(ProcessedElemMessage.parseAllIn(result.systemOut)).anyMatch {
+		assertThat(ProcessedElemMessage.parseAllIn(result.messages)).anyMatch {
 			it.elementSimpleName == "JSource"
 		}
 	}
@@ -414,7 +423,7 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.systemOut).contains(KotlinTestProcessor.ON_INIT_MSG)
+		assertThat(result.messages).contains(KotlinTestProcessor.ON_INIT_MSG)
 
 		val clazz = result.classLoader.loadClass(KotlinTestProcessor.GENERATED_PACKAGE +
 				"." + KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME)
@@ -444,6 +453,8 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.JSource")
+		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}")
 	}
 
 	@Test
@@ -469,6 +480,8 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.JSource")
+		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}")
 	}
 
 	@Test
@@ -494,6 +507,8 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.KSource")
+		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}")
 	}
 
 	@Test
@@ -519,6 +534,8 @@ class KotlinCompilationTests {
 		).compile_()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.tschuchort.compiletesting.KSource")
+		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}")
 	}
 
 
@@ -541,18 +558,18 @@ class KotlinCompilationTests {
 		)
 	}
 
-	private fun KotlinCompilation.compile_() = run {
-		val systemOutBuffer = Buffer()
-		val result = copy(systemOut = PrintStream(TeeOutputStream(System.out, systemOutBuffer.outputStream())))
-			.compile()
+	private fun KotlinCompilation.compile_() = copy(systemOut = System.out).compile()
 
-		return@run object {
-			val exitCode = result.exitCode
-			val classLoader = URLClassLoader(arrayOf(result.outputDirectory.toURI().toURL()),
-				this::class.java.classLoader)
-			val systemOut = systemOutBuffer.readUtf8()
+	private fun assertClassLoadable(compileResult: KotlinCompilation.Result, className: String): Class<*> {
+		try {
+			val clazz = compileResult.classLoader.loadClass(className)
+			assertThat(clazz).isNotNull
+			return clazz
+		}
+		catch(e: ClassNotFoundException) {
+			return fail<Nothing>("Class $className could not be loaded")
 		}
 	}
-
+	
 	class InheritedClass {}
 }

@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.config.Services
 import org.jetbrains.kotlin.incremental.isJavaFile
 import java.io.*
 import java.lang.RuntimeException
+import java.net.URLClassLoader
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.tools.Diagnostic
@@ -219,8 +220,15 @@ data class KotlinCompilation(
     }
 
 	/** Result of the compilation */
-	data class Result(val exitCode: ExitCode, val outputDirectory: File) {
+	data class Result(val exitCode: ExitCode, val outputDirectory: File,
+					  /** Messages that were printed by the compilation */
+					  val messages: String) {
+		/** All output files that were created by the compilation */
 		val generatedFiles: Collection<File> = outputDirectory.listFilesRecursively()
+
+		/** class loader to load the compile classes */
+		val classLoader = URLClassLoader(arrayOf(outputDirectory.toURI().toURL()),
+			this::class.java.classLoader)
 	}
 
 	/** A service that will be passed to kapt */
@@ -509,8 +517,9 @@ data class KotlinCompilation(
 		if(services.isNotEmpty()) {
 			val exitCode = stubsAndApt(compilerMessageCollector)
 			if(exitCode != ExitCode.OK) {
-				searchSystemOutForKnownErrors(compilerSystemOutBuffer.readUtf8())
-				return Result(exitCode, classesDir)
+				val messages = compilerSystemOutBuffer.readUtf8()
+				searchSystemOutForKnownErrors(messages)
+				return Result(exitCode, classesDir, messages)
 			}
 		}
 		else if(verbose) {
@@ -520,17 +529,20 @@ data class KotlinCompilation(
 		// step 3: compile Kotlin files
 		compileKotlin(compilerMessageCollector).let { exitCode ->
 			if(exitCode != ExitCode.OK) {
-				searchSystemOutForKnownErrors(compilerSystemOutBuffer.readUtf8())
-				return Result(exitCode, classesDir)
+				val messages = compilerSystemOutBuffer.readUtf8()
+				searchSystemOutForKnownErrors(messages)
+				return Result(exitCode, classesDir, messages)
 			}
 		}
 
 		// step 4: compile Java files
 		compileJava().let { exitCode ->
-			if(exitCode != ExitCode.OK)
-				searchSystemOutForKnownErrors(compilerSystemOutBuffer.readUtf8())
+			val messages = compilerSystemOutBuffer.readUtf8()
 
-			return Result(exitCode, classesDir)
+			if(exitCode != ExitCode.OK)
+				searchSystemOutForKnownErrors(messages)
+
+			return Result(exitCode, classesDir, messages)
 		}
 	}
 
