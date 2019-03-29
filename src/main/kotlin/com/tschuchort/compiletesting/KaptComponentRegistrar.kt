@@ -48,11 +48,9 @@ import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import java.io.File
 import javax.annotation.processing.Processor
 
-@Suppress("RemoveEmptyPrimaryConstructor")
-internal class KaptComponentRegistrar() : ComponentRegistrar {
+internal class KaptComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        println("registerProjectComponents called")
         if (threadLocalParameters.get().processors.isEmpty())
             return
 

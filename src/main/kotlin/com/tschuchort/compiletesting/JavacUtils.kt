@@ -88,3 +88,7 @@ internal fun isJavac9OrLater(javacVersionString: String): Boolean {
     return (majorv.toInt() == 1 && minorv.toInt() >= 9) // old versioning scheme: 1.8.x
             || (majorv.toInt() >= 9) // new versioning scheme: 10.x.x
 }
+
+/** Finds the tools.jar given a path to a JDK 8 or earlier */
+internal fun findToolsJarFromJdk(jdkHome: File): File
+        = File(jdkHome.absolutePath + "/../lib/tools.jar").also { check(it.isFile) }
