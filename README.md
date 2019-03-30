@@ -68,5 +68,7 @@ fun `test my annotation processor`() {
 ## License
 
 Copyright (C) 2019 Thilo Schuchort
+
 Licensed under the Mozilla Public License 2.0
+
 For custom license agreements contact me directly 

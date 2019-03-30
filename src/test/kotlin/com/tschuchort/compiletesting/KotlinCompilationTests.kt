@@ -627,15 +627,4 @@ class KotlinCompilationTests {
 	}
 	
 	class InheritedClass {}
-
-	private fun KotlinCompilation.Result.assertClassIsLoadable(className: String) {
-		val classLoader = URLClassLoader(arrayOf(outputDirectory.toURI().toURL()),
-			this::class.java.classLoader)
-
-		val clazz = classLoader.loadClass(className)
-		assertThat(clazz).isNotNull
-
-		val instance = clazz.newInstance()
-		assertThat(instance).isNotNull
-	}
 }
