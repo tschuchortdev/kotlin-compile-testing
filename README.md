@@ -65,6 +65,28 @@ fun `test my annotation processor`() {
 - JDK-crosscompilation: Provide your own JDK to compile the code against, instead of using the host application's JDK. This allows you to easily test your code on all JDK versions
 - Find dependencies automatically on the host classpath
 
+## Installation
+
+Add jitpack to the repositories in your root `build.gradle` file:
+
+```Groovy
+allprojects {
+	repositories {
+		// ...
+		maven { url 'https://jitpack.io' } // add this
+	}
+}
+```
+
+Add dependency to your module `build.gradle` file:
+
+```Groovy
+dependencies {
+    // ...
+	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.0.0'
+}
+```
+
 ## License
 
 Copyright (C) 2019 Thilo Schuchort
