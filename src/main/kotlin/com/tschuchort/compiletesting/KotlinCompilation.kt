@@ -668,24 +668,32 @@ class KotlinCompilation {
 		4. Run javac with Java sources and the compiled Kotlin classes
 		 */
 
-		// step 1 and 2: generate stubs and run annotation processors
-		try {
-			val exitCode = stubsAndApt()
-			if (exitCode != ExitCode.OK) {
-				val messages = internalMessageBuffer.readUtf8()
-				searchSystemOutForKnownErrors(messages)
-				return Result(exitCode, classesDir, messages)
+		/* Work around for warning that sometimes happens:
+		"Failed to initialize native filesystem for Windows
+		java.lang.RuntimeException: Could not find installation home path.
+		Please make sure bin/idea.properties is present in the installation directory"
+		See: https://github.com/arturbosch/detekt/issues/630
+		*/
+		withSystemProperty("idea.use.native.fs.for.win", "false") {
+			// step 1 and 2: generate stubs and run annotation processors
+			try {
+				val exitCode = stubsAndApt()
+				if (exitCode != ExitCode.OK) {
+					val messages = internalMessageBuffer.readUtf8()
+					searchSystemOutForKnownErrors(messages)
+					return Result(exitCode, classesDir, messages)
+				}
+			} finally {
+				KaptComponentRegistrar.threadLocalParameters.remove()
 			}
-		} finally {
-			KaptComponentRegistrar.threadLocalParameters.remove()
-		}
 
-		// step 3: compile Kotlin files
-		compileKotlin().let { exitCode ->
-			if(exitCode != ExitCode.OK) {
-				val messages = internalMessageBuffer.readUtf8()
-				searchSystemOutForKnownErrors(messages)
-				return Result(exitCode, classesDir, messages)
+			// step 3: compile Kotlin files
+			compileKotlin().let { exitCode ->
+				if(exitCode != ExitCode.OK) {
+					val messages = internalMessageBuffer.readUtf8()
+					searchSystemOutForKnownErrors(messages)
+					return Result(exitCode, classesDir, messages)
+				}
 			}
 		}
 
@@ -790,4 +798,3 @@ private fun getHostClasspaths(): List<File> {
 
 	return (classpaths + modules).distinctBy(File::getAbsolutePath)
 }
-

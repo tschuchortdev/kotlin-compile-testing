@@ -45,3 +45,25 @@ internal fun URLClassLoader.addUrl(url: URL) {
     addUrlMethod.isAccessible = true
     addUrlMethod.invoke(this, url)
 }
+
+internal inline fun <T> withSystemProperty(key: String, value: String, f: () -> T): T
+        = withSystemProperties(mapOf(key to value), f)
+
+
+internal inline fun <T> withSystemProperties(properties: Map<String, String>, f: () -> T): T {
+    val previousProperties = mutableMapOf<String, String?>()
+
+    for ((key, value) in properties) {
+        previousProperties[key] = System.getProperty(key)
+        System.setProperty(key, value)
+    }
+
+    try {
+        return f()
+    } finally {
+        for ((key, value) in previousProperties) {
+            if (value != null)
+                System.setProperty(key, value)
+        }
+    }
+}
