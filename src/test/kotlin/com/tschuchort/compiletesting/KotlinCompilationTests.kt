@@ -2,11 +2,14 @@ package com.tschuchort.compiletesting
 
 import org.assertj.core.api.Assertions.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
+import okio.Buffer
 import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
+import java.io.FileDescriptor
+import java.io.FileOutputStream
+import java.io.PrintStream
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
@@ -586,6 +589,42 @@ class KotlinCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 		assertClassLoadable(result, "com.tschuchort.compiletesting.KSource")
 		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}")
+	}
+
+	@Test
+	fun `Can execute Kotlinscript`() {
+	    val kSource = SourceFile.new("Kscript.kts", """
+    println("hello script")
+""".trimIndent())
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+		}.compile()
+
+		val (ret, sysOut) = captureSystemOut {
+			result.runCompiledScript("Kscript")
+		}
+
+		assertThat(sysOut).contains("hello script")
+	}
+
+	@Test
+	fun `Kotlinscript receives command line arguments`() {
+		val kSource = SourceFile.new("Kscript.kts", """
+    println(args[0] + " " + args[1])
+""".trimIndent())
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+
+		val (_, sysOut) = captureSystemOut {
+			result.runCompiledScript("Kscript", args = listOf("arg0", "arg1"))
+		}
+
+		assertThat(sysOut).contains("arg0 arg1")
 	}
 
 	private fun defaultCompilerConfig(): KotlinCompilation {

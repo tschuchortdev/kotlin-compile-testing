@@ -1,9 +1,10 @@
 package com.tschuchort.compiletesting
 
-import java.io.File
-import java.io.IOException
+import okio.Buffer
+import java.io.*
 import java.net.URL
 import java.net.URLClassLoader
+import java.nio.charset.Charset
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import javax.lang.model.SourceVersion
@@ -83,4 +84,17 @@ internal inline fun <T> withSystemProperties(properties: Map<String, String>, f:
                 System.setProperty(key, value)
         }
     }
+}
+
+internal inline fun <R> withSystemOut(stream: PrintStream, crossinline f: () -> R): R {
+    System.setOut(stream)
+    val ret = f()
+    System.setOut(PrintStream(FileOutputStream(FileDescriptor.out)))
+    return ret
+}
+
+internal inline fun <R> captureSystemOut(crossinline f: () -> R): Pair<R, String> {
+    val systemOutBuffer = Buffer()
+    val ret = withSystemOut(PrintStream(systemOutBuffer.outputStream()), f)
+    return Pair(ret, systemOutBuffer.readString(Charset.defaultCharset()))
 }
