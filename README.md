@@ -26,7 +26,7 @@ fun `test my annotation processor`() {
         class KClass {
             fun foo() {
                 // Classes from the test environment are visible to the compiled sources
-                val hostClass = TestEnvClass() 
+                val testEnvClass = TestEnvClass() 
             }
     """)   
       
