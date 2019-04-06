@@ -18,19 +18,19 @@ A library for in-process compilation of Kotlin and Java code, in the spirit of [
 Create sources
 
 ```Kotlin
-class HostClass {}
+class TestEnvClass {}
 
 @Test
 fun `test my annotation processor`() {
-    val kotlinSource = KotlinCompilation.SourceFile("KClass.kt", """
+    val kotlinSource = SourceFile.new("KClass.kt", """
         class KClass {
             fun foo() {
                 // Classes from the test environment are visible to the compiled sources
-                val hostClass = HostClass() 
+                val hostClass = TestEnvClass() 
             }
     """)   
       
-    val javaSource = KotlinCompilation.SourceFile("JClass.java", """
+    val javaSource = SourceFile.new("JClass.java", """
         public class JClass {
             public void bar() {
                 // compiled Kotlin classes are visible to Java sources
