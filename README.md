@@ -1,4 +1,10 @@
 # Kotlin Compile Testing
+
+[![](https://jitpack.io/v/tschuchortdev/kotlin-compile-testing.svg)](https://jitpack.io/#tschuchortdev/kotlin-compile-testing)
+![GitHub](https://img.shields.io/github/license/tschuchortdev/kotlin-compile-testing.svg?color=green&style=popout)
+![Maintenance](https://img.shields.io/maintenance/yes/2019.svg?style=popout)
+[![Generic badge](https://img.shields.io/badge/contributions-welcome-green.svg)](https://shields.io/)
+
 A library for in-process compilation of Kotlin and Java code, in the spirit of [Google Compile Testing](https://github.com/google/compile-testing). For example, you can use this library to test your annotation processors or run Kotlin-script files. 
 
 ## Use Cases
@@ -9,7 +15,9 @@ A library for in-process compilation of Kotlin and Java code, in the spirit of [
 
 ## Example
 
-```kotlin
+Create sources
+
+```Kotlin
 class HostClass {}
 
 @Test
@@ -29,7 +37,9 @@ fun `test my annotation processor`() {
                 KClass kClass = new KClass(); 
             }
     """)
-      
+```
+Configure compilation
+```Kotlin
     val result = KotlinCompilation().apply {
         sources = listOf(kotlinSource, javaSource)
         
@@ -39,7 +49,9 @@ fun `test my annotation processor`() {
         inheritClasspath = true
         messageOutputStream = System.out // see diagnostics in real time
     }.compile()
-
+```
+Assert results
+```Kotlin
     assertThat(result.exitCode).isEqualTo(ExitCode.OK)	
     
     // Test diagnostic output of compiler
