@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.javax
 
 import com.tschuchort.compiletesting.isJdk9OrLater
-import org.jetbrains.kotlin.com.intellij.util.lang.JavaVersion
 
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -29,7 +28,7 @@ import javax.tools.ToolProvider
  * ToolProvider has no synchronization internally, so if we don't synchronize from the outside we
  * could wind up loading the compiler classes multiple times from different class loaders.
  */
-object SynchronizedToolProvider {
+internal object SynchronizedToolProvider {
     private var getPlatformClassLoaderMethod: Method? = null
 
     val systemJavaCompiler: JavaCompiler

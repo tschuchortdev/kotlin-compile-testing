@@ -1,8 +1,11 @@
 package com.tschuchort.compiletesting
 
 import java.io.File
+import java.io.IOException
 import java.net.URL
 import java.net.URLClassLoader
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
 import javax.lang.model.SourceVersion
 
 internal fun <E> MutableCollection<E>.addAll(vararg elems: E) = addAll(elems)
@@ -34,11 +37,25 @@ internal fun File.listFilesRecursively(): List<File> {
     }
 }
 
-internal fun File.isKotlinFile()
-        = listOf("kt", "kts").any{ it.equals(extension, ignoreCase = true) }
+internal fun Path.listFilesRecursively(): List<Path> {
+    val files = mutableListOf<Path>()
 
-internal fun File.isJavaFile()
-        = listOf("java").any{ it.equals(extension, ignoreCase = true) }
+    Files.walkFileTree(this, object : SimpleFileVisitor<Path>() {
+        override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+            files.add(file)
+            return FileVisitResult.CONTINUE
+        }
+    })
+
+    return files
+}
+
+internal fun File.isKotlinFile() = hasFileExtension(listOf("kt", "kts"))
+
+internal fun File.isJavaFile() = hasFileExtension(listOf("java"))
+
+internal fun File.hasFileExtension(extensions: List<String>)
+    = extensions.any{ it.equals(extension, ignoreCase = true) }
 
 internal fun URLClassLoader.addUrl(url: URL) {
     val addUrlMethod = URLClassLoader::class.java.getDeclaredMethod("addURL", URL::class.java)

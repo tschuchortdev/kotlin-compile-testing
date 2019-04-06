@@ -7,8 +7,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.io.Serializable
-import java.net.URLClassLoader
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
@@ -23,7 +21,7 @@ class KotlinCompilationTests {
 	@Test
 	fun `runs with only kotlin sources`() {
 		val result = defaultCompilerConfig().apply {
-			sources = listOf(KotlinCompilation.SourceFile("kSource.kt", "class KSource"))
+			sources = listOf(SourceFile.new("kSource.kt", "class KSource"))
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
@@ -33,7 +31,7 @@ class KotlinCompilationTests {
 	@Test
 	fun `runs with only java sources`() {
 		val result = defaultCompilerConfig().apply {
-			sources = listOf(KotlinCompilation.SourceFile("JSource.java", "class JSource {}"))
+			sources = listOf(SourceFile.new("JSource.java", "class JSource {}"))
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
@@ -52,7 +50,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin can access JDK`() {
-		val source = KotlinCompilation.SourceFile("kSource.kt", """
+		val source = SourceFile.new("kSource.kt", """
     |import javax.lang.model.SourceVersion
     |import java.io.File
     |
@@ -71,7 +69,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin can not access JDK`() {
-		val source = KotlinCompilation.SourceFile("kSource.kt", """
+		val source = SourceFile.new("kSource.kt", """
     |import javax.lang.model.SourceVersion
     |import java.io.File
     |
@@ -92,7 +90,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `can compile Kotlin without JDK`() {
-		val source = KotlinCompilation.SourceFile("kSource.kt", "class KClass")
+		val source = SourceFile.new("kSource.kt", "class KClass")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
@@ -105,7 +103,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java can access JDK`() {
-		val source = KotlinCompilation.SourceFile("JSource.java", """
+		val source = SourceFile.new("JSource.java", """
     |import javax.lang.model.SourceVersion;
     |import java.io.File;
     |
@@ -126,7 +124,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java can not access JDK`() {
-		val source = KotlinCompilation.SourceFile("JSource.java", """
+		val source = SourceFile.new("JSource.java", """
 		|import javax.lang.model.SourceVersion;
 		|import java.io.File;
 		|
@@ -148,7 +146,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java inherits classpath`() {
-		val source = KotlinCompilation.SourceFile("JSource.java", """
+		val source = SourceFile.new("JSource.java", """
     package com.tschuchort.compiletesting;
 
     class JSource {
@@ -169,7 +167,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java doesn't inherit classpath`() {
-		val source = KotlinCompilation.SourceFile("JSource.java", """
+		val source = SourceFile.new("JSource.java", """
     package com.tschuchort.compiletesting;
 
     class JSource {
@@ -190,7 +188,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin inherits classpath`() {
-		val source = KotlinCompilation.SourceFile("KSource.kt", """
+		val source = SourceFile.new("KSource.kt", """
     package com.tschuchort.compiletesting
 
     class KSource {
@@ -212,7 +210,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin doesn't inherit classpath`() {
-		val source = KotlinCompilation.SourceFile("KSource.kt", """
+		val source = SourceFile.new("KSource.kt", """
     package com.tschuchort.compiletesting
 
     class KSource {
@@ -234,7 +232,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Compiled Kotlin class can be loaded`() {
-		val source = KotlinCompilation.SourceFile("Source.kt", """
+		val source = SourceFile.new("Source.kt", """
     package com.tschuchort.compiletesting
 
     class Source {
@@ -268,7 +266,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Compiled Java class can be loaded`() {
-		val source = KotlinCompilation.SourceFile("Source.java", """
+		val source = SourceFile.new("Source.java", """
     package com.tschuchort.compiletesting;
 
     public class Source {
@@ -297,7 +295,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin can access Java class`() {
-		val jSource = KotlinCompilation.SourceFile("JSource.java", """
+		val jSource = SourceFile.new("JSource.java", """
     package com.tschuchort.compiletesting;
 
     class JSource {
@@ -305,7 +303,7 @@ class KotlinCompilationTests {
     }
 		""".trimIndent())
 
-		val kSource = KotlinCompilation.SourceFile("KSource.kt", """
+		val kSource = SourceFile.new("KSource.kt", """
     package com.tschuchort.compiletesting
 
     class KSource {
@@ -326,7 +324,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java can access Kotlin class`() {
-		val jSource = KotlinCompilation.SourceFile("JSource.java", """
+		val jSource = SourceFile.new("JSource.java", """
     package com.tschuchort.compiletesting;
 
     class JSource {
@@ -336,7 +334,7 @@ class KotlinCompilationTests {
     }
 		""".trimIndent())
 
-		val kSource = KotlinCompilation.SourceFile("KSource.kt", """
+		val kSource = SourceFile.new("KSource.kt", """
     package com.tschuchort.compiletesting
 
     class KSource {
@@ -355,7 +353,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java AP sees Kotlin class`() {
-		val kSource = KotlinCompilation.SourceFile(
+		val kSource = SourceFile.new(
 			"KSource.kt", """
     package com.tschuchort.compiletesting
 
@@ -380,7 +378,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java AP sees Java class`() {
-		val jSource = KotlinCompilation.SourceFile(
+		val jSource = SourceFile.new(
 			"JSource.java", """
     package com.tschuchort.compiletesting;
 
@@ -405,7 +403,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin AP sees Kotlin class`() {
-		val kSource = KotlinCompilation.SourceFile(
+		val kSource = SourceFile.new(
 			"KSource.kt", """
     package com.tschuchort.compiletesting
 
@@ -432,7 +430,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin AP sees Java class`() {
-		val jSource = KotlinCompilation.SourceFile(
+		val jSource = SourceFile.new(
 			"JSource.kt", """
     package com.tschuchort.compiletesting;
 
@@ -458,7 +456,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Given only Java sources, Kotlin sources are generated and compiled`() {
-		val jSource = KotlinCompilation.SourceFile(
+		val jSource = SourceFile.new(
 			"JSource.java", """
     package com.tschuchort.compiletesting;
 
@@ -484,7 +482,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java can access generated Kotlin class`() {
-		val jSource = KotlinCompilation.SourceFile(
+		val jSource = SourceFile.new(
 			"JSource.java", """
     package com.tschuchort.compiletesting;
     import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME};
@@ -511,7 +509,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Java can access generated Java class`() {
-		val jSource = KotlinCompilation.SourceFile(
+		val jSource = SourceFile.new(
 			"JSource.java", """
     package com.tschuchort.compiletesting;
     import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME};
@@ -538,7 +536,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin can access generated Kotlin class`() {
-		val kSource = KotlinCompilation.SourceFile(
+		val kSource = SourceFile.new(
 			"KSource.kt", """
     package com.tschuchort.compiletesting
     import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}
@@ -565,7 +563,7 @@ class KotlinCompilationTests {
 
 	@Test
 	fun `Kotlin can access generated Java class`() {
-		val kSource = KotlinCompilation.SourceFile(
+		val kSource = SourceFile.new(
 			"KSource.kt", """
     package com.tschuchort.compiletesting
     import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}
@@ -590,8 +588,6 @@ class KotlinCompilationTests {
 		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}")
 	}
 
-
-
 	private fun defaultCompilerConfig(): KotlinCompilation {
 		return KotlinCompilation().apply {
 			workingDir = temporaryFolder.root
@@ -600,7 +596,7 @@ class KotlinCompilationTests {
 			toolsJar = if(isJdk9OrLater())
 				null
 			else
-				File(jdkHome, "lib\\tools.jar")
+				jdkHome!!.resolve("lib\\tools.jar")
 
 			inheritClassPath = false
 			skipRuntimeVersionCheck = true
@@ -610,10 +606,6 @@ class KotlinCompilationTests {
 			messageOutputStream = System.out
 		}
 	}
-
-	interface Inf
-
-	fun <T> foo() where T : Serializable, T : Inf {}
 
 	private fun assertClassLoadable(compileResult: KotlinCompilation.Result, className: String): Class<*> {
 		try {
