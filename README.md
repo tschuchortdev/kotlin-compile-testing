@@ -1,3 +1,6 @@
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Kotlin-logo.svg/512px-Kotlin-logo.svg.png" align="right"
+     title="Kotlin Logo" width="120">
+
 # Kotlin Compile Testing
 
 [![](https://jitpack.io/v/tschuchortdev/kotlin-compile-testing.svg)](https://jitpack.io/#tschuchortdev/kotlin-compile-testing)
@@ -77,7 +80,7 @@ Assert results
 - JDK-crosscompilation: Provide your own JDK to compile the code against, instead of using the host application's JDK. This allows you to easily test your code on all JDK versions
 - Find dependencies automatically on the host classpath
 
-## Installation
+## Installation <img src="https://i.imgur.com/iV36acM.png" width="23">
 
 Add jitpack to the repositories in your root `build.gradle` file:
 
@@ -94,10 +97,12 @@ Add dependency to your module `build.gradle` file:
 
 ```Groovy
 dependencies {
-    // ...
+        // ...
 	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.0.0'
 }
 ```
+
+<img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/whatsapp/186/white-medium-star_2b50.png" width="23"> Remember to leave a star if you found it useful <img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/whatsapp/186/white-medium-star_2b50.png" width="23">
 
 ## License
 
