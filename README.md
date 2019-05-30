@@ -31,6 +31,7 @@ fun `test my annotation processor`() {
                 // Classes from the test environment are visible to the compiled sources
                 val testEnvClass = TestEnvClass() 
             }
+        }
     """)   
       
     val javaSource = SourceFile.new("JClass.java", """
@@ -49,7 +50,7 @@ Configure compilation
         // pass your own instance of an annotation processor
         annotationProcessors = listOf(MyAnnotationProcessor()) 
         
-        inheritClasspath = true
+        inheritClassPath = true
         messageOutputStream = System.out // see diagnostics in real time
     }.compile()
 ```
@@ -62,7 +63,7 @@ Assert results
     
     // Load compiled classes and inspect generated code through reflection
     val kClazz = result.classloader.loadClass("KClass")
-    assertThat(kClazz).hasDeclaredMethod("foo")
+    assertThat(kClazz).hasDeclaredMethods("foo")
 }
 ```
 
