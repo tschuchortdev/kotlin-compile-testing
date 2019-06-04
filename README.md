@@ -47,7 +47,7 @@ Configure compilation
         sources = listOf(kotlinSource, javaSource)
         
         // pass your own instance of an annotation processor
-        annotationProcessors = listOf(MyAnnotationProcessor())) 
+        annotationProcessors = listOf(MyAnnotationProcessor()) 
         
         inheritClasspath = true
         messageOutputStream = System.out // see diagnostics in real time
@@ -98,7 +98,7 @@ Add dependency to your module `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.1.0'
+	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.1.2'
 }
 ```
 

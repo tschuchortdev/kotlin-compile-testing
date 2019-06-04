@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.Services
 import java.io.*
 import java.lang.RuntimeException
+import java.net.URI
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
@@ -462,10 +463,21 @@ class KotlinCompilation {
 			}
 		}
 
-		val resourcesPath = this::class.java.classLoader
-				.getResource("META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar").path
-				.removeSuffix("META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
-		
+		val resourcesUri = URI.create(
+			this::class.java.classLoader
+				.getResource("META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
+				.toString().removeSuffix("/META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
+		)
+
+		val resourcesPath = when(resourcesUri.scheme) {
+			"jar" -> resourcesUri.schemeSpecificPart.removeSurrounding("file:", "!")
+			"file" -> resourcesUri.schemeSpecificPart
+			else -> throw IllegalStateException(
+				"Don't know how to handle protocol of ComponentRegistrar plugin. " +
+						"Did you include this library in a weird way? Only jar and file path are supported."
+			)
+		}.removePrefix("/")
+
 		val k2JvmArgs = commonK2JVMArgs().also {
 			it.freeArgs = sourcePaths
 
