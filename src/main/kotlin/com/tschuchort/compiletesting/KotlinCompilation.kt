@@ -71,7 +71,7 @@ class KotlinCompilation {
 	 * Helpful information (if [verbose] = true) and the compiler
 	 * system output will be written to this stream
 	 */
-	var messageOutputStream: OutputStream = NullStream
+	var messageOutputStream: OutputStream = System.out
 
 	/** Inherit classpath from calling process */
 	var inheritClassPath: Boolean = false
@@ -83,7 +83,7 @@ class KotlinCompilation {
 	var correctErrorTypes: Boolean = true
 
 	/** Print verbose logging info */
-	var verbose: Boolean = false
+	var verbose: Boolean = true
 
 	/** Suppress all warnings */
 	var suppressWarnings: Boolean = false
