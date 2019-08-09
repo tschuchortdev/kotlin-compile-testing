@@ -270,7 +270,11 @@ class KotlinCompilation {
 	 * internal compiler error!
 	 */
 	var toolsJar: File? by default {
-		findInHostClasspath(hostClasspaths, "tools.jar", Regex("tools.jar"))
+        if (!isJdk9OrLater())
+            jdkHome?.let { findToolsJarFromJdk(it) }
+            ?: findInHostClasspath(hostClasspaths, "tools.jar", Regex("tools.jar"))
+        else
+            null
 	}
 
 	// Directory for input source files

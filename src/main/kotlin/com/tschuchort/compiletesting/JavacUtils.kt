@@ -100,5 +100,9 @@ internal fun isJavac9OrLater(javacVersionString: String): Boolean {
 }
 
 /** Finds the tools.jar given a path to a JDK 8 or earlier */
-internal fun findToolsJarFromJdk(jdkHome: File): File
-        = File(jdkHome.absolutePath + "/../lib/tools.jar").also { check(it.isFile) }
+internal fun findToolsJarFromJdk(jdkHome: File): File {
+    return jdkHome.resolve("../lib/tools.jar").existsOrNull()
+        ?: jdkHome.resolve("lib/tools.jar").existsOrNull()
+        ?: jdkHome.resolve("tools.jar").existsOrNull()
+        ?: throw IllegalStateException("Can not find tools.jar from JDK with path ${jdkHome.absolutePath}")
+}

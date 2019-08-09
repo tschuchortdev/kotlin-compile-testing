@@ -98,3 +98,5 @@ internal inline fun <R> captureSystemOut(crossinline f: () -> R): Pair<R, String
     val ret = withSystemOut(PrintStream(systemOutBuffer.outputStream()), f)
     return Pair(ret, systemOutBuffer.readString(Charset.defaultCharset()))
 }
+
+internal fun File.existsOrNull(): File? = if (exists()) this else null

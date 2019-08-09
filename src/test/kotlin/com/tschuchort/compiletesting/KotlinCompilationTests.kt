@@ -630,12 +630,6 @@ class KotlinCompilationTests {
 	private fun defaultCompilerConfig(): KotlinCompilation {
 		return KotlinCompilation().apply {
 			workingDir = temporaryFolder.root
-
-			toolsJar = if(isJdk9OrLater())
-				null
-			else
-				jdkHome!!.resolve("lib\\tools.jar")
-
 			inheritClassPath = false
 			skipRuntimeVersionCheck = true
 			correctErrorTypes = true
