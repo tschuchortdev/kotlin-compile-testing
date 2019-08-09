@@ -460,6 +460,7 @@ class KotlinCompilation {
 					"toolsJar must not be null on JDK 8 or earlier if it's classes aren't already on the classpath"
 				}
 
+				require(toolsJar!!.exists()) { "toolsJar file does not exist" }
 				(ClassLoader.getSystemClassLoader() as URLClassLoader).addUrl(toolsJar!!.toURI().toURL())
 			}
 		}
