@@ -211,7 +211,7 @@ class KotlinCompilation {
 	 * (on JDK8) or --system none (on JDK9+). This can be useful if all
 	 * the JDK classes you need are already on the (inherited) classpath.
 	 * */
-	var jdkHome: File? = if(inheritClassPath) null else getJdkHome()
+	var jdkHome: File? = getJdkHome()
 
 	/**
 	 * Path to the kotlin-stdlib.jar
