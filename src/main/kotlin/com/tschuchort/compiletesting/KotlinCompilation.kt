@@ -37,6 +37,7 @@ import java.net.URI
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import javax.annotation.processing.Processor
 import javax.tools.*
 
@@ -471,18 +472,18 @@ class KotlinCompilation {
 		)
 
 		val resourcesPath = when(resourcesUri.scheme) {
-			"jar" -> resourcesUri.schemeSpecificPart.removeSurrounding("file:", "!")
-			"file" -> resourcesUri.schemeSpecificPart
+			"jar" -> Paths.get(URI.create(resourcesUri.schemeSpecificPart.removeSuffix("!")))
+			"file" -> Paths.get(resourcesUri)
 			else -> throw IllegalStateException(
 				"Don't know how to handle protocol of ComponentRegistrar plugin. " +
 						"Did you include this library in a weird way? Only jar and file path are supported."
 			)
-		}.removePrefix("/")
+		}.toAbsolutePath()
 
 		val k2JvmArgs = commonK2JVMArgs().also {
 			it.freeArgs = sourcePaths
 
-			it.pluginClasspaths = (it.pluginClasspaths?.toList() ?: emptyList<String>() + resourcesPath)
+			it.pluginClasspaths = (it.pluginClasspaths?.toList() ?: emptyList<String>() + resourcesPath.toString())
 					.distinct().toTypedArray()
 		}
 
