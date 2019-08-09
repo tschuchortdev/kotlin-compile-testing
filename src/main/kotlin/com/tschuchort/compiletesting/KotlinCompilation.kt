@@ -31,6 +31,8 @@ import org.jetbrains.kotlin.config.JVMAssertionsMode
 import org.jetbrains.kotlin.config.JvmDefaultMode
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.Services
+import org.jetbrains.kotlin.kapt3.base.incremental.DeclaredProcType
+import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 import java.io.*
 import java.lang.RuntimeException
 import java.net.URI
@@ -96,8 +98,6 @@ class KotlinCompilation {
 
 	/** Report on performance of the compilation */
 	var reportPerformance: Boolean = false
-
-	var loadBuiltInsFromDependencies: Boolean = false
 
 	/** Name of the generated .kotlin_module file */
 	var moduleName: String? = null
@@ -398,7 +398,6 @@ class KotlinCompilation {
 		it.reportOutputFiles = reportOutputFiles
 		it.reportPerf = reportPerformance
 		it.reportOutputFiles = reportOutputFiles
-		it.loadBuiltInsFromDependencies = loadBuiltInsFromDependencies
 	}
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
@@ -429,7 +428,10 @@ class KotlinCompilation {
 		 *  any parameters that change between compilations
 		 */
 		KaptComponentRegistrar.threadLocalParameters.set(
-				KaptComponentRegistrar.Parameters(annotationProcessors, kaptOptions)
+				KaptComponentRegistrar.Parameters(
+					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL) },
+					kaptOptions
+				)
 		)
 
 		val kotlinSources = sourcesDir.listFilesRecursively().filter<File>(File::isKotlinFile)

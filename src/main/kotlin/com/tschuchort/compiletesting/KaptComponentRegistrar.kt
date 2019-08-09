@@ -40,6 +40,7 @@ import org.jetbrains.kotlin.kapt3.AbstractKapt3Extension
 import org.jetbrains.kotlin.kapt3.Kapt3ComponentRegistrar
 import org.jetbrains.kotlin.kapt3.base.Kapt
 import org.jetbrains.kotlin.kapt3.base.LoadedProcessors
+import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 import org.jetbrains.kotlin.kapt3.base.util.KaptLogger
 import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
 import org.jetbrains.kotlin.psi.KtFile
@@ -170,7 +171,7 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
     }
 
     data class Parameters(
-        val processors: List<Processor>,
+        val processors: List<IncrementalProcessor>,
         val kaptOptions: KaptOptions.Builder
     )
 }
