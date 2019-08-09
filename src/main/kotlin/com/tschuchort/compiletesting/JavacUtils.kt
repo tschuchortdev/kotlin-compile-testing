@@ -2,12 +2,12 @@ package com.tschuchort.compiletesting
 
 import okio.Buffer
 import java.io.*
-import java.lang.IllegalArgumentException
 import java.net.URI
 import java.nio.charset.Charset
 import javax.tools.JavaCompiler
 import javax.tools.JavaFileObject
 import javax.tools.SimpleJavaFileObject
+import kotlin.IllegalArgumentException
 
 /**
  * A [JavaFileObject] created from a source [File].
@@ -81,12 +81,22 @@ internal fun getJavacVersionString(javacCommand: String): String {
 }
 
 internal fun isJavac9OrLater(javacVersionString: String): Boolean {
-    val (majorv, minorv, patchv, otherv) = Regex("([0-9]*)\\.([0-9]*)\\.([0-9]*)(.*)")
-        .matchEntire(javacVersionString)?.destructured
-        ?: throw IllegalArgumentException("Could not parse javac version string: '$javacVersionString'")
+    try {
+        val (majorv, minorv, patchv, otherv) = Regex("([0-9]*)(?:\\.([0-9]*))?(?:\\.([0-9]*))?(.*)")
+            .matchEntire(javacVersionString)?.destructured
+            ?: throw IllegalArgumentException("Could not match version regex")
 
-    return (majorv.toInt() == 1 && minorv.toInt() >= 9) // old versioning scheme: 1.8.x
-            || (majorv.toInt() >= 9) // new versioning scheme: 10.x.x
+        check(majorv.isNotBlank()) { "Major version can not be blank" }
+
+        if (majorv.toInt() == 1)
+            check(minorv.isNotBlank()) { "Minor version can not be blank if major version is 1" }
+
+        return (majorv.toInt() == 1 && minorv.toInt() >= 9) // old versioning scheme: 1.8.x
+                || (majorv.toInt() >= 9) // new versioning scheme: 10.x.x
+    }
+    catch (t: Throwable) {
+        throw IllegalArgumentException("Could not parse javac version string: '$javacVersionString'", t)
+    }
 }
 
 /** Finds the tools.jar given a path to a JDK 8 or earlier */
