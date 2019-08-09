@@ -16,7 +16,7 @@ A library for in-process compilation of Kotlin and Java code, in the spirit of [
 
 - Compile Kotlin and Java code in tests
 - Test your annotation processors
-- Run Kotlin-script files from within your application
+- Test Kotlin code generation
 
 ## Example
 
