@@ -630,7 +630,6 @@ class KotlinCompilationTests {
 	private fun defaultCompilerConfig(): KotlinCompilation {
 		return KotlinCompilation().apply {
 			workingDir = temporaryFolder.root
-			jdkHome = getJdkHome()
 
 			toolsJar = if(isJdk9OrLater())
 				null

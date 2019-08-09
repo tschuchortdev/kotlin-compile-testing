@@ -67,16 +67,6 @@ class KotlinCompilation {
 	var annotationProcessors: List<Processor> = emptyList()
 
 	/**
-	 * Path to the JDK to be used
-	 *
-	 * If null, no JDK will be used with kotlinc (option -no-jdk)
-	 * and the system java compiler will be used with empty bootclasspath
-	 * (on JDK8) or --system none (on JDK9+). This can be useful if all
-	 * the JDK classes you need are already on the (inherited) classpath.
-	 * */
-	var jdkHome: File? = null
-
-	/**
 	 * Helpful information (if [verbose] = true) and the compiler
 	 * system output will be written to this stream
 	 */
@@ -211,6 +201,16 @@ class KotlinCompilation {
 
 	/** Paths to output directories for friend modules (whose internals should be visible) */
 	var friendPaths: MutableList<File> = mutableListOf()
+
+	/**
+	 * Path to the JDK to be used
+	 *
+	 * If null, no JDK will be used with kotlinc (option -no-jdk)
+	 * and the system java compiler will be used with empty bootclasspath
+	 * (on JDK8) or --system none (on JDK9+). This can be useful if all
+	 * the JDK classes you need are already on the (inherited) classpath.
+	 * */
+	var jdkHome: File? = if(inheritClassPath) null else getJdkHome()
 
 	/**
 	 * Path to the kotlin-stdlib.jar
@@ -466,7 +466,8 @@ class KotlinCompilation {
 		val resourcesUri = URI.create(
 			this::class.java.classLoader
 				.getResource("META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
-				.toString().removeSuffix("/META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
+				?.toString()?.removeSuffix("/META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
+				?: throw AssertionError("Could not get path to ComponentRegistrar service from META-INF")
 		)
 
 		val resourcesPath = when(resourcesUri.scheme) {
@@ -716,11 +717,18 @@ class KotlinCompilation {
 	private fun searchSystemOutForKnownErrors(compilerSystemOut: String) {
 		if(compilerSystemOut.contains("No enum constant com.sun.tools.javac.main.Option.BOOT_CLASS_PATH")) {
 			warn(
-				"${this::class.simpleName} has detected that the compilation failed with an error that may be " +
+				"${this::class.simpleName} has detected that the compiler output contains an error message that may be " +
 						"caused by including a tools.jar file together with a JDK of version 9 or later. " +
 						if (inheritClassPath)
 							"Make sure that no tools.jar (or unwanted JDK) is in the inherited classpath"
 						else ""
+			)
+		}
+
+		if(compilerSystemOut.contains("Unable to find package java.")) {
+			warn (
+				"${this::class.simpleName} has detected that the compiler output contains an error message " +
+						"that may be caused by a missing JDK. This can happen if jdkHome=null and inheritClassPath=false."
 			)
 		}
 	}
