@@ -101,7 +101,7 @@ Add dependency to your module `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.1.2'
+	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.2.0'
 }
 ```
 
