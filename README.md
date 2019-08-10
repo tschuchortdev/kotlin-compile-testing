@@ -10,7 +10,7 @@
 [![Build Status](https://travis-ci.com/tschuchortdev/kotlin-compile-testing.svg?branch=master)](https://travis-ci.com/tschuchortdev/kotlin-compile-testing)
 [![Build status](https://ci.appveyor.com/api/projects/status/jj639rc6whehaf9o?svg=true)](https://ci.appveyor.com/project/tschuchortdev/kotlin-compile-testing)
 
-A library for in-process compilation of Kotlin and Java code, in the spirit of [Google Compile Testing](https://github.com/google/compile-testing). For example, you can use this library to test your annotation processors or run Kotlin-script files. 
+A library for in-process compilation of Kotlin and Java code, in the spirit of [Google Compile Testing](https://github.com/google/compile-testing). For example, you can use this library to test your annotation processors. 
 
 ## Use Cases
 
