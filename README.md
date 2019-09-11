@@ -65,7 +65,7 @@ Assert results
     assertThat(result.messages).contains("My annotation processor was called") 
     
     // Load compiled classes and inspect generated code through reflection
-    val kClazz = result.classloader.loadClass("KClass")
+    val kClazz = result.classLoader.loadClass("KClass")
     assertThat(kClazz).hasDeclaredMethods("foo")
 }
 ```
