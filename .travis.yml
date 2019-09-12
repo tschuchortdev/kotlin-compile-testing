@@ -4,6 +4,8 @@ os:
   - linux
   - osx
 
+dist: trusty
+
 jdk:
   - oraclejdk8
   - oraclejdk11
