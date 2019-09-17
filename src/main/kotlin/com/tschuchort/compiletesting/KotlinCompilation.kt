@@ -401,7 +401,7 @@ class KotlinCompilation {
 	}
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
-	private fun stubsAndApt(): ExitCode {
+	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
 		if(annotationProcessors.isEmpty()) {
 			log("No services were given. Not running kapt steps.")
 			return ExitCode.OK
@@ -434,8 +434,8 @@ class KotlinCompilation {
 				)
 		)
 
-		val kotlinSources = sourcesDir.listFilesRecursively().filter<File>(File::isKotlinFile)
-		val javaSources = sourcesDir.listFilesRecursively().filter(File::isJavaFile)
+		val kotlinSources = sourceFiles.filter(File::isKotlinFile)
+		val javaSources = sourceFiles.filter(File::isJavaFile)
 
 		val sourcePaths = mutableListOf<File>().apply {
 			addAll(javaSources)
@@ -503,8 +503,8 @@ class KotlinCompilation {
 	}
 
 	/** Performs the 3rd compilation step to compile Kotlin source files */
-	private fun compileKotlin(): ExitCode {
-		val sources = sourcesDir.listFilesRecursively() +
+	private fun compileKotlin(sourceFiles: List<File>): ExitCode {
+		val sources = sourceFiles +
 				kaptKotlinGeneratedDir.listFilesRecursively() +
 				kaptSourceDir.listFilesRecursively()
 
@@ -557,8 +557,8 @@ class KotlinCompilation {
 	}
 
 	/** Performs the 4th compilation step to compile Java source files */
-	private fun compileJava(): ExitCode {
-		val javaSources = (sourcesDir.listFilesRecursively() + kaptSourceDir.listFilesRecursively())
+	private fun compileJava(sourceFiles: List<File>): ExitCode {
+		val javaSources = (sourceFiles + kaptSourceDir.listFilesRecursively())
 			    .filterNot<File>(File::isKotlinFile)
 
 		if(javaSources.isEmpty())
@@ -660,7 +660,7 @@ class KotlinCompilation {
 		kaptKotlinGeneratedDir.mkdirs()
 
 		// write given sources to working directory
-		sources.forEach { it.writeIfNeeded(sourcesDir) }
+		val sourceFiles = sources.map { it.writeIfNeeded(sourcesDir) }
 
 		/*
 		There are 4 steps to the compilation process:
@@ -679,7 +679,7 @@ class KotlinCompilation {
 		withSystemProperty("idea.use.native.fs.for.win", "false") {
 			// step 1 and 2: generate stubs and run annotation processors
 			try {
-				val exitCode = stubsAndApt()
+				val exitCode = stubsAndApt(sourceFiles)
 				if (exitCode != ExitCode.OK) {
 					val messages = internalMessageBuffer.readUtf8()
 					searchSystemOutForKnownErrors(messages)
@@ -690,7 +690,7 @@ class KotlinCompilation {
 			}
 
 			// step 3: compile Kotlin files
-			compileKotlin().let { exitCode ->
+			compileKotlin(sourceFiles).let { exitCode ->
 				if(exitCode != ExitCode.OK) {
 					val messages = internalMessageBuffer.readUtf8()
 					searchSystemOutForKnownErrors(messages)
@@ -700,7 +700,7 @@ class KotlinCompilation {
 		}
 
 		// step 4: compile Java files
-		compileJava().let { exitCode ->
+		compileJava(sourceFiles).let { exitCode ->
 			val messages = internalMessageBuffer.readUtf8()
 
 			if(exitCode != ExitCode.OK)
