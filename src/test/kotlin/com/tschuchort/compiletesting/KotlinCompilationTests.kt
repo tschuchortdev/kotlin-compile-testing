@@ -46,6 +46,42 @@ class KotlinCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 	}
 
+	@Test
+	fun `runs with SourceFile from path`() {
+		val sourceFile = temporaryFolder.newFile("KSource.kt").apply {
+			writeText("class KSource")
+		}
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(SourceFile.fromPath(sourceFile))
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "KSource")
+	}
+
+	@Test
+	fun `runs with SourceFile from paths with filename conflicts`() {
+		temporaryFolder.newFolder("a")
+		val sourceFileA = temporaryFolder.newFile("a/KSource.kt").apply {
+			writeText("package a\n\nclass KSource")
+		}
+
+		temporaryFolder.newFolder("b")
+		val sourceFileB = temporaryFolder.newFile("b/KSource.kt").apply {
+			writeText("package b\n\nclass KSource")
+		}
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(
+				SourceFile.fromPath(sourceFileA),
+				SourceFile.fromPath(sourceFileB))
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "a.KSource")
+		assertClassLoadable(result, "b.KSource")
+	}
 
 	@Test
 	fun `Kotlin can access JDK`() {
