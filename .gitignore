@@ -77,6 +77,7 @@ tags
 .idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/dictionaries
+.idea/inspectionProfiles
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
