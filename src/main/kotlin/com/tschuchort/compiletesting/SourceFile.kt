@@ -2,6 +2,7 @@ package com.tschuchort.compiletesting
 
 import okio.buffer
 import okio.sink
+import org.intellij.lang.annotations.Language
 import java.io.File
 
 /**
@@ -11,6 +12,22 @@ abstract class SourceFile {
     internal abstract fun writeIfNeeded(dir: File): File
 
     companion object {
+        /**
+         * Create a new Java source file for the compilation when the compilation is run
+         */
+        fun java(name: String, @Language("java") contents: String, trimIndent: Boolean = true): SourceFile {
+            val finalContents = if (trimIndent) contents.trimIndent() else contents
+            return new(name, finalContents)
+        }
+
+        /**
+         * Create a new Kotlin source file for the compilation when the compilation is run
+         */
+        fun kotlin(name: String, @Language("kotlin") contents: String, trimIndent: Boolean = true): SourceFile {
+            val finalContents = if (trimIndent) contents.trimIndent() else contents
+            return new(name, finalContents)
+        }
+
         /**
          * Create a new source file for the compilation when the compilation is run
          */
