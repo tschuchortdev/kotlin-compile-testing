@@ -28,7 +28,7 @@ class TestEnvClass {}
 
 @Test
 fun `test my annotation processor`() {
-    val kotlinSource = SourceFile.new("KClass.kt", """
+    val kotlinSource = SourceFile.kotlin("KClass.kt", """
         class KClass {
             fun foo() {
                 // Classes from the test environment are visible to the compiled sources
@@ -37,7 +37,7 @@ fun `test my annotation processor`() {
         }
     """)   
       
-    val javaSource = SourceFile.new("JClass.java", """
+    val javaSource = SourceFile.java("JClass.java", """
         public class JClass {
             public void bar() {
                 // compiled Kotlin classes are visible to Java sources
