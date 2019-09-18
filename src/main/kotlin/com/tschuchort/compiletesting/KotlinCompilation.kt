@@ -27,6 +27,8 @@ import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
+import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
+import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.JVMAssertionsMode
 import org.jetbrains.kotlin.config.JvmDefaultMode
 import org.jetbrains.kotlin.config.JvmTarget
@@ -470,26 +472,10 @@ class KotlinCompilation {
 			}
 		}
 
-		val resourcesUri = URI.create(
-			this::class.java.classLoader
-				.getResource("META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
-				?.toString()?.removeSuffix("/META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar")
-				?: throw AssertionError("Could not get path to ComponentRegistrar service from META-INF")
-		)
-
-		val resourcesPath = when(resourcesUri.scheme) {
-			"jar" -> Paths.get(URI.create(resourcesUri.schemeSpecificPart.removeSuffix("!")))
-			"file" -> Paths.get(resourcesUri)
-			else -> throw IllegalStateException(
-				"Don't know how to handle protocol of ComponentRegistrar plugin. " +
-						"Did you include this library in a weird way? Only jar and file path are supported."
-			)
-		}.toAbsolutePath()
-
 		val k2JvmArgs = commonK2JVMArgs().also {
 			it.freeArgs = sourcePaths
 
-			it.pluginClasspaths = (it.pluginClasspaths?.toList() ?: emptyList<String>() + resourcesPath.toString())
+			it.pluginClasspaths = (it.pluginClasspaths?.toList() ?: emptyList<String>() + getResourcesPath())
 					.distinct().toTypedArray()
 		}
 
@@ -500,6 +486,24 @@ class KotlinCompilation {
 		return convertKotlinExitCode(
             K2JVMCompiler().exec(compilerMessageCollector, Services.EMPTY, k2JvmArgs)
 		)
+	}
+
+	private fun getResourcesPath(): String {
+		val resourceName = "META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar"
+		return this::class.java.classLoader.getResources(resourceName)
+			.asSequence()
+			.mapNotNull { url ->
+				val uri = URI.create(url.toString().removeSuffix("/$resourceName"))
+				when (uri.scheme) {
+					"jar" -> Paths.get(URI.create(uri.schemeSpecificPart.removeSuffix("!")))
+					"file" -> Paths.get(uri)
+					else -> return@mapNotNull null
+				}.toAbsolutePath()
+			}
+			.find { resourcesPath ->
+				ServiceLoaderLite.findImplementations(ComponentRegistrar::class.java, listOf(resourcesPath.toFile()))
+					.any { implementation -> implementation == KaptComponentRegistrar::class.java.name }
+			}?.toString() ?: throw AssertionError("Could not get path to ComponentRegistrar service from META-INF")
 	}
 
 	/** Performs the 3rd compilation step to compile Kotlin source files */
