@@ -86,13 +86,13 @@ class KotlinCompilationTests {
 	@Test
 	fun `Kotlin can access JDK`() {
 		val source = SourceFile.kotlin("kSource.kt", """
-    |import javax.lang.model.SourceVersion
-    |import java.io.File
-    |
-    |fun main(addKotlincArgs: Array<String>) {
-    |	File("")
-    |}
-			""".trimMargin())
+            import javax.lang.model.SourceVersion
+            import java.io.File
+            
+            fun main(addKotlincArgs: Array<String>) {
+            	File("")
+            }
+			""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
@@ -105,13 +105,13 @@ class KotlinCompilationTests {
 	@Test
 	fun `Kotlin can not access JDK`() {
 		val source = SourceFile.kotlin("kSource.kt", """
-    |import javax.lang.model.SourceVersion
-    |import java.io.File
-    |
-    |fun main(addKotlincArgs: Array<String>) {
-    |	File("")
-    |}
-			""".trimMargin())
+            import javax.lang.model.SourceVersion
+            import java.io.File
+            
+            fun main(addKotlincArgs: Array<String>) {
+            	File("")
+            }
+			""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
@@ -139,15 +139,15 @@ class KotlinCompilationTests {
 	@Test
 	fun `Java can access JDK`() {
 		val source = SourceFile.java("JSource.java", """
-    |import javax.lang.model.SourceVersion;
-    |import java.io.File;
-    |
-    |class JSource {
-    |	File foo() {
-    |		return new File("");
-    |	}
-    |}
-			""".trimMargin())
+            import javax.lang.model.SourceVersion;
+            import java.io.File;
+            
+            class JSource {
+            	File foo() {
+            		return new File("");
+            	}
+            }
+			""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
@@ -160,15 +160,15 @@ class KotlinCompilationTests {
 	@Test
 	fun `Java can not access JDK`() {
 		val source = SourceFile.java("JSource.java", """
-		|import javax.lang.model.SourceVersion;
-		|import java.io.File;
-		|
-		|class JSource {
-		|	File foo() {
-		|		return new File("");
-		|	}
-		|}
-			""".trimMargin())
+		    import javax.lang.model.SourceVersion;
+		    import java.io.File;
+		    
+		    class JSource {
+		    	File foo() {
+		    		return new File("");
+		    	}
+		    }
+			""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
@@ -182,14 +182,14 @@ class KotlinCompilationTests {
 	@Test
 	fun `Java inherits classpath`() {
 		val source = SourceFile.java("JSource.java", """
-    package com.tschuchort.compiletesting;
-
-    class JSource {
-    	void foo() {
-    		String s = KotlinCompilationTests.InheritedClass.class.getName();
-    	}
-    }
-    	""".trimIndent())
+			package com.tschuchort.compiletesting;
+		
+			class JSource {
+				void foo() {
+					String s = KotlinCompilationTests.InheritedClass.class.getName();
+				}
+			}
+				""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
@@ -203,14 +203,14 @@ class KotlinCompilationTests {
 	@Test
 	fun `Java doesn't inherit classpath`() {
 		val source = SourceFile.java("JSource.java", """
-    package com.tschuchort.compiletesting;
-
-    class JSource {
-    	void foo() {
-    		String s = KotlinCompilationTests.InheritedClass.class.getName();
-    	}
-    }
-    	""".trimIndent())
+			package com.tschuchort.compiletesting;
+		
+			class JSource {
+				void foo() {
+					String s = KotlinCompilationTests.InheritedClass.class.getName();
+				}
+			}
+				""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
@@ -224,14 +224,14 @@ class KotlinCompilationTests {
 	@Test
 	fun `Kotlin inherits classpath`() {
 		val source = SourceFile.kotlin("KSource.kt", """
-    package com.tschuchort.compiletesting
-
-    class KSource {
-    	fun foo() {
-    		val s = KotlinCompilationTests.InheritedClass::class.java.name
-    	}
-    }
-		""".trimIndent())
+			package com.tschuchort.compiletesting
+		
+			class KSource {
+				fun foo() {
+					val s = KotlinCompilationTests.InheritedClass::class.java.name
+				}
+			}
+				""")
 
 
 		val result = defaultCompilerConfig().apply {
@@ -246,14 +246,14 @@ class KotlinCompilationTests {
 	@Test
 	fun `Kotlin doesn't inherit classpath`() {
 		val source = SourceFile.kotlin("KSource.kt", """
-    package com.tschuchort.compiletesting
-
-    class KSource {
-    	fun foo() {
-    		val s = KotlinCompilationTests.InheritedClass::class.java.name
-    	}
-    }
-		""".trimIndent())
+			package com.tschuchort.compiletesting
+		
+			class KSource {
+				fun foo() {
+					val s = KotlinCompilationTests.InheritedClass::class.java.name
+				}
+			}
+				""")
 
 
 		val result = defaultCompilerConfig().apply {
@@ -268,14 +268,14 @@ class KotlinCompilationTests {
 	@Test
 	fun `Compiled Kotlin class can be loaded`() {
 		val source = SourceFile.kotlin("Source.kt", """
-    package com.tschuchort.compiletesting
-
-    class Source {
-    	fun helloWorld(): String {
-    		return "Hello World"
-    	}
-    }
-		""".trimIndent())
+			package com.tschuchort.compiletesting
+		
+			class Source {
+				fun helloWorld(): String {
+					return "Hello World"
+				}
+			}
+				""")
 
 
 		val result = defaultCompilerConfig().apply {
@@ -302,14 +302,14 @@ class KotlinCompilationTests {
 	@Test
 	fun `Compiled Java class can be loaded`() {
 		val source = SourceFile.java("Source.java", """
-    package com.tschuchort.compiletesting;
-
-    public class Source {
-    	public String helloWorld() {
-    		return "Hello World";
-    	}
-    }
-		""".trimIndent())
+			package com.tschuchort.compiletesting;
+		
+			public class Source {
+				public String helloWorld() {
+					return "Hello World";
+				}
+			}
+				""")
 
 
 		val result = defaultCompilerConfig().apply {
@@ -331,22 +331,22 @@ class KotlinCompilationTests {
 	@Test
 	fun `Kotlin can access Java class`() {
 		val jSource = SourceFile.java("JSource.java", """
-    package com.tschuchort.compiletesting;
+			package com.tschuchort.compiletesting;
+		
+			class JSource {
+				void foo() {}
+			}
+				""")
 
-    class JSource {
-    	void foo() {}
-    }
-		""".trimIndent())
-
-		val kSource = SourceFile.kotlin("KSource.kt", """
-    package com.tschuchort.compiletesting
-
-    class KSource {
-    	fun bar() {
-    		JSource().foo()
-    	}
-    }
-		""".trimIndent())
+				val kSource = SourceFile.kotlin("KSource.kt", """
+			package com.tschuchort.compiletesting
+		
+			class KSource {
+				fun bar() {
+					JSource().foo()
+				}
+			}
+				""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(kSource, jSource)
@@ -360,22 +360,22 @@ class KotlinCompilationTests {
 	@Test
 	fun `Java can access Kotlin class`() {
 		val jSource = SourceFile.java("JSource.java", """
-    package com.tschuchort.compiletesting;
+			package com.tschuchort.compiletesting;
+		
+			class JSource {
+				void foo() {
+					String s = (new KSource()).bar();
+				}
+			}
+				""")
 
-    class JSource {
-    	void foo() {
-    		String s = (new KSource()).bar();
-    	}
-    }
-		""".trimIndent())
-
-		val kSource = SourceFile.kotlin("KSource.kt", """
-    package com.tschuchort.compiletesting
-
-    class KSource {
-    	fun bar(): String = "bar"
-    }
-		""".trimIndent())
+				val kSource = SourceFile.kotlin("KSource.kt", """
+			package com.tschuchort.compiletesting
+		
+			class KSource {
+				fun bar(): String = "bar"
+			}
+				""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(kSource, jSource)
@@ -390,12 +390,12 @@ class KotlinCompilationTests {
 	fun `Java AP sees Kotlin class`() {
 		val kSource = SourceFile.kotlin(
 			"KSource.kt", """
-    package com.tschuchort.compiletesting
-
-	@ProcessElem
-    class KSource {
-    }
-		""".trimIndent())
+				package com.tschuchort.compiletesting
+			
+				@ProcessElem
+				class KSource {
+				}
+					""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(kSource)
@@ -415,12 +415,12 @@ class KotlinCompilationTests {
 	fun `Java AP sees Java class`() {
 		val jSource = SourceFile.java(
 			"JSource.java", """
-    package com.tschuchort.compiletesting;
-
-	@ProcessElem
-    class JSource {
-    }
-		""".trimIndent())
+				package com.tschuchort.compiletesting;
+			
+				@ProcessElem
+				class JSource {
+				}
+					""")
 
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(jSource)
@@ -440,12 +440,12 @@ class KotlinCompilationTests {
 	fun `Kotlin AP sees Kotlin class`() {
 		val kSource = SourceFile.kotlin(
 			"KSource.kt", """
-    package com.tschuchort.compiletesting
-
-	@ProcessElem
-    class KSource {
-    }
-		""".trimIndent()
+				package com.tschuchort.compiletesting
+			
+				@ProcessElem
+				class KSource {
+				}
+					"""
 		)
 
 		val result = defaultCompilerConfig().apply {
@@ -467,12 +467,12 @@ class KotlinCompilationTests {
 	fun `Kotlin AP sees Java class`() {
 		val jSource = SourceFile.java(
 			"JSource.kt", """
-    package com.tschuchort.compiletesting;
-
-	@ProcessElem
-    class JSource {
-    }
-		""".trimIndent()
+				package com.tschuchort.compiletesting;
+			
+				@ProcessElem
+				class JSource {
+				}
+					"""
 		)
 
 		val result = defaultCompilerConfig().apply {
@@ -493,12 +493,12 @@ class KotlinCompilationTests {
 	fun `Given only Java sources, Kotlin sources are generated and compiled`() {
 		val jSource = SourceFile.java(
 			"JSource.java", """
-    package com.tschuchort.compiletesting;
-
-	@ProcessElem
-    class JSource {
-    }
-		""".trimIndent()
+				package com.tschuchort.compiletesting;
+			
+				@ProcessElem
+				class JSource {
+				}
+					"""
 		)
 
 		val result = defaultCompilerConfig().apply {
@@ -519,16 +519,16 @@ class KotlinCompilationTests {
 	fun `Java can access generated Kotlin class`() {
 		val jSource = SourceFile.java(
 			"JSource.java", """
-    package com.tschuchort.compiletesting;
-    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME};
-
-	@ProcessElem
-    class JSource {
-    	void foo() {
-    		Class<?> c = ${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}.class;
-		}
-    }
-		""".trimIndent()
+				package com.tschuchort.compiletesting;
+				import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME};
+			
+				@ProcessElem
+				class JSource {
+					void foo() {
+						Class<?> c = ${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}.class;
+					}
+				}
+					"""
 		)
 
 		val result = defaultCompilerConfig().apply {
@@ -546,16 +546,16 @@ class KotlinCompilationTests {
 	fun `Java can access generated Java class`() {
 		val jSource = SourceFile.java(
 			"JSource.java", """
-    package com.tschuchort.compiletesting;
-    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME};
-
-	@ProcessElem
-    class JSource {
-    	void foo() {
-    		Class<?> c = ${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}.class;
-		}
-    }
-		""".trimIndent()
+				package com.tschuchort.compiletesting;
+				import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME};
+			
+				@ProcessElem
+				class JSource {
+					void foo() {
+						Class<?> c = ${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}.class;
+					}
+				}
+					"""
 		)
 
 		val result = defaultCompilerConfig().apply {
@@ -573,16 +573,16 @@ class KotlinCompilationTests {
 	fun `Kotlin can access generated Kotlin class`() {
 		val kSource = SourceFile.kotlin(
 			"KSource.kt", """
-    package com.tschuchort.compiletesting
-    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}
-
-	@ProcessElem
-    class KSource {
-    	fun foo() {
-    		val c = ${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}::class.java
-		}
-    }
-		""".trimIndent()
+				package com.tschuchort.compiletesting
+				import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}
+			
+				@ProcessElem
+				class KSource {
+					fun foo() {
+						val c = ${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}::class.java
+					}
+				}
+					"""
 		)
 
 		val result = defaultCompilerConfig().apply {
@@ -600,16 +600,16 @@ class KotlinCompilationTests {
 	fun `Kotlin can access generated Java class`() {
 		val kSource = SourceFile.kotlin(
 			"KSource.kt", """
-    package com.tschuchort.compiletesting
-    import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}
-
-	@ProcessElem
-    class KSource {
-    	fun foo() {
-    		val c = ${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}::class.java
-		}
-    }
-		""".trimIndent()
+				package com.tschuchort.compiletesting
+				import ${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}
+			
+				@ProcessElem
+				class KSource {
+					fun foo() {
+						val c = ${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}::class.java
+					}
+				}
+				"""
 		)
 
 		val result = defaultCompilerConfig().apply {
