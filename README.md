@@ -86,18 +86,9 @@ Assert results
 
 ## Installation <img src="https://i.imgur.com/iV36acM.png" width="23">
 
-Add jitpack to the repositories in your root `build.gradle` file:
+The package is available on mavenCentral and jitpack.
 
-```Groovy
-allprojects {
-	repositories {
-		// ...
-		maven { url 'https://jitpack.io' } // add this
-	}
-}
-```
-
-Add dependency to your module `build.gradle` file:
+Add dependency to your module's `build.gradle` file:
 
 ```Groovy
 dependencies {
