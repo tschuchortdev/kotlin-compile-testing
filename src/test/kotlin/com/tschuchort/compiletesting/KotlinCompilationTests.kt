@@ -120,7 +120,7 @@ class KotlinCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
-		assertThat(result.messages).contains("unresolved reference: java")
+		assertThat(result.messages).containsIgnoringCase("unresolved reference: java")
 	}
 
 	@Test
@@ -262,7 +262,7 @@ class KotlinCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
-		assertThat(result.messages).contains("unresolved reference: KotlinCompilationTests")
+		assertThat(result.messages).containsIgnoringCase("unresolved reference: KotlinCompilationTests")
 	}
 
 	@Test
@@ -630,7 +630,7 @@ class KotlinCompilationTests {
 			skipRuntimeVersionCheck = true
 			correctErrorTypes = true
 			verbose = true
-			reportOutputFiles = true
+			reportOutputFiles = false
 			messageOutputStream = System.out
 		}
 	}
