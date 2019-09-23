@@ -466,7 +466,7 @@ class KotlinCompilationTests {
 	@Test
 	fun `Kotlin AP sees Java class`() {
 		val jSource = SourceFile.java(
-			"JSource.kt", """
+			"JSource.java", """
 				package com.tschuchort.compiletesting;
 			
 				@ProcessElem

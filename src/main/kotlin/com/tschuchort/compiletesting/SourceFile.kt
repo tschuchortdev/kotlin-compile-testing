@@ -16,6 +16,7 @@ abstract class SourceFile {
          * Create a new Java source file for the compilation when the compilation is run
          */
         fun java(name: String, @Language("java") contents: String, trimIndent: Boolean = true): SourceFile {
+            require(File(name).hasJavaFileExtension())
             val finalContents = if (trimIndent) contents.trimIndent() else contents
             return new(name, finalContents)
         }
@@ -24,6 +25,7 @@ abstract class SourceFile {
          * Create a new Kotlin source file for the compilation when the compilation is run
          */
         fun kotlin(name: String, @Language("kotlin") contents: String, trimIndent: Boolean = true): SourceFile {
+            require(File(name).hasKotlinFileExtension())
             val finalContents = if (trimIndent) contents.trimIndent() else contents
             return new(name, finalContents)
         }

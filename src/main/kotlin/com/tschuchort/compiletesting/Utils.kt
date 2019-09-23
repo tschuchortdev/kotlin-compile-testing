@@ -51,9 +51,9 @@ internal fun Path.listFilesRecursively(): List<Path> {
     return files
 }
 
-internal fun File.isKotlinFile() = hasFileExtension(listOf("kt", "kts"))
+internal fun File.hasKotlinFileExtension() = hasFileExtension(listOf("kt", "kts"))
 
-internal fun File.isJavaFile() = hasFileExtension(listOf("java"))
+internal fun File.hasJavaFileExtension() = hasFileExtension(listOf("java"))
 
 internal fun File.hasFileExtension(extensions: List<String>)
     = extensions.any{ it.equals(extension, ignoreCase = true) }
