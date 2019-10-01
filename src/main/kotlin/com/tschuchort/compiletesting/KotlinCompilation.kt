@@ -35,15 +35,19 @@ import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.Services
 import org.jetbrains.kotlin.kapt3.base.incremental.DeclaredProcType
 import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
-import java.io.*
-import java.lang.RuntimeException
+import java.io.File
+import java.io.OutputStream
+import java.io.OutputStreamWriter
+import java.io.PrintStream
 import java.net.URI
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.annotation.processing.Processor
-import javax.tools.*
+import javax.tools.Diagnostic
+import javax.tools.DiagnosticCollector
+import javax.tools.JavaFileObject
 
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -70,6 +74,8 @@ class KotlinCompilation {
 
 	/** Annotation processors to be passed to kapt */
 	var annotationProcessors: List<Processor> = emptyList()
+
+	var componentRegistrars: List<ComponentRegistrar> = emptyList()
 
 	/** Print verbose logging info */
 	var verbose: Boolean = true
@@ -433,6 +439,7 @@ class KotlinCompilation {
 		KaptComponentRegistrar.threadLocalParameters.set(
 				KaptComponentRegistrar.Parameters(
 					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL) },
+					componentRegistrars,
 					kaptOptions
 				)
 		)

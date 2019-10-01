@@ -47,7 +47,6 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import java.io.File
-import javax.annotation.processing.Processor
 
 internal class KaptComponentRegistrar : ComponentRegistrar {
 
@@ -83,6 +82,11 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
 
         if (options[KaptFlag.VERBOSE]) {
             logger.info(options.logString())
+        }
+
+        threadLocalParameters.get().componentRegistrar.forEach {
+            it.registerProjectComponents(project,configuration)
+            return
         }
 
         val kapt3AnalysisCompletedHandlerExtension =
@@ -172,6 +176,7 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
 
     data class Parameters(
         val processors: List<IncrementalProcessor>,
+        val componentRegistrar: List<ComponentRegistrar>,
         val kaptOptions: KaptOptions.Builder
     )
 }

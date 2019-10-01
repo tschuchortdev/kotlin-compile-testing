@@ -53,7 +53,7 @@ dependencies {
 
     implementation "com.squareup.okio:okio:2.1.0"
     implementation 'io.github.classgraph:classgraph:4.6.10'
-
+    compile 'de.jensklingenberg:mpapt-runtime:0.8.3'
     // the Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
     implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.50"

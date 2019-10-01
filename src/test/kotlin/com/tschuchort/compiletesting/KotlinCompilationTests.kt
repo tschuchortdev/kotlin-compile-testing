@@ -1,6 +1,7 @@
 package com.tschuchort.compiletesting
 
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
+import de.jensklingenberg.mpapt.model.Element
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
@@ -540,6 +541,105 @@ class KotlinCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 		assertClassLoadable(result, "com.tschuchort.compiletesting.JSource")
 		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME}")
+	}
+
+    @Test
+    fun testMpAptAnnotatedClassWasFound() {
+        val kSource = SourceFile.kotlin(
+            "KSource.kt", """
+				package com.tschuchort.compiletesting
+
+			
+				@ProcessElem
+				class KSource {
+				}
+					"""
+        )
+		val foundElement = mutableListOf<Element.ClassElement>()
+
+        val processor = object : de.jensklingenberg.mpapt.model.AbstractProcessor() {
+
+
+            override fun processingOver() {
+
+            }
+
+            override fun process(roundEnvironment: de.jensklingenberg.mpapt.model.RoundEnvironment) {
+                roundEnvironment.getElementsAnnotatedWith(ProcessElem::class.java.name).forEach {
+                    when (it) {
+                        is Element.ClassElement -> {
+                            foundElement.add(it)
+                        }
+                    }
+                }
+            }
+
+            override fun getSupportedAnnotationTypes(): Set<String> {
+                return setOf(ProcessElem::class.java.name)
+            }
+        }
+
+
+        val result = defaultCompilerConfig().apply {
+            sources = listOf(kSource)
+            annotationProcessors = listOf(kotlinTestProc)
+            componentRegistrars = listOf(MpAptTestComponentRegistrar(processor))
+            inheritClassPath = true
+        }.compile()
+
+
+		assertThat(foundElement).isNotEmpty
+		assertThat(foundElement[0].simpleName).isEqualTo("KSource")
+
+    }
+
+	@Test
+	fun testMpAptAnnotatedFunctionWasFound() {
+		val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting
+		
+				
+				class KSource {
+				
+				@ProcessElem
+				fun myMethod(){}
+				
+				}
+					"""
+		)
+		val foundElement = mutableListOf<Element.FunctionElement>()
+
+		val processor = object : de.jensklingenberg.mpapt.model.AbstractProcessor() {
+
+			override fun process(roundEnvironment: de.jensklingenberg.mpapt.model.RoundEnvironment) {
+				roundEnvironment.getElementsAnnotatedWith(ProcessElem::class.java.name).forEach {
+					when (it) {
+						is Element.FunctionElement -> {
+							foundElement.add(it)
+
+						}
+					}
+				}
+			}
+
+			override fun getSupportedAnnotationTypes(): Set<String> {
+				return setOf(ProcessElem::class.java.name)
+			}
+
+		}
+
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+			annotationProcessors = listOf(kotlinTestProc)
+			componentRegistrars = listOf(MpAptTestComponentRegistrar(processor))
+			inheritClassPath = true
+		}.compile()
+
+
+		assertThat(foundElement).isNotEmpty
+		assertThat(foundElement[0].simpleName).isEqualTo("myMethod")
 	}
 
 	@Test
