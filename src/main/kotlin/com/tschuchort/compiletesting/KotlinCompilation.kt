@@ -65,6 +65,11 @@ class KotlinCompilation {
 	 */
 	var classpaths: List<File> = emptyList()
 
+	/**
+	 * Paths to plugins to be made available in the compilation
+	 */
+	var pluginClasspaths: List<File> = emptyList()
+
 	/** Source files to be compiled */
 	var sources: List<SourceFile> = emptyList()
 
@@ -326,6 +331,8 @@ class KotlinCompilation {
 		it.destination = classesDir.absolutePath
 		it.classpath = commonClasspaths().joinToString(separator = File.pathSeparator)
 
+		it.pluginClasspaths = pluginClasspaths.map(File::getAbsolutePath).toTypedArray()
+
 		if(jdkHome != null) {
 			it.jdkHome = jdkHome!!.absolutePath
 		}
@@ -403,6 +410,13 @@ class KotlinCompilation {
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
 	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
+		pluginClasspaths.forEach { filepath ->
+			if (!filepath.exists()) {
+				error("Plugin $filepath not found")
+				return ExitCode.INTERNAL_ERROR
+			}
+		}
+
 		if(annotationProcessors.isEmpty()) {
 			log("No services were given. Not running kapt steps.")
 			return ExitCode.OK
@@ -475,8 +489,8 @@ class KotlinCompilation {
 
 		val k2JvmArgs = commonK2JVMArgs().also {
 			it.freeArgs = sourcePaths
-			it.pluginClasspaths = (it.pluginClasspaths?.toList() ?: emptyList<String>() + getResourcesPath())
-					.distinct().toTypedArray()
+			if (it.pluginClasspaths?.isEmpty()!!)
+				it.pluginClasspaths = arrayOf(getResourcesPath())
 		}
 
 		val compilerMessageCollector = PrintingMessageCollector(

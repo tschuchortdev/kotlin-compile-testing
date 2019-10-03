@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
@@ -621,6 +622,17 @@ class KotlinCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 		assertClassLoadable(result, "com.tschuchort.compiletesting.KSource")
 		assertClassLoadable(result, "${KotlinTestProcessor.GENERATED_PACKAGE}.${KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME}")
+	}
+
+	@Test
+	fun `checks configuration with pluginClasspaths`() {
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
+			pluginClasspaths = listOf(File("./plugin.jar"))
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.INTERNAL_ERROR)
+		assertThat(result.messages.isEmpty())
 	}
 
 	private fun defaultCompilerConfig(): KotlinCompilation {
