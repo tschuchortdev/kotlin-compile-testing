@@ -625,10 +625,10 @@ class KotlinCompilationTests {
 	}
 
 	@Test
-	fun `checks configuration with pluginClasspaths`() {
+	fun `returns an internal error when adding a non existing plugin for compilation`() {
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
-			pluginClasspaths = listOf(File("./plugin.jar"))
+			pluginClasspaths = listOf(File("./non-existing-plugin.jar"))
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.INTERNAL_ERROR)

@@ -489,8 +489,7 @@ class KotlinCompilation {
 
 		val k2JvmArgs = commonK2JVMArgs().also {
 			it.freeArgs = sourcePaths
-			if (it.pluginClasspaths?.isEmpty()!!)
-				it.pluginClasspaths = arrayOf(getResourcesPath())
+			it.pluginClasspaths = it.pluginClasspaths?.plus(arrayOf(getResourcesPath()))
 		}
 
 		val compilerMessageCollector = PrintingMessageCollector(
