@@ -76,8 +76,6 @@ class KotlinCompilation {
 	/** Annotation processors to be passed to kapt */
 	var annotationProcessors: List<Processor> = emptyList()
 
-	var componentRegistrars: List<ComponentRegistrar> = emptyList()
-
 	/** Print verbose logging info */
 	var verbose: Boolean = true
 
