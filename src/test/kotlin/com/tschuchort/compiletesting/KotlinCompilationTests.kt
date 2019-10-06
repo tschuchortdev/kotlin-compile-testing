@@ -1,6 +1,7 @@
 package com.tschuchort.compiletesting
 
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
+import io.github.classgraph.ClassGraph
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
@@ -625,6 +626,17 @@ class KotlinCompilationTests {
 	}
 
 	@Test
+	fun `detects the plugin provided for compilation via pluginClasspaths property`() {
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
+			pluginClasspaths = listOf(classpathOf("kotlin-scripting-compiler-1.3.50"))
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.messages).contains("provided plugin org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar")
+	}
+
+	@Test
 	fun `returns an internal error when adding a non existing plugin for compilation`() {
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
@@ -632,7 +644,7 @@ class KotlinCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.INTERNAL_ERROR)
-		assertThat(result.messages.isEmpty())
+		assertThat(result.messages).contains("non-existing-plugin.jar not found")
 	}
 
 	private fun defaultCompilerConfig(): KotlinCompilation {
@@ -656,6 +668,12 @@ class KotlinCompilationTests {
 		catch(e: ClassNotFoundException) {
 			return fail<Nothing>("Class $className could not be loaded")
 		}
+	}
+
+	private fun classpathOf(dependency: String): File {
+		val regex = Regex(".*$dependency\\.jar")
+		val classGraph = ClassGraph().whitelistJars()
+		return classGraph.classpathFiles.first { classpath -> classpath.name.matches(regex) }
 	}
 	
 	class InheritedClass {}
