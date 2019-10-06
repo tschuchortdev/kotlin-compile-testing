@@ -670,10 +670,14 @@ class KotlinCompilationTests {
 		}
 	}
 
+	/**
+	 * Returns the classpath for a dependency (format $name-$version).
+	 * This is necessary to know the actual location of a dependency
+	 * which has been included in test runtime (build.gradle).
+	 */
 	private fun classpathOf(dependency: String): File {
 		val regex = Regex(".*$dependency\\.jar")
-		val classGraph = ClassGraph().whitelistJars()
-		return classGraph.classpathFiles.first { classpath -> classpath.name.matches(regex) }
+		return ClassGraph().classpathFiles.first { classpath -> classpath.name.matches(regex) }
 	}
 	
 	class InheritedClass {}

@@ -487,6 +487,9 @@ class KotlinCompilation {
 			}
 		}
 
+		if (pluginClasspaths.isNotEmpty())
+			warn("Included plugins in pluginsClasspaths will be executed twice.")
+
 		val k2JvmArgs = commonK2JVMArgs().also {
 			it.freeArgs = sourcePaths
 			it.pluginClasspaths = (it.pluginClasspaths ?: emptyArray()) + arrayOf(getResourcesPath())
