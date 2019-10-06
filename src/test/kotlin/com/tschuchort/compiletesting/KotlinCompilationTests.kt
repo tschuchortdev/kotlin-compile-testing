@@ -1,6 +1,6 @@
 package com.tschuchort.compiletesting
 
-import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
+import de.jensklingenberg.mpapt.model.Element
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.Rule
@@ -44,6 +44,106 @@ class KotlinCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+	}
+
+	@Test
+	fun testMpAptAnnotatedClassWasFound() {
+		val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting
+						
+			annotation class ProcessElem
+			
+				@ProcessElem
+				class KSource {
+				}
+					"""
+		)
+		val foundElement = mutableListOf<Element.ClassElement>()
+
+		val processor = object : de.jensklingenberg.mpapt.model.AbstractProcessor() {
+
+
+			override fun processingOver() {
+
+			}
+
+			override fun process(roundEnvironment: de.jensklingenberg.mpapt.model.RoundEnvironment) {
+				roundEnvironment.getElementsAnnotatedWith(ProcessElem::class.java.name).forEach {
+					when (it) {
+						is Element.ClassElement -> {
+							foundElement.add(it)
+						}
+					}
+				}
+			}
+
+			override fun getSupportedAnnotationTypes(): Set<String> {
+				return setOf(ProcessElem::class.java.name)
+			}
+		}
+
+
+		val result = defaultJSCompilerConfig().apply {
+			sources = listOf(kSource)
+			componentRegistrars = listOf(MpAptTestComponentRegistrar(processor))
+			inheritClassPath = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+
+		assertThat(foundElement).isNotEmpty
+		assertThat(foundElement[0].simpleName).isEqualTo("KSource")
+
+	}
+
+	@Test
+	fun testMpAptAnnotatedFunctionWasFound() {
+		val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting
+		
+				
+				class KSource {
+				
+				@ProcessElem
+				fun myMethod(){}
+				
+				}
+					"""
+		)
+		val foundElement = mutableListOf<Element.FunctionElement>()
+
+		val processor = object : de.jensklingenberg.mpapt.model.AbstractProcessor() {
+
+			override fun process(roundEnvironment: de.jensklingenberg.mpapt.model.RoundEnvironment) {
+				roundEnvironment.getElementsAnnotatedWith(ProcessElem::class.java.name).forEach {
+					when (it) {
+						is Element.FunctionElement -> {
+							foundElement.add(it)
+
+						}
+					}
+				}
+			}
+
+			override fun getSupportedAnnotationTypes(): Set<String> {
+				return setOf(ProcessElem::class.java.name)
+			}
+
+		}
+
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+			annotationProcessors = listOf(kotlinTestProc)
+			componentRegistrars = listOf(MpAptTestComponentRegistrar(processor))
+			inheritClassPath = true
+		}.compile()
+
+
+		assertThat(foundElement).isNotEmpty
+		assertThat(foundElement[0].simpleName).isEqualTo("myMethod")
 	}
 
 	@Test
@@ -635,7 +735,19 @@ class KotlinCompilationTests {
 		}
 	}
 
-	private fun assertClassLoadable(compileResult: KotlinCompilation.Result, className: String): Class<*> {
+	private fun defaultJSCompilerConfig(): KotlinJSCompilation {
+		return KotlinJSCompilation().apply {
+			workingDir = temporaryFolder.root
+			inheritClassPath = false
+			skipRuntimeVersionCheck = true
+			correctErrorTypes = true
+			verbose = true
+			reportOutputFiles = false
+			messageOutputStream = System.out
+		}
+	}
+
+	private fun assertClassLoadable(compileResult: Result, className: String): Class<*> {
 		try {
 			val clazz = compileResult.classLoader.loadClass(className)
 			assertThat(clazz).isNotNull

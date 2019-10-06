@@ -40,24 +40,21 @@ import org.jetbrains.kotlin.kapt3.AbstractKapt3Extension
 import org.jetbrains.kotlin.kapt3.Kapt3ComponentRegistrar
 import org.jetbrains.kotlin.kapt3.base.Kapt
 import org.jetbrains.kotlin.kapt3.base.LoadedProcessors
-import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 import org.jetbrains.kotlin.kapt3.base.util.KaptLogger
 import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import java.io.File
-import javax.annotation.processing.Processor
 
-internal class KaptComponentRegistrar : ComponentRegistrar {
-
+class KaptComponentRegistrar: ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        if (threadLocalParameters.get().processors.isEmpty())
+        if (CommonComponentRegistrar.threadLocalParameters.get().processors.isEmpty())
             return
 
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
 
-        val optionsBuilder = threadLocalParameters.get().kaptOptions.apply {
+        val optionsBuilder = CommonComponentRegistrar.threadLocalParameters.get().kaptOptions.apply {
             projectBaseDir = project.basePath?.let(::File)
             compileClasspath.addAll(contentRoots.filterIsInstance<JvmClasspathRoot>().map { it.file })
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
@@ -65,7 +62,8 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
         }
 
         val messageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
-            ?: PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, optionsBuilder.flags.contains(KaptFlag.VERBOSE))
+            ?: PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, optionsBuilder.flags.contains(
+                KaptFlag.VERBOSE))
 
         val logger = MessageCollectorBackedKaptLogger(
             optionsBuilder.flags.contains(KaptFlag.VERBOSE),
@@ -88,13 +86,14 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
         val kapt3AnalysisCompletedHandlerExtension =
             object : AbstractKapt3Extension(options, logger, configuration) {
                 override fun loadProcessors() = LoadedProcessors(
-                    processors = threadLocalParameters.get().processors,
+                    processors = CommonComponentRegistrar.threadLocalParameters.get().processors,
                     classLoader = this::class.java.classLoader
                 )
-        }
+            }
 
         AnalysisHandlerExtension.registerExtension(project, kapt3AnalysisCompletedHandlerExtension)
         StorageComponentContainerContributor.registerExtension(project, Kapt3ComponentRegistrar.KaptComponentContributor())
+
     }
 
     private fun KaptOptions.Builder.checkOptions(project: MockProject, logger: KaptLogger, configuration: CompilerConfiguration): Boolean {
@@ -160,18 +159,4 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
             return AnalysisResult.success(bindingTrace.bindingContext, module, shouldGenerateCode = false)
         }
     }
-
-    companion object {
-        /** This kapt compiler plugin is instantiated by K2JVMCompiler using
-         *  a service locator. So we can't just pass parameters to it easily.
-         *  Instead we need to use a thread-local global variable to pass
-         *  any parameters that change between compilations
-         */
-        val threadLocalParameters: ThreadLocal<Parameters> = ThreadLocal()
-    }
-
-    data class Parameters(
-        val processors: List<IncrementalProcessor>,
-        val kaptOptions: KaptOptions.Builder
-    )
 }

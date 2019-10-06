@@ -41,9 +41,11 @@ idea {
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-js"
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     testImplementation group: 'junit', name: 'junit', version: '4.12'
-
+    compile 'de.jensklingenberg:mpapt-runtime:0.8.3'
     testImplementation "org.assertj:assertj-core:3.11.1"
     testImplementation "org.mockito:mockito-core:3.0.0"
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
