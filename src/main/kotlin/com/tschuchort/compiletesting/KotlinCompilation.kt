@@ -410,13 +410,6 @@ class KotlinCompilation {
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
 	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
-		pluginClasspaths.forEach { filepath ->
-			if (!filepath.exists()) {
-				error("Plugin $filepath not found")
-				return ExitCode.INTERNAL_ERROR
-			}
-		}
-
 		if(annotationProcessors.isEmpty()) {
 			log("No services were given. Not running kapt steps.")
 			return ExitCode.OK
@@ -681,6 +674,13 @@ class KotlinCompilation {
 
 		// write given sources to working directory
 		val sourceFiles = sources.map { it.writeIfNeeded(sourcesDir) }
+
+		pluginClasspaths.forEach { filepath ->
+			if (!filepath.exists()) {
+				error("Plugin $filepath not found")
+				return Result(ExitCode.INTERNAL_ERROR, classesDir, "")
+			}
+		}
 
 		/*
 		There are 4 steps to the compilation process:

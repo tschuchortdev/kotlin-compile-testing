@@ -633,7 +633,9 @@ class KotlinCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.messages).contains("provided plugin org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar")
+		assertThat(result.messages).contains(
+			"provided plugin org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar"
+		)
 	}
 
 	@Test
