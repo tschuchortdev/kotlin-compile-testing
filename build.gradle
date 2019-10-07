@@ -41,8 +41,6 @@ idea {
 }
 
 dependencies {
-    testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:1.3.50"
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
@@ -56,7 +54,11 @@ dependencies {
     implementation "com.squareup.okio:okio:2.1.0"
     implementation 'io.github.classgraph:classgraph:4.6.10'
 
-    // the Kotlin compiler should be near the end of the list because its .jar file includes
+    // This dependency is only needed as a "sample" compiler plugin to test that
+    // running compiler plugins passed via the pluginClasspath CLI option works
+    testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:1.3.50"
+
+    // The Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
     implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.50"
     implementation "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:1.3.50"
