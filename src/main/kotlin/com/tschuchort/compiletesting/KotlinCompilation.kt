@@ -407,7 +407,6 @@ class KotlinCompilation {
 		it.reportOutputFiles = reportOutputFiles
 		it.reportPerf = reportPerformance
 	}
-
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
 	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
 		if(annotationProcessors.isEmpty()) {
@@ -678,7 +677,7 @@ class KotlinCompilation {
 		pluginClasspaths.forEach { filepath ->
 			if (!filepath.exists()) {
 				error("Plugin $filepath not found")
-				return Result(ExitCode.INTERNAL_ERROR, classesDir, "")
+				return makeResult(ExitCode.INTERNAL_ERROR)
 			}
 		}
 
@@ -701,9 +700,7 @@ class KotlinCompilation {
 			try {
 				val exitCode = stubsAndApt(sourceFiles)
 				if (exitCode != ExitCode.OK) {
-					val messages = internalMessageBuffer.readUtf8()
-					searchSystemOutForKnownErrors(messages)
-					return Result(exitCode, classesDir, messages)
+					return makeResult(exitCode)
 				}
 			} finally {
 				KaptComponentRegistrar.threadLocalParameters.remove()
@@ -712,22 +709,22 @@ class KotlinCompilation {
 			// step 3: compile Kotlin files
 			compileKotlin(sourceFiles).let { exitCode ->
 				if(exitCode != ExitCode.OK) {
-					val messages = internalMessageBuffer.readUtf8()
-					searchSystemOutForKnownErrors(messages)
-					return Result(exitCode, classesDir, messages)
+					return makeResult(exitCode)
 				}
 			}
 		}
 
 		// step 4: compile Java files
-		compileJava(sourceFiles).let { exitCode ->
-			val messages = internalMessageBuffer.readUtf8()
+		return makeResult(compileJava(sourceFiles))
+	}
 
-			if(exitCode != ExitCode.OK)
-				searchSystemOutForKnownErrors(messages)
+	private fun makeResult(exitCode: ExitCode): Result {
+		val messages = internalMessageBuffer.readUtf8()
 
-			return Result(exitCode, classesDir, messages)
-		}
+		if(exitCode != ExitCode.OK)
+			searchSystemOutForKnownErrors(messages)
+
+		return Result(exitCode, classesDir, messages)
 	}
 
 	private fun commonClasspaths() = mutableListOf<File>().apply {
