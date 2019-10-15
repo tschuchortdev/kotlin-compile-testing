@@ -1,0 +1,18 @@
+name: Java CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ '1.8.0', '11.0.x' ]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java }}
+    - name: print Java version
+      run: java -version
+    - name: Build with Gradle
+      run: ./gradlew clean build
