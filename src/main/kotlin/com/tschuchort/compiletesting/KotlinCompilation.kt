@@ -70,6 +70,11 @@ class KotlinCompilation {
 	 */
 	var pluginClasspaths: List<File> = emptyList()
 
+	/**
+	 * Compiler plugins that should be added the compilation
+	 */
+	var compilerPlugins: List<ComponentRegistrar> = emptyList()
+
 	/** Source files to be compiled */
 	var sources: List<SourceFile> = emptyList()
 
@@ -409,10 +414,6 @@ class KotlinCompilation {
 	}
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
 	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
-		if(annotationProcessors.isEmpty()) {
-			log("No services were given. Not running kapt steps.")
-			return ExitCode.OK
-		}
 
 		val kaptOptions = KaptOptions.Builder().also {
 			it.stubsOutputDir = kaptStubsDir
@@ -436,10 +437,11 @@ class KotlinCompilation {
 		 *  Instead we need to use a thread-local global variable to pass
 		 *  any parameters that change between compilations
 		 */
-		KaptComponentRegistrar.threadLocalParameters.set(
-				KaptComponentRegistrar.Parameters(
+		MainComponentRegistrar.threadLocalParameters.set(
+				MainComponentRegistrar.Parameters(
 					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL) },
-					kaptOptions
+					kaptOptions,
+					compilerPlugins
 				)
 		)
 
@@ -510,7 +512,7 @@ class KotlinCompilation {
 			}
 			.find { resourcesPath ->
 				ServiceLoaderLite.findImplementations(ComponentRegistrar::class.java, listOf(resourcesPath.toFile()))
-					.any { implementation -> implementation == KaptComponentRegistrar::class.java.name }
+					.any { implementation -> implementation == MainComponentRegistrar::class.java.name }
 			}?.toString() ?: throw AssertionError("Could not get path to ComponentRegistrar service from META-INF")
 	}
 
@@ -703,7 +705,7 @@ class KotlinCompilation {
 					return makeResult(exitCode)
 				}
 			} finally {
-				KaptComponentRegistrar.threadLocalParameters.remove()
+				MainComponentRegistrar.threadLocalParameters.remove()
 			}
 
 			// step 3: compile Kotlin files

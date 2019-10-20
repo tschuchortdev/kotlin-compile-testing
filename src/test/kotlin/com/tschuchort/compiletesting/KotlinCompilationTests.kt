@@ -649,38 +649,5 @@ class KotlinCompilationTests {
 		assertThat(result.messages).contains("non-existing-plugin.jar not found")
 	}
 
-	private fun defaultCompilerConfig(): KotlinCompilation {
-		return KotlinCompilation().apply {
-			workingDir = temporaryFolder.root
-			inheritClassPath = false
-			skipRuntimeVersionCheck = true
-			correctErrorTypes = true
-			verbose = true
-			reportOutputFiles = false
-			messageOutputStream = System.out
-		}
-	}
-
-	private fun assertClassLoadable(compileResult: KotlinCompilation.Result, className: String): Class<*> {
-		try {
-			val clazz = compileResult.classLoader.loadClass(className)
-			assertThat(clazz).isNotNull
-			return clazz
-		}
-		catch(e: ClassNotFoundException) {
-			return fail<Nothing>("Class $className could not be loaded")
-		}
-	}
-
-	/**
-	 * Returns the classpath for a dependency (format $name-$version).
-	 * This is necessary to know the actual location of a dependency
-	 * which has been included in test runtime (build.gradle).
-	 */
-	private fun classpathOf(dependency: String): File {
-		val regex = Regex(".*$dependency\\.jar")
-		return ClassGraph().classpathFiles.first { classpath -> classpath.name.matches(regex) }
-	}
-	
 	class InheritedClass {}
 }
