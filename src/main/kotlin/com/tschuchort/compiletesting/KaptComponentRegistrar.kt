@@ -47,17 +47,19 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import java.io.File
-import javax.annotation.processing.Processor
 
-internal class KaptComponentRegistrar : ComponentRegistrar {
+internal class KaptComponentRegistrar(
+    private val processors: List<IncrementalProcessor>,
+    private val kaptOptions: KaptOptions.Builder
+) : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        if (threadLocalParameters.get().processors.isEmpty())
+        if (processors.isEmpty())
             return
 
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
 
-        val optionsBuilder = threadLocalParameters.get().kaptOptions.apply {
+        val optionsBuilder = kaptOptions.apply {
             projectBaseDir = project.basePath?.let(::File)
             compileClasspath.addAll(contentRoots.filterIsInstance<JvmClasspathRoot>().map { it.file })
             javaSourceRoots.addAll(contentRoots.filterIsInstance<JavaSourceRoot>().map { it.file })
@@ -88,7 +90,7 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
         val kapt3AnalysisCompletedHandlerExtension =
             object : AbstractKapt3Extension(options, logger, configuration) {
                 override fun loadProcessors() = LoadedProcessors(
-                    processors = threadLocalParameters.get().processors,
+                    processors = processors,
                     classLoader = this::class.java.classLoader
                 )
         }
@@ -161,17 +163,4 @@ internal class KaptComponentRegistrar : ComponentRegistrar {
         }
     }
 
-    companion object {
-        /** This kapt compiler plugin is instantiated by K2JVMCompiler using
-         *  a service locator. So we can't just pass parameters to it easily.
-         *  Instead we need to use a thread-local global variable to pass
-         *  any parameters that change between compilations
-         */
-        val threadLocalParameters: ThreadLocal<Parameters> = ThreadLocal()
-    }
-
-    data class Parameters(
-        val processors: List<IncrementalProcessor>,
-        val kaptOptions: KaptOptions.Builder
-    )
 }
