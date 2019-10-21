@@ -14,11 +14,12 @@ import javax.lang.model.element.TypeElement
 class CompilerPluginsTest{
 
     @Test
-    fun whenCompilerPluginsAreAddedTheyGetExecuted() {
+    fun `when compilerplugins are added they get executed`() {
 
         val mockPlugin = Mockito.mock(ComponentRegistrar::class.java)
 
         val result = defaultCompilerConfig().apply {
+            sources = listOf(SourceFile.new("emptyKotlinFile.kt", ""))
             compilerPlugins = listOf(mockPlugin)
             inheritClassPath = true
         }.compile()
@@ -29,7 +30,7 @@ class CompilerPluginsTest{
     }
 
     @Test
-    fun whenCompilerPluginsAndAnnotationProcessorsAreAddedTheyGetExecuted() {
+    fun `when compiler plugins and annotation processors are added they get executed`() {
 
         val annotationProcessor = object : AbstractProcessor() {
             override fun getSupportedAnnotationTypes(): Set<String> = setOf(ProcessElem::class.java.canonicalName)
@@ -44,13 +45,13 @@ class CompilerPluginsTest{
 
         val mockPlugin = Mockito.mock(ComponentRegistrar::class.java)
 
-        val jSource = SourceFile.java(
-            "JSource.java", """
+        val jSource = SourceFile.kotlin(
+            "JSource.kt", """
 				package com.tschuchort.compiletesting;
 
 				@ProcessElem
 				class JSource {
-					void foo() { }
+					fun foo() { }
 				}
 					"""
         )
@@ -62,7 +63,7 @@ class CompilerPluginsTest{
             inheritClassPath = true
         }.compile()
 
-        verify(mockPlugin).registerProjectComponents(any(), any())
+         verify(mockPlugin).registerProjectComponents(any(), any())
 
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
