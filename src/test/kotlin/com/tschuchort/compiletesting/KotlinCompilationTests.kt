@@ -741,7 +741,41 @@ class KotlinCompilationTests {
 		assertThat(result.generatedFiles.map { it.name }).contains("JSource.class")
 	}
 
+	@Test
+	fun `Output directory contains compiled class files`() {
+		val jSource = SourceFile.java(
+			"JSource.java", """
+				package com.tschuchort.compiletesting;
+			
+				@ProcessElem
+				class JSource {
+					void foo() {
+					}
+				}
+					"""
+		)
 
+		val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting
+			
+				@ProcessElem
+				class KSource {
+					fun foo() {}
+				}
+				"""
+		)
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(jSource, kSource)
+			annotationProcessors = emptyList()
+			inheritClassPath = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.outputDirectory.listFilesRecursively().map { it.name })
+				.contains("JSource.class", "KSource.class")
+	}
 
 	private fun defaultCompilerConfig(): KotlinCompilation {
 		return KotlinCompilation().apply {
