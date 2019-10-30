@@ -464,7 +464,6 @@ class KotlinCompilationTests {
 		}
 	}
 
-
 	@Test
 	fun `Kotlin AP sees Java class`() {
 		val jSource = SourceFile.java(
@@ -648,6 +647,101 @@ class KotlinCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.INTERNAL_ERROR)
 		assertThat(result.messages).contains("non-existing-plugin.jar not found")
 	}
+
+	@Test
+	fun `Generated Java source is among generated files list`() {
+		val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting
+			
+				@ProcessElem
+				class KSource {
+					fun foo() {}
+				}
+				"""
+		)
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+			annotationProcessors = listOf(kotlinTestProc)
+			inheritClassPath = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.generatedFiles.map { it.name }).contains(KotlinTestProcessor.GENERATED_JAVA_CLASS_NAME + ".java")
+	}
+
+	@Test
+	fun `Generated Kotlin source is among generated files list`() {
+		val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting
+			
+				@ProcessElem
+				class KSource {
+					fun foo() {}
+				}
+				"""
+		)
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+			annotationProcessors = listOf(kotlinTestProc)
+			inheritClassPath = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.generatedFiles.map { it.name }).contains(KotlinTestProcessor.GENERATED_KOTLIN_CLASS_NAME + ".kt")
+	}
+
+	@Test
+	fun `Compiled Kotlin class file is among generated files list`() {
+		val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting
+			
+				@ProcessElem
+				class KSource {
+					fun foo() {}
+				}
+				"""
+		)
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+			annotationProcessors = listOf(kotlinTestProc)
+			inheritClassPath = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.generatedFiles.map { it.name }).contains("KSource.class")
+	}
+
+	@Test
+	fun `Compiled Java class file is among generated files list`() {
+		val jSource = SourceFile.java(
+			"JSource.java", """
+				package com.tschuchort.compiletesting;
+			
+				@ProcessElem
+				class JSource {
+					void foo() {
+					}
+				}
+					"""
+		)
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(jSource)
+			annotationProcessors = listOf(kotlinTestProc)
+			inheritClassPath = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.generatedFiles.map { it.name }).contains("JSource.class")
+	}
+
+
 
 	private fun defaultCompilerConfig(): KotlinCompilation {
 		return KotlinCompilation().apply {

@@ -314,12 +314,18 @@ class KotlinCompilation {
     }
 
 	/** Result of the compilation */
-	class Result(val exitCode: ExitCode, val outputDirectory: File,
-					  /** Messages that were printed by the compilation */
-					  val messages: String) {
-		/** All output files that were created by the compilation */
-		val generatedFiles: Collection<File> = outputDirectory.listFilesRecursively()
-
+	class Result(
+		val exitCode: ExitCode,
+		/**
+		 * The class, resource and intermediate source files generated during the compilation.
+		 * Does not include stub files and kapt incremental data.
+		 */
+		val generatedFiles: Collection<File>,
+		/** The directory where only the final output class and resources files will be */
+		val outputDirectory: File,
+		/** Messages that were printed by the compilation */
+		val messages: String
+	) {
 		/** class loader to load the compile classes */
 		val classLoader = URLClassLoader(arrayOf(outputDirectory.toURI().toURL()),
 			this::class.java.classLoader)
@@ -724,7 +730,12 @@ class KotlinCompilation {
 		if(exitCode != ExitCode.OK)
 			searchSystemOutForKnownErrors(messages)
 
-		return Result(exitCode, classesDir, messages)
+		val classAndResFiles = classesDir.listFilesRecursively()
+		val kaptGeneratedKotlinFiles = kaptKotlinGeneratedDir.listFilesRecursively()
+		val kaptGeneratedJavaFiles = kaptSourceDir.listFilesRecursively()
+		val generatedFiles = classAndResFiles + kaptGeneratedJavaFiles + kaptGeneratedKotlinFiles
+
+		return Result(exitCode, generatedFiles, classesDir, messages)
 	}
 
 	private fun commonClasspaths() = mutableListOf<File>().apply {
