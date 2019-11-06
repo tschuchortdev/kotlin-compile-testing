@@ -420,7 +420,7 @@ class KotlinCompilation {
 	}
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
 	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
-		if(annotationProcessors.isEmpty() && compilerPlugins.isEmpty()) {
+		if(annotationProcessors.isEmpty()) {
 			log("No services were given. Not running kapt steps.")
 			return ExitCode.OK
 		}
