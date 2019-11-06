@@ -1,6 +1,7 @@
 package com.tschuchort.compiletesting
 
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.verify
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
@@ -11,10 +12,10 @@ import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
 
-class CompilerPluginsTest{
+class CompilerPluginsTest {
 
     @Test
-    fun `when compilerplugins are added they get executed`() {
+    fun `when compiler plugins are added they get executed`() {
 
         val mockPlugin = Mockito.mock(ComponentRegistrar::class.java)
 
@@ -24,7 +25,7 @@ class CompilerPluginsTest{
             inheritClassPath = true
         }.compile()
 
-        verify(mockPlugin).registerProjectComponents(any(), any())
+        verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
@@ -37,7 +38,7 @@ class CompilerPluginsTest{
 
             override fun process(p0: MutableSet<out TypeElement>?, p1: RoundEnvironment?): Boolean {
                 p1?.getElementsAnnotatedWith(ProcessElem::class.java)?.forEach {
-                    Assert.assertEquals("JSource",it?.simpleName.toString())
+                    Assert.assertEquals("JSource", it?.simpleName.toString())
                 }
                 return false
             }
@@ -58,12 +59,12 @@ class CompilerPluginsTest{
 
         val result = defaultCompilerConfig().apply {
             sources = listOf(jSource)
-            annotationProcessors= listOf(annotationProcessor)
+            annotationProcessors = listOf(annotationProcessor)
             compilerPlugins = listOf(mockPlugin)
             inheritClassPath = true
         }.compile()
 
-         verify(mockPlugin).registerProjectComponents(any(), any())
+        verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
