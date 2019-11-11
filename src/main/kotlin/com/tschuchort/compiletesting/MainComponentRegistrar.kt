@@ -26,11 +26,20 @@ internal class MainComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         val parameters = threadLocalParameters.get()
-        KaptComponentRegistrar(parameters.processors,parameters.kaptOptions).registerProjectComponents(project,configuration)
 
+        /*
+        The order of registering plugins here matters. If the kapt plugin is registered first, then
+        it will be executed first and any changes made to the AST by later plugins won't apply to the
+        generated stub files and thus won't be visible to any annotation processors. So we decided
+        to register third-party plugins before kapt and hope that it works, although we don't
+        know for sure if that is the correct way.
+         */
         parameters.compilerPlugins.forEach { componentRegistrar->
             componentRegistrar.registerProjectComponents(project,configuration)
         }
+
+        KaptComponentRegistrar(parameters.processors, parameters.kaptOptions)
+                .registerProjectComponents(project,configuration)
     }
 
     companion object {
