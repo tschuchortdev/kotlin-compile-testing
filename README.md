@@ -93,7 +93,7 @@ Add dependency to your module's `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.2.3'
+	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.2.4'
 }
 ```
 
