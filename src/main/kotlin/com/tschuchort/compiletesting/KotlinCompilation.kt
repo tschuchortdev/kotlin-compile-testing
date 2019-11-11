@@ -71,7 +71,7 @@ class KotlinCompilation {
 	var pluginClasspaths: List<File> = emptyList()
 
 	/**
-	 * Compiler plugins that should be added the compilation
+	 * Compiler plugins that should be added to the compilation
 	 */
 	var compilerPlugins: List<ComponentRegistrar> = emptyList()
 
