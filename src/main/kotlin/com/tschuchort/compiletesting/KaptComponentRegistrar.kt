@@ -46,11 +46,12 @@ import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
+import org.jetbrains.kotlin.resolve.jvm.extensions.PartialAnalysisHandlerExtension
 import java.io.File
 
-internal class KaptComponentRegistrar(
-    private val processors: List<IncrementalProcessor>,
-    private val kaptOptions: KaptOptions.Builder
+internal class KaptComponentRegistrar @JvmOverloads constructor(
+    private val processors: List<IncrementalProcessor> = emptyList(),
+    private val kaptOptions: KaptOptions.Builder = KaptOptions.Builder()
 ) : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
@@ -96,7 +97,34 @@ internal class KaptComponentRegistrar(
         }
 
         AnalysisHandlerExtension.registerExtension(project, kapt3AnalysisCompletedHandlerExtension)
-        StorageComponentContainerContributor.registerExtension(project, Kapt3ComponentRegistrar.KaptComponentContributor())
+        StorageComponentContainerContributor.registerExtension(project,
+            Kapt3ComponentRegistrar.KaptComponentContributor(
+                object : PartialAnalysisHandlerExtension() {
+                    override val analyzePartially: Boolean
+                        get() = false
+
+                    override fun analysisCompleted(
+                        project: Project,
+                        module: ModuleDescriptor,
+                        bindingTrace: BindingTrace,
+                        files: Collection<KtFile>
+                    ): AnalysisResult? {
+                        return null
+                    }
+
+                    override fun doAnalysis(
+                        project: Project,
+                        module: ModuleDescriptor,
+                        projectContext: ProjectContext,
+                        files: Collection<KtFile>,
+                        bindingTrace: BindingTrace,
+                        componentProvider: ComponentProvider
+                    ): AnalysisResult? {
+                        return null
+                    }
+                }
+            )
+        )
     }
 
     private fun KaptOptions.Builder.checkOptions(project: MockProject, logger: KaptLogger, configuration: CompilerConfiguration): Boolean {
