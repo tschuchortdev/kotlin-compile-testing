@@ -49,9 +49,9 @@ import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.resolve.jvm.extensions.PartialAnalysisHandlerExtension
 import java.io.File
 
-internal class KaptComponentRegistrar @JvmOverloads constructor(
-    private val processors: List<IncrementalProcessor> = emptyList(),
-    private val kaptOptions: KaptOptions.Builder = KaptOptions.Builder()
+internal class KaptComponentRegistrar(
+    private val processors: List<IncrementalProcessor>,
+    private val kaptOptions: KaptOptions.Builder
 ) : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
