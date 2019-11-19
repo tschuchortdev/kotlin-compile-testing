@@ -97,33 +97,9 @@ internal class KaptComponentRegistrar(
         }
 
         AnalysisHandlerExtension.registerExtension(project, kapt3AnalysisCompletedHandlerExtension)
-        StorageComponentContainerContributor.registerExtension(project,
-            Kapt3ComponentRegistrar.KaptComponentContributor(
-                object : PartialAnalysisHandlerExtension() {
-                    override val analyzePartially: Boolean
-                        get() = false
-
-                    override fun analysisCompleted(
-                        project: Project,
-                        module: ModuleDescriptor,
-                        bindingTrace: BindingTrace,
-                        files: Collection<KtFile>
-                    ): AnalysisResult? {
-                        return null
-                    }
-
-                    override fun doAnalysis(
-                        project: Project,
-                        module: ModuleDescriptor,
-                        projectContext: ProjectContext,
-                        files: Collection<KtFile>,
-                        bindingTrace: BindingTrace,
-                        componentProvider: ComponentProvider
-                    ): AnalysisResult? {
-                        return null
-                    }
-                }
-            )
+        StorageComponentContainerContributor.registerExtension(
+            project = project,
+            extension = Kapt3ComponentRegistrar.KaptComponentContributor(kapt3AnalysisCompletedHandlerExtension)
         )
     }
 
