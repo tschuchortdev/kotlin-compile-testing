@@ -46,6 +46,7 @@ import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
+import org.jetbrains.kotlin.resolve.jvm.extensions.PartialAnalysisHandlerExtension
 import java.io.File
 
 internal class KaptComponentRegistrar(
@@ -96,7 +97,10 @@ internal class KaptComponentRegistrar(
         }
 
         AnalysisHandlerExtension.registerExtension(project, kapt3AnalysisCompletedHandlerExtension)
-        StorageComponentContainerContributor.registerExtension(project, Kapt3ComponentRegistrar.KaptComponentContributor())
+        StorageComponentContainerContributor.registerExtension(
+            project = project,
+            extension = Kapt3ComponentRegistrar.KaptComponentContributor(kapt3AnalysisCompletedHandlerExtension)
+        )
     }
 
     private fun KaptOptions.Builder.checkOptions(project: MockProject, logger: KaptLogger, configuration: CompilerConfiguration): Boolean {
