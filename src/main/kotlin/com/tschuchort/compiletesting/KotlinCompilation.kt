@@ -232,7 +232,7 @@ class KotlinCompilation {
 	 */
 	var kotlinStdLibJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-stdlib.jar",
-			Regex("(kotlin-stdlib|kotlin-runtime)(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"))
+			Regex("(kotlin-stdlib|kotlin-runtime)(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
 	}
 
 	/**
@@ -242,7 +242,7 @@ class KotlinCompilation {
 	 */
 	var kotlinStdLibJdkJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-stdlib-jdk*.jar",
-			Regex("kotlin-stdlib-jdk[0-9]+(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"))
+			Regex("kotlin-stdlib-jdk[0-9]+(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
 	}
 
 	/**
@@ -252,7 +252,7 @@ class KotlinCompilation {
 	 */
 	var kotlinReflectJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-reflect.jar",
-			Regex("kotlin-reflect(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"))
+			Regex("kotlin-reflect(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
 	}
 
 	/**
@@ -262,7 +262,7 @@ class KotlinCompilation {
 	 */
 	var kotlinScriptRuntimeJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-script-runtime.jar",
-			Regex("kotlin-script-runtime(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"))
+			Regex("kotlin-script-runtime(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
 	}
 
 	/**
@@ -272,7 +272,7 @@ class KotlinCompilation {
 	 */
 	var kotlinStdLibCommonJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-stdlib-common.jar",
-			Regex("kotlin-stdlib-common(-[0-9]+\\.[0-9]+\\.[0-9]+)\\.jar"))
+			Regex("kotlin-stdlib-common(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
 	}
 
 	/**
