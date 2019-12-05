@@ -112,6 +112,13 @@ However, if your project or any of its dependencies depend directly on compiler 
 
 Because the internal APIs of the Kotlin compiler often change between versions, we can only support one `kotlin-compiler-embeddable` version at a time. 
 
+## Projects that use Kotlin-Compile-Testing
+
+- [square/moshi](https://github.com/square/moshi)
+- [uber/motif](https://github.com/uber/motif)
+- [arrow-kt/arrow-meta](https://github.com/arrow-kt/arrow-meta)
+- your project
+
 ## License
 
 Copyright (C) 2019 Thilo Schuchort
