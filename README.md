@@ -117,6 +117,8 @@ Because the internal APIs of the Kotlin compiler often change between versions, 
 - [square/moshi](https://github.com/square/moshi)
 - [uber/motif](https://github.com/uber/motif)
 - [arrow-kt/arrow-meta](https://github.com/arrow-kt/arrow-meta)
+- [foso/mpapt](https://github.com/foso/mpapt)
+
 - your project
 
 ## License
