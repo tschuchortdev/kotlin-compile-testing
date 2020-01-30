@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.3.60'
+    ext.kotlin_version = '1.3.61'
 
     repositories {
         mavenCentral()
@@ -15,7 +15,7 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.60'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.61'
 }
 
 apply plugin: 'kotlin'
@@ -44,9 +44,12 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
+    compileOnly "com.google.auto.service:auto-service:1.0-rc2"
+    kapt "com.google.auto.service:auto-service:1.0-rc2"
+
     testImplementation "org.assertj:assertj-core:3.11.1"
     testImplementation "org.mockito:mockito-core:3.1.0"
-    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
 
     testImplementation 'com.squareup:kotlinpoet:1.4.0'
     testImplementation 'com.squareup:javapoet:1.11.1'
@@ -56,12 +59,12 @@ dependencies {
 
     // This dependency is only needed as a "sample" compiler plugin to test that
     // running compiler plugins passed via the pluginClasspath CLI option works
-    testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:1.3.60"
+    testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:1.3.61"
 
     // The Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
-    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.60"
-    implementation "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:1.3.60"
+    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.61"
+    implementation "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:1.3.61"
 }
 
 compileKotlin {

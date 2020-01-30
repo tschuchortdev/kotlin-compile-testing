@@ -16,12 +16,14 @@
 
 package com.tschuchort.compiletesting
 
+import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.base.kapt3.KaptOptions
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 
+@AutoService(ComponentRegistrar::class)
 internal class MainComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
@@ -48,12 +50,12 @@ internal class MainComponentRegistrar : ComponentRegistrar {
          *  Instead we need to use a thread-local global variable to pass
          *  any parameters that change between compilations
          */
-        val threadLocalParameters: ThreadLocal<Parameters> = ThreadLocal()
+        val threadLocalParameters: ThreadLocal<ThreadLocalParameters> = ThreadLocal()
     }
 
-    data class Parameters(
+    data class ThreadLocalParameters(
         val processors: List<IncrementalProcessor>,
         val kaptOptions: KaptOptions.Builder,
         val compilerPlugins: List<ComponentRegistrar>
-        )
+    )
 }
