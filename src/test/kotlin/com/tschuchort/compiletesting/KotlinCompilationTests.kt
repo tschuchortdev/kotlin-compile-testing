@@ -1,9 +1,13 @@
 package com.tschuchort.compiletesting
 
+import com.nhaarman.mockitokotlin2.*
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
-import io.github.classgraph.ClassGraph
+import com.tschuchort.compiletesting.MockitoAdditionalMatchersKotlin.Companion.not
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
+import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
+import org.jetbrains.kotlin.compiler.plugin.CliOption
+import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.jetbrains.kotlin.compiler.plugin.PluginCliOptionProcessingException
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -118,7 +122,7 @@ class KotlinCompilationTests {
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(source)
 			jdkHome = null
-		
+
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
@@ -628,7 +632,7 @@ class KotlinCompilationTests {
 	fun `detects the plugin provided for compilation via pluginClasspaths property`() {
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
-			pluginClasspaths = listOf(classpathOf("kotlin-scripting-compiler-1.3.60"))
+			pluginClasspaths = listOf(classpathOf("kotlin-scripting-compiler-1.3.61"))
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
@@ -739,6 +743,34 @@ class KotlinCompilationTests {
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 		assertThat(result.generatedFiles.map { it.name }).contains("JSource.class")
+	}
+
+	@Test
+	fun `Custom plugin receives CLI argument`() {
+	    val kSource = SourceFile.kotlin(
+			"KSource.kt", """
+				package com.tschuchort.compiletesting;
+				class KSource()
+			""".trimIndent()
+		)
+
+		val cliProcessor = spy(object : CommandLineProcessor {
+			override val pluginId = "myPluginId"
+			override val pluginOptions = listOf(CliOption("test_option_name", "", ""))
+		})
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(kSource)
+			inheritClassPath = false
+			pluginOptions = listOf(PluginOption("myPluginId", "test_option_name", "test_value"))
+			commandLineProcessors = listOf(cliProcessor)
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+
+		verify(cliProcessor, atLeastOnce()).processOption(argWhere<AbstractCliOption> { it.optionName == "test_option_name" }, eq("test_value"), any())
+		verify(cliProcessor, never()).processOption(argWhere<AbstractCliOption> { it.optionName == "test_option_name" }, not(eq("test_value")), any())
+		verify(cliProcessor, never()).processOption(argWhere<AbstractCliOption> { it.optionName != "test_option_name" }, any(), any())
 	}
 
 	@Test

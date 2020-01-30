@@ -24,10 +24,13 @@ import org.jetbrains.kotlin.base.kapt3.KaptFlag
 import org.jetbrains.kotlin.base.kapt3.KaptOptions
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
+import org.jetbrains.kotlin.cli.common.arguments.validateArguments
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
+import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.JVMAssertionsMode
 import org.jetbrains.kotlin.config.JvmDefaultMode
@@ -45,6 +48,11 @@ import java.nio.file.Paths
 import javax.annotation.processing.Processor
 import javax.tools.*
 
+data class PluginOption(val pluginId: PluginId, val optionName: OptionName, val optionValue: OptionValue)
+
+typealias PluginId = String
+typealias OptionName = String
+typealias OptionValue = String
 
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinCompilation {
@@ -56,7 +64,7 @@ class KotlinCompilation {
 	}
 
 	/** Arbitrary arguments to be passed to kapt */
-	var kaptArgs: MutableMap<String, String> = mutableMapOf()
+	var kaptArgs: MutableMap<OptionName, OptionValue> = mutableMapOf()
 
 	/**
 	 * Paths to directories or .jar files that contain classes
@@ -74,6 +82,11 @@ class KotlinCompilation {
 	 * Compiler plugins that should be added to the compilation
 	 */
 	var compilerPlugins: List<ComponentRegistrar> = emptyList()
+
+	/**
+	 * Commandline processors for compiler plugins that should be added to the compilation
+	 */
+	var commandLineProcessors: List<CommandLineProcessor> = emptyList()
 
 	/** Source files to be compiled */
 	var sources: List<SourceFile> = emptyList()
@@ -213,7 +226,12 @@ class KotlinCompilation {
 	var sanitizeParentheses: Boolean = false
 
 	/** Paths to output directories for friend modules (whose internals should be visible) */
-	var friendPaths: MutableList<File> = mutableListOf()
+	var friendPaths: List<File> = emptyList()
+
+	/** Additional string arguments to the Kotlin compiler */
+	var kotlincArguments: List<String> = emptyList()
+	/** Options to be passed to compiler plugins: -P plugin:<pluginId>:<optionName>=<value>*/
+	var pluginOptions: List<PluginOption> = emptyList()
 
 	/**
 	 * Path to the JDK to be used
@@ -355,87 +373,119 @@ class KotlinCompilation {
 				= sourcesGeneratedByAnnotationProcessor + compiledClassAndResourceFiles + generatedStubFiles
 	}
 
-	// setup common arguments for the two kotlinc calls
-	private fun commonK2JVMArgs() = K2JVMCompilerArguments().also { it ->
-		it.destination = classesDir.absolutePath
-		it.classpath = commonClasspaths().joinToString(separator = File.pathSeparator)
 
-		it.pluginClasspaths = pluginClasspaths.map(File::getAbsolutePath).toTypedArray()
+	// setup common arguments for the two kotlinc calls
+	private fun commonK2JVMArgs() = K2JVMCompilerArguments().also { args ->
+		args.destination = classesDir.absolutePath
+		args.classpath = commonClasspaths().joinToString(separator = File.pathSeparator)
+
+		args.pluginClasspaths = pluginClasspaths.map(File::getAbsolutePath).toTypedArray()
 
 		if(jdkHome != null) {
-			it.jdkHome = jdkHome!!.absolutePath
+			args.jdkHome = jdkHome!!.absolutePath
 		}
 		else {
 			log("Using option -no-jdk. Kotlinc won't look for a JDK.")
-			it.noJdk = true
+			args.noJdk = true
 		}
 
-		it.verbose = verbose
-		it.includeRuntime = includeRuntime
+		args.verbose = verbose
+		args.includeRuntime = includeRuntime
 
 		// the compiler should never look for stdlib or reflect in the
 		// kotlinHome directory (which is null anyway). We will put them
 		// in the classpath manually if they're needed
-		it.noStdlib = true
-		it.noReflect = true
+		args.noStdlib = true
+		args.noReflect = true
 
 		if(moduleName != null)
-			it.moduleName = moduleName
+			args.moduleName = moduleName
 
-		it.jvmTarget = jvmTarget
-		it.javaParameters = javaParameters
-		it.useIR = useIR
+		args.jvmTarget = jvmTarget
+		args.javaParameters = javaParameters
+		args.useIR = useIR
 
 		if(javaModulePath != null)
-			it.javaModulePath = javaModulePath!!.toString()
+			args.javaModulePath = javaModulePath!!.toString()
 
-		it.additionalJavaModules = additionalJavaModules.map(File::getAbsolutePath).toTypedArray()
-		it.noCallAssertions = noCallAssertions
-		it.noParamAssertions = noParamAssertions
-		it.noReceiverAssertions = noReceiverAssertions
-		it.strictJavaNullabilityAssertions = strictJavaNullabilityAssertions
-		it.noOptimize = noOptimize
+		args.additionalJavaModules = additionalJavaModules.map(File::getAbsolutePath).toTypedArray()
+		args.noCallAssertions = noCallAssertions
+		args.noParamAssertions = noParamAssertions
+		args.noReceiverAssertions = noReceiverAssertions
+		args.strictJavaNullabilityAssertions = strictJavaNullabilityAssertions
+		args.noOptimize = noOptimize
 
 		if(constructorCallNormalizationMode != null)
-			it.constructorCallNormalizationMode = constructorCallNormalizationMode
+			args.constructorCallNormalizationMode = constructorCallNormalizationMode
 
 		if(assertionsMode != null)
-			it.assertionsMode = assertionsMode
+			args.assertionsMode = assertionsMode
 
 		if(buildFile != null)
-			it.buildFile = buildFile!!.toString()
+			args.buildFile = buildFile!!.toString()
 
-		it.inheritMultifileParts = inheritMultifileParts
-		it.useTypeTable = useTypeTable
+		args.inheritMultifileParts = inheritMultifileParts
+		args.useTypeTable = useTypeTable
 
 		if(declarationsOutputPath != null)
-			it.declarationsOutputPath = declarationsOutputPath!!.toString()
+			args.declarationsOutputPath = declarationsOutputPath!!.toString()
 
-		it.singleModule = singleModule
+		args.singleModule = singleModule
 
 		if(javacArguments.isNotEmpty())
-			it.javacArguments = javacArguments.toTypedArray()
+			args.javacArguments = javacArguments.toTypedArray()
 
 		if(supportCompatqualCheckerFrameworkAnnotations != null)
-			it.supportCompatqualCheckerFrameworkAnnotations = supportCompatqualCheckerFrameworkAnnotations
+			args.supportCompatqualCheckerFrameworkAnnotations = supportCompatqualCheckerFrameworkAnnotations
 
-		it.jvmDefault = jvmDefault
-		it.strictMetadataVersionSemantics = strictMetadataVersionSemantics
-		it.sanitizeParentheses = sanitizeParentheses
+		args.jvmDefault = jvmDefault
+		args.strictMetadataVersionSemantics = strictMetadataVersionSemantics
+		args.sanitizeParentheses = sanitizeParentheses
 
 		if(friendPaths.isNotEmpty())
-			it.friendPaths = friendPaths.map(File::getAbsolutePath).toTypedArray()
+			args.friendPaths = friendPaths.map(File::getAbsolutePath).toTypedArray()
 
 		if(scriptResolverEnvironment.isNotEmpty())
-			it.scriptResolverEnvironment = scriptResolverEnvironment.map { (key, value) -> "$key=\"$value\"" }.toTypedArray()
+			args.scriptResolverEnvironment = scriptResolverEnvironment.map { (key, value) -> "$key=\"$value\"" }.toTypedArray()
 
-		it.noExceptionOnExplicitEqualsForBoxedNull = noExceptionOnExplicitEqualsForBoxedNull
-		it.skipRuntimeVersionCheck = skipRuntimeVersionCheck
-		it.suppressWarnings = suppressWarnings
-		it.allWarningsAsErrors = allWarningsAsErrors
-		it.reportOutputFiles = reportOutputFiles
-		it.reportPerf = reportPerformance
+		args.noExceptionOnExplicitEqualsForBoxedNull = noExceptionOnExplicitEqualsForBoxedNull
+		args.skipRuntimeVersionCheck = skipRuntimeVersionCheck
+		args.suppressWarnings = suppressWarnings
+		args.allWarningsAsErrors = allWarningsAsErrors
+		args.reportOutputFiles = reportOutputFiles
+		args.reportPerf = reportPerformance
+        args.javaPackagePrefix = javaPackagePrefix
+        args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
+
+		/**
+		 * It's not possible to pass dynamic [CommandLineProcessor] instancess directly to the [K2JVMCompiler]
+		 * because the compiler discoveres them on the classpath through a service locator, so we need to apply
+		 * the same trick as with [ComponentRegistrar]s: We put our own static [CommandLineProcessor] on the
+		 * classpath which in turn calls the user's dynamic [CommandLineProcessor] instances.
+		 */
+		MainCommandLineProcessor.threadLocalParameters.set(
+			MainCommandLineProcessor.ThreadLocalParameters(commandLineProcessors)
+		)
+
+		/**
+		 * Our [MainCommandLineProcessor] only has access to the CLI options that belong to its own plugin ID.
+		 * So in order to be able to access CLI options that are meant for other [CommandLineProcessor]s we
+		 * wrap these CLI options, send them to our own plugin ID and later unwrap them again to forward them
+		 * to the correct [CommandLineProcessor].
+		 */
+		args.pluginOptions = pluginOptions.map { (pluginId, optionName, optionValue) ->
+			"plugin:${MainCommandLineProcessor.pluginId}:${MainCommandLineProcessor.encodeForeignOptionName(pluginId, optionName)}=$optionValue"
+		}.toTypedArray()
+
+		/* Parse extra CLI arguments that are given as strings so users can specify arguments that are not yet
+		implemented here as well-typed properties. */
+		parseCommandLineArguments(kotlincArguments, args)
+
+		validateArguments(args.errors)?.let {
+			throw IllegalArgumentException("Errors parsing kotlinc CLI arguments:\n$it")
+		}
 	}
+
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
 	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
 		if(annotationProcessors.isEmpty()) {
@@ -467,7 +517,7 @@ class KotlinCompilation {
 		 *
 		 */
 		MainComponentRegistrar.threadLocalParameters.set(
-				MainComponentRegistrar.Parameters(
+				MainComponentRegistrar.ThreadLocalParameters(
 					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL) },
 					kaptOptions,
 					compilerPlugins
@@ -555,13 +605,12 @@ class KotlinCompilation {
 		 * the list is set to empty
 		 */
 		MainComponentRegistrar.threadLocalParameters.set(
-			MainComponentRegistrar.Parameters(
+			MainComponentRegistrar.ThreadLocalParameters(
 				listOf(),
 				KaptOptions.Builder(),
 				compilerPlugins
 			)
 		)
-
 
 		val sources = sourceFiles +
 				kaptKotlinGeneratedDir.listFilesRecursively() +
@@ -572,7 +621,7 @@ class KotlinCompilation {
 			return ExitCode.OK
 
 		// in this step also include source files generated by kapt in the previous step
-		val k2JvmArgs = commonK2JVMArgs().also {jvmArgs->
+		val k2JvmArgs = commonK2JVMArgs().also { jvmArgs->
 			jvmArgs.pluginClasspaths = (jvmArgs.pluginClasspaths ?: emptyArray()) + arrayOf(getResourcesPath())
 			jvmArgs.freeArgs = sources.map(File::getAbsolutePath).distinct()
 		}
@@ -777,7 +826,9 @@ class KotlinCompilation {
 
 	private fun commonClasspaths() = mutableListOf<File>().apply {
 		addAll(classpaths)
-		addAll(listOfNotNull(kotlinStdLibJar, kotlinReflectJar, kotlinScriptRuntimeJar))
+		addAll(listOfNotNull(kotlinStdLibJar,  kotlinStdLibCommonJar, kotlinStdLibJdkJar,
+            kotlinReflectJar, kotlinScriptRuntimeJar
+        ))
 
 		if(inheritClassPath) {
 			addAll(hostClasspaths)
