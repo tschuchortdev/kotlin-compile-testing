@@ -55,6 +55,7 @@ Configure compilation
 
         // pass your own instance of a compiler plugin
         compilerPlugins = listOf(MyComponentRegistrar())
+	commandlineProcessors = listOf(MyCommandlineProcessor())
         
         inheritClassPath = true
         messageOutputStream = System.out // see diagnostics in real time
