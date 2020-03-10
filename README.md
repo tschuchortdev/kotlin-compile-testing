@@ -97,7 +97,7 @@ Add dependency to your module's `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.2.6'
+	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.2.7'
 }
 ```
 
@@ -109,7 +109,7 @@ Kotlin-Compile-Testing is compatible with all _local_ compiler versions. It does
 
 However, if your project or any of its dependencies depend directly on compiler artifacts such as `kotlin-compiler-embeddable` or `kotlin-annotation-processing-embeddable` then they have to be the same version as the one used by Kotlin-Compile-Testing or there will be a transitive dependency conflict.
 
-- Current `kotlin-compiler-embeddable` version: `1.3.61`
+- Current `kotlin-compiler-embeddable` version: `1.3.70`
 
 Because the internal APIs of the Kotlin compiler often change between versions, we can only support one `kotlin-compiler-embeddable` version at a time. 
 

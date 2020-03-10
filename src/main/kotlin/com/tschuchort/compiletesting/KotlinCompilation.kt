@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.Services
 import org.jetbrains.kotlin.kapt3.base.incremental.DeclaredProcType
 import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
+import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
 import java.io.*
 import java.lang.RuntimeException
 import java.net.URI
@@ -509,6 +510,8 @@ class KotlinCompilation {
 				it.flags.addAll(KaptFlag.MAP_DIAGNOSTIC_LOCATIONS, KaptFlag.VERBOSE)
 		}
 
+		val kaptLogger = MessageCollectorBackedKaptLogger(kaptOptions.build())
+
 		/** The main compiler plugin (MainComponentRegistrar)
 		 *  is instantiated by K2JVMCompiler using
 		 *  a service locator. So we can't just pass parameters to it easily.
@@ -518,7 +521,7 @@ class KotlinCompilation {
 		 */
 		MainComponentRegistrar.threadLocalParameters.set(
 				MainComponentRegistrar.ThreadLocalParameters(
-					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL) },
+					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL, kaptLogger) },
 					kaptOptions,
 					compilerPlugins
 				)
