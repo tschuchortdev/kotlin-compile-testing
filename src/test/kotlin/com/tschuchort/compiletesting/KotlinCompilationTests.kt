@@ -632,7 +632,7 @@ class KotlinCompilationTests {
 	fun `detects the plugin provided for compilation via pluginClasspaths property`() {
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
-			pluginClasspaths = listOf(classpathOf("kotlin-scripting-compiler-1.3.61"))
+			pluginClasspaths = listOf(classpathOf("kotlin-scripting-compiler-1.3.70"))
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
