@@ -510,7 +510,11 @@ class KotlinCompilation {
 				it.flags.addAll(KaptFlag.MAP_DIAGNOSTIC_LOCATIONS, KaptFlag.VERBOSE)
 		}
 
-		val kaptLogger = MessageCollectorBackedKaptLogger(kaptOptions.build())
+		val compilerMessageCollector = PrintingMessageCollector(
+			internalMessageStream, MessageRenderer.GRADLE_STYLE, verbose
+		)
+
+		val kaptLogger = MessageCollectorBackedKaptLogger(kaptOptions.build(), compilerMessageCollector)
 
 		/** The main compiler plugin (MainComponentRegistrar)
 		 *  is instantiated by K2JVMCompiler using
@@ -570,10 +574,6 @@ class KotlinCompilation {
 			it.freeArgs = sourcePaths
 			it.pluginClasspaths = (it.pluginClasspaths ?: emptyArray()) + arrayOf(getResourcesPath())
 		}
-
-		val compilerMessageCollector = PrintingMessageCollector(
-			internalMessageStream, MessageRenderer.GRADLE_STYLE, verbose
-		)
 
 		return convertKotlinExitCode(
             K2JVMCompiler().exec(compilerMessageCollector, Services.EMPTY, k2JvmArgs)
