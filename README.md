@@ -120,6 +120,11 @@ Because the internal APIs of the Kotlin compiler often change between versions, 
 - [arrow-kt/arrow-meta](https://github.com/arrow-kt/arrow-meta)
 - [foso/mpapt](https://github.com/foso/mpapt)
 - [kotlintest/kotlintest](https://github.com/kotlintest/kotlintest)
+- [bnorm/kotlin-power-assert](https://github.com/bnorm/kotlin-power-assert)
+- [JakeWharton/confundus](https://github.com/JakeWharton/confundus)
+- [kotest/kotest](https://github.com/kotest/kotest)
+- [ZacSweers/aak](https://github.com/ZacSweers/aak)
+- [apollographql/apollo-android](https://github.com/apollographql/apollo-android)
 - your project...
 
 ## License
