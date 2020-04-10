@@ -5,7 +5,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.tschuchortdev/kotlin-compile-testing/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.tschuchortdev/kotlin-compile-testing)
 [![](https://jitpack.io/v/tschuchortdev/kotlin-compile-testing.svg)](https://jitpack.io/#tschuchortdev/kotlin-compile-testing)
 ![GitHub](https://img.shields.io/github/license/tschuchortdev/kotlin-compile-testing.svg?color=green&style=popout)
-![Maintenance](https://img.shields.io/maintenance/yes/2019.svg?style=popout)
+![Maintenance](https://img.shields.io/maintenance/yes/2020.svg?style=popout)
 [![Generic badge](https://img.shields.io/badge/contributions-welcome-green.svg)](https://shields.io/)
 [![Build Status](https://travis-ci.com/tschuchortdev/kotlin-compile-testing.svg?branch=master)](https://travis-ci.com/tschuchortdev/kotlin-compile-testing)
 [![Build status](https://ci.appveyor.com/api/projects/status/jj639rc6whehaf9o?svg=true)](https://ci.appveyor.com/project/tschuchortdev/kotlin-compile-testing)
