@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.3.70'
+    ext.kotlin_version = '1.3.72'
 
     repositories {
         mavenCentral()
@@ -15,7 +15,7 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.70'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
 }
 
 apply plugin: 'kotlin'
@@ -59,12 +59,12 @@ dependencies {
 
     // This dependency is only needed as a "sample" compiler plugin to test that
     // running compiler plugins passed via the pluginClasspath CLI option works
-    testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:1.3.70"
+    testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:1.3.72"
 
     // The Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
-    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.70"
-    implementation "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:1.3.70"
+    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.3.72"
+    implementation "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:1.3.72"
 }
 
 compileKotlin {
