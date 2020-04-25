@@ -125,6 +125,7 @@ Because the internal APIs of the Kotlin compiler often change between versions, 
 - [kotest/kotest](https://github.com/kotest/kotest)
 - [ZacSweers/aak](https://github.com/ZacSweers/aak)
 - [apollographql/apollo-android](https://github.com/apollographql/apollo-android)
+- [patxibocos/poetimizely](https://github.com/patxibocos/poetimizely)
 - your project...
 
 ## License
