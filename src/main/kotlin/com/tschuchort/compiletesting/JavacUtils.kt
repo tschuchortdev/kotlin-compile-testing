@@ -75,10 +75,14 @@ internal fun getJavacVersionString(javacCommand: String): String {
 
     val output = buffer.readUtf8()
 
-    return Regex("javac (.*)?[\\s\\S]*").matchEntire(output)?.destructured?.component1()
-        ?: throw IllegalStateException("Command '$javacCommand -version' did not print expected output. " +
-                "Output was: '$output'")
+    return parseVersionString(output) ?: throw IllegalStateException(
+        "Command '$javacCommand -version' did not print expected output. " +
+                "Output was: '$output'"
+    )
 }
+
+internal fun parseVersionString(output: String) =
+    Regex("javac (.*)?[\\s\\S]*").find(output)?.destructured?.component1()
 
 internal fun isJavac9OrLater(javacVersionString: String): Boolean {
     try {
