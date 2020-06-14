@@ -44,8 +44,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
-    compileOnly "com.google.auto.service:auto-service:1.0-rc2"
-    kapt "com.google.auto.service:auto-service:1.0-rc2"
+    compileOnly "com.google.auto.service:auto-service:1.0-rc7"
+    kapt "com.google.auto.service:auto-service:1.0-rc7"
 
     testImplementation "org.assertj:assertj-core:3.11.1"
     testImplementation "org.mockito:mockito-core:3.2.4"
