@@ -251,7 +251,7 @@ class KotlinCompilation {
 	 */
 	var kotlinStdLibJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-stdlib.jar",
-			Regex("(kotlin-stdlib|kotlin-runtime)(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
+			kotlinDependencyRegex("(kotlin-stdlib|kotlin-runtime)"))
 	}
 
 	/**
@@ -261,7 +261,7 @@ class KotlinCompilation {
 	 */
 	var kotlinStdLibJdkJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-stdlib-jdk*.jar",
-			Regex("kotlin-stdlib-jdk[0-9]+(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
+			kotlinDependencyRegex("kotlin-stdlib-jdk[0-9]+"))
 	}
 
 	/**
@@ -271,7 +271,7 @@ class KotlinCompilation {
 	 */
 	var kotlinReflectJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-reflect.jar",
-			Regex("kotlin-reflect(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
+			kotlinDependencyRegex("kotlin-reflect"))
 	}
 
 	/**
@@ -281,7 +281,7 @@ class KotlinCompilation {
 	 */
 	var kotlinScriptRuntimeJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-script-runtime.jar",
-			Regex("kotlin-script-runtime(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
+			kotlinDependencyRegex("kotlin-script-runtime"))
 	}
 
 	/**
@@ -291,7 +291,7 @@ class KotlinCompilation {
 	 */
 	var kotlinStdLibCommonJar: File? by default {
 		findInHostClasspath(hostClasspaths, "kotlin-stdlib-common.jar",
-			Regex("kotlin-stdlib-common(-[0-9]+\\.[0-9]+\\.[0-9]+)([-0-9a-zA-Z]+)?\\.jar"))
+			kotlinDependencyRegex("kotlin-stdlib-common"))
 	}
 
 	/**
@@ -904,6 +904,10 @@ class KotlinCompilation {
 	companion object {
 		const val OPTION_KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated"
     }
+}
+
+private fun kotlinDependencyRegex(prefix:String): Regex {
+	return Regex("$prefix(-[0-9]+\\.[0-9]+(\\.[0-9]+)?)([-0-9a-zA-Z]+)?\\.jar")
 }
 
 private fun convertKotlinExitCode(code: ExitCode) = when(code) {
