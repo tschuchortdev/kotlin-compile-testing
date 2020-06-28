@@ -1,2 +1,3 @@
 rootProject.name = 'kotlin-compile-testing'
+include("ksp")
 
