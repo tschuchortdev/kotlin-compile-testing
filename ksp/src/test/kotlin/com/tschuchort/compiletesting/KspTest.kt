@@ -3,11 +3,11 @@ package com.tschuchort.compiletesting
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.ksp.processing.Resolver
 import org.jetbrains.kotlin.ksp.processing.SymbolProcessor
+import org.jetbrains.kotlin.ksp.symbol.KSClassDeclaration
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,6 +46,55 @@ class KspTest {
             verify().process(any())
             verify().finish()
         }
+    }
+
+    @Test
+    fun processorGeneratedCodeIsVisible() {
+        val annotation = SourceFile.kotlin(
+            "TestAnnotation.kt", """
+            package foo.bar
+            annotation class TestAnnotation
+        """.trimIndent()
+        )
+        val targetClass = SourceFile.kotlin(
+            "AppCode.kt", """
+            package foo.bar
+            import foo.bar.generated.AppCode_Gen
+            @TestAnnotation
+            class AppCode {
+                init {
+                    // access generated code
+                    AppCode_Gen()
+                }
+            }
+        """.trimIndent()
+        )
+        val processor = object : AbstractSymbolProcessor() {
+            override fun process(resolver: Resolver) {
+                val symbols = resolver.getSymbolsWithAnnotation("foo.bar.TestAnnotation")
+                assertThat(symbols).isNotEmpty()
+                val klass = symbols.first()
+                check(klass is KSClassDeclaration)
+                val qName = klass.qualifiedName ?: error("should've found qualified name")
+                val genPackage = "${qName.getQualifier()}.generated"
+                val genClassName = "${qName.getShortName()}_Gen"
+                val outFile = codeGenerator.createNewFile(
+                    packageName = genPackage,
+                    fileName = genClassName
+                )
+                outFile.writeText(
+                    """
+                        package $genPackage
+                        class $genClassName() {}
+                    """.trimIndent()
+                )
+            }
+        }
+        val result = KotlinCompilation().apply {
+            sources = listOf(annotation, targetClass)
+            symbolProcessor(processorRule.delegateTo(processor))
+        }.compile()
+        assertThat(result.exitCode).isEqualTo(ExitCode.OK)
     }
 
     companion object {
