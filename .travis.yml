@@ -32,12 +32,15 @@ cache:
 
 before_install:
   - chmod +x gradlew
+  - chmod +x ksp/gradlew
 
 install:
   - ./gradlew assemble --info --no-daemon
+  - ./gradlew -p ksp assemble --info --no-daemon
 
 script:
   - ./gradlew check --info --no-daemon
+  - ./gradlew -p ksp check --info --no-daemon
 
 notifications:
   email: false

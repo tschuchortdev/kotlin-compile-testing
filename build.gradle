@@ -4,7 +4,6 @@ buildscript {
     repositories {
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
     }
 
     dependencies {
@@ -16,6 +15,7 @@ buildscript {
 
 plugins {
     id 'java'
+    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
     id "com.github.gmazzo.buildconfig" version "2.0.1"
 }
 
@@ -32,7 +32,6 @@ repositories {
     maven { url 'https://jitpack.io' }
     maven { url 'https://kotlin.bintray.com/kotlinx' }
     jcenter()
-    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
 }
 
 idea {
