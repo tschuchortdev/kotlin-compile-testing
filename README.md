@@ -137,7 +137,7 @@ class MySymbolProcessor : SymbolProcessor {
 
 val result = KotlinCompilation().apply {
     sources = listOf(source)
-    symbolProcessor(MySymbolProcessor::class.java)
+    symbolProcessors(MySymbolProcessor::class.java)
 }.compile()
 ```
 

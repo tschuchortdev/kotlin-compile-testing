@@ -17,6 +17,8 @@ build:
 
 build_script:
   - gradlew.bat assemble --info --no-daemon
+  - gradlew.bat -p ksp assemble --info --no-daemon
 
 test_script:
   - gradlew.bat check --info --no-daemon
+  - gradlew.bat -p check --info --no-daemon

@@ -38,7 +38,9 @@ internal class DelegateProcessor : SymbolProcessor {
 }
 
 /**
- * JUnit test rule that can trigger a single KSP processor
+ * JUnit test rule that can trigger a single KSP processor.
+ * Useful for testing now until we figure out how to accept instance variables without changing the main
+ * [KotlinCompilation] class.
  */
 class DelegatingSymbolProcessorRule : TestWatcher() {
     fun delegateTo(processor: SymbolProcessor): Class<out SymbolProcessor> {
