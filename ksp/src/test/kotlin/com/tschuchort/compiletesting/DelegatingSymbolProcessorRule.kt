@@ -6,6 +6,10 @@ import org.jetbrains.kotlin.ksp.processing.SymbolProcessor
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 
+/**
+ * A processor implementation that delegates to an instance given in test.
+ * Must be used via [DelegatingSymbolProcessorRule] until we move this support into internals.
+ */
 internal class DelegateProcessor : SymbolProcessor {
     private val delegate
         get() = checkNotNull(Companion.delegate) {
@@ -33,6 +37,9 @@ internal class DelegateProcessor : SymbolProcessor {
     }
 }
 
+/**
+ * JUnit test rule that can trigger a single KSP processor
+ */
 class DelegatingSymbolProcessorRule : TestWatcher() {
     fun delegateTo(processor: SymbolProcessor): Class<out SymbolProcessor> {
         check(DelegateProcessor.delegate == null) {
