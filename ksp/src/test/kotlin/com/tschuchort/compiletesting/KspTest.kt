@@ -72,7 +72,7 @@ class KspTest {
         val processor = object : AbstractSymbolProcessor() {
             override fun process(resolver: Resolver) {
                 val symbols = resolver.getSymbolsWithAnnotation("foo.bar.TestAnnotation")
-                assertThat(symbols).isNotEmpty()
+                assertThat(symbols.size).isEqualTo(1)
                 val klass = symbols.first()
                 check(klass is KSClassDeclaration)
                 val qName = klass.qualifiedName ?: error("should've found qualified name")
