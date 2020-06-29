@@ -97,6 +97,45 @@ class KspTest {
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
     }
 
+    @Test
+    fun multipleProcessors() {
+        // access generated code by multiple processors
+        val source = SourceFile.kotlin(
+            "foo.bar.Dummy.kt", """
+            package foo.bar
+            import generated.A
+            import generated.B
+            class Dummy(val a:A, val b:B)
+        """.trimIndent()
+        )
+        val result = KotlinCompilation().apply {
+            sources = listOf(source)
+            symbolProcessor(Write_foo_bar_A::class.java, Write_foo_bar_B::class.java)
+        }.compile()
+        assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+    }
+
+    @Suppress("ClassName")
+    internal class Write_foo_bar_A() : ClassGeneratingProcessor("generated", "A")
+
+    @Suppress("ClassName")
+    internal class Write_foo_bar_B() : ClassGeneratingProcessor("generated", "B")
+
+    internal open class ClassGeneratingProcessor(
+        private val packageName: String,
+        private val className: String
+    ) : AbstractSymbolProcessor() {
+        override fun process(resolver: Resolver) {
+            super.process(resolver)
+            codeGenerator.createNewFile(packageName, className).writeText(
+                """
+                package $packageName
+                class $className() {}
+            """.trimIndent()
+            )
+        }
+    }
+
     companion object {
         private val DUMMY_KOTLIN_SRC = SourceFile.kotlin(
             "foo.bar.Dummy.kt", """

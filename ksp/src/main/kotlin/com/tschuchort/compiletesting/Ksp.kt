@@ -11,7 +11,7 @@ private const val KSP_PLUGIN_ID = "org.jetbrains.kotlin.ksp"
 
 // TODO can we add support for instances?
 fun KotlinCompilation.symbolProcessor(
-    vararg processors : Class<out SymbolProcessor>
+    vararg processors: Class<out SymbolProcessor>
 ) {
     check(processors.isNotEmpty()) {
         "Must provide at least 1 symbol processor"
@@ -42,8 +42,8 @@ fun KotlinCompilation.symbolProcessor(
         PluginOption(KSP_PLUGIN_ID, "classes", classesFolder.path),
         PluginOption(KSP_PLUGIN_ID, "sources", sourceFolder.path)
     )
-    compilerPlugins += KotlinSymbolProcessingComponentRegistrar()
-    commandLineProcessors += listOf(KotlinSymbolProcessingCommandLineProcessor())
-    pluginOptions += kspOptions
+    compilerPlugins = compilerPlugins + KotlinSymbolProcessingComponentRegistrar()
+    commandLineProcessors = commandLineProcessors + listOf(KotlinSymbolProcessingCommandLineProcessor())
+    pluginOptions = pluginOptions + kspOptions
     this.kaptSourceDir
 }
