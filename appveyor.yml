@@ -21,4 +21,4 @@ build_script:
 
 test_script:
   - gradlew.bat check --info --no-daemon
-  - gradlew.bat -p check --info --no-daemon
+  - gradlew.bat -p ksp check --info --no-daemon
