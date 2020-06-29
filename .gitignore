@@ -234,3 +234,4 @@ hs_err_pid*
 !gradle/wrapper/gradle-wrapper.jar
 
 ksp/build
+ksp/.idea
