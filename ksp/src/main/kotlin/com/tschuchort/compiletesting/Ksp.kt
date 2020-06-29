@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.ksp.processing.SymbolProcessor
 
 private const val KSP_PLUGIN_ID = "org.jetbrains.kotlin.ksp"
 
-// TODO can we add support for instances?
 fun KotlinCompilation.symbolProcessor(
     vararg processors: Class<out SymbolProcessor>
 ) {
