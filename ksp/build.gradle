@@ -1,7 +1,9 @@
 apply plugin: 'kotlin'
-// TODO remove group and version
+apply plugin: 'maven'
+apply plugin: 'com.vanniktech.maven.publish'
+
 group 'com.github.tschuchortdev'
-version '1.2.8'
+
 ext.ksp_version='1.4-M1-dev-experimental-20200610'
 
 repositories {

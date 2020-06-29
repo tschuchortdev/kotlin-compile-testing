@@ -113,6 +113,34 @@ However, if your project or any of its dependencies depend directly on compiler 
 
 Because the internal APIs of the Kotlin compiler often change between versions, we can only support one `kotlin-compiler-embeddable` version at a time. 
 
+## Kotlin Symbol Processing API Support
+[Kotlin Symbol Processing (KSP)](https://goo.gle/ksp) is a new annotation processing pipeline that builds on top of the
+plugin architecture of the Kotlin Compiler, instead of delegating to javac as `kapt` does.
+
+**Note:** KSP is currently in active development and requires Kotlin 1.4 hence its support is kept separate from the
+main project until it becomes stable.
+
+To test KSP processors, you need to add a dependency to the ksp module:
+
+```Groovy
+dependencies {
+    implementation 'com.github.tschuchortdev:kotlin-compile-testing-ksp:1.2.9'
+}
+```
+
+This module adds a new function to the `KotlinCompilation` to specify KSP processors:
+
+```Kotlin
+class MySymbolProcessor : SymbolProcessor {
+    // implementation of the SymbolProcessor from the KSP API
+}
+
+val result = KotlinCompilation().apply {
+    sources = listOf(source)
+    symbolProcessor(MySymbolProcessor::class.java)
+}.compile()
+```
+
 ## Projects that use Kotlin-Compile-Testing
 
 - [square/moshi](https://github.com/square/moshi)
