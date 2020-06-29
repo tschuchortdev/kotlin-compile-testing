@@ -23,7 +23,7 @@ class KspTest {
     fun failedKspTest() {
         val result = KotlinCompilation().apply {
             sources = listOf(DUMMY_KOTLIN_SRC)
-            symbolProcessor(processorRule.delegateTo(object : AbstractSymbolProcessor() {
+            symbolProcessors(processorRule.delegateTo(object : AbstractSymbolProcessor() {
                 override fun process(resolver: Resolver) {
                     throw RuntimeException("intentional fail")
                 }
@@ -38,7 +38,7 @@ class KspTest {
         val instance = mock<SymbolProcessor>()
         val result = KotlinCompilation().apply {
             sources = listOf(DUMMY_KOTLIN_SRC)
-            symbolProcessor(processorRule.delegateTo(instance))
+            symbolProcessors(processorRule.delegateTo(instance))
         }.compile()
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
         instance.inOrder {
@@ -92,7 +92,7 @@ class KspTest {
         }
         val result = KotlinCompilation().apply {
             sources = listOf(annotation, targetClass)
-            symbolProcessor(processorRule.delegateTo(processor))
+            symbolProcessors(processorRule.delegateTo(processor))
         }.compile()
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
     }
@@ -105,12 +105,14 @@ class KspTest {
             package foo.bar
             import generated.A
             import generated.B
-            class Dummy(val a:A, val b:B)
+            import generated.C
+            class Dummy(val a:A, val b:B, val c:C)
         """.trimIndent()
         )
         val result = KotlinCompilation().apply {
             sources = listOf(source)
-            symbolProcessor(Write_foo_bar_A::class.java, Write_foo_bar_B::class.java)
+            symbolProcessors(Write_foo_bar_A::class.java, Write_foo_bar_B::class.java)
+            symbolProcessors(Write_foo_bar_C::class.java)
         }.compile()
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
     }
@@ -120,6 +122,9 @@ class KspTest {
 
     @Suppress("ClassName")
     internal class Write_foo_bar_B() : ClassGeneratingProcessor("generated", "B")
+
+    @Suppress("ClassName")
+    internal class Write_foo_bar_C() : ClassGeneratingProcessor("generated", "C")
 
     internal open class ClassGeneratingProcessor(
         private val packageName: String,
