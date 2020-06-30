@@ -1,5 +1,4 @@
 install:
    - ./gradlew install --info --no-daemon
    - ./gradlew -p ksp install --info --no-daemon
-env:
-   MYVAR: "custom environment variable"
+
