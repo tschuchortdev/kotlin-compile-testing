@@ -74,16 +74,15 @@ class KspTest {
                 val qName = klass.qualifiedName ?: error("should've found qualified name")
                 val genPackage = "${qName.getQualifier()}.generated"
                 val genClassName = "${qName.getShortName()}_Gen"
-                val outFile = codeGenerator.createNewFile(
+                codeGenerator.createNewFile(
                     packageName = genPackage,
                     fileName = genClassName
-                )
-                outFile.writeText(
-                    """
+                ).bufferedWriter(Charsets.UTF_8).use {
+                    it.write("""
                         package $genPackage
                         class $genClassName() {}
-                    """.trimIndent()
-                )
+                    """.trimIndent())
+                }
             }
         }
         val result = KotlinCompilation().apply {
@@ -151,12 +150,12 @@ class KspTest {
     ) : AbstractTestSymbolProcessor() {
         override fun process(resolver: Resolver) {
             super.process(resolver)
-            codeGenerator.createNewFile(packageName, className).writeText(
-                """
-                package $packageName
-                class $className() {}
-            """.trimIndent()
-            )
+            codeGenerator.createNewFile(packageName, className).bufferedWriter(Charsets.UTF_8).use {
+                it.write("""
+                    package $packageName
+                    class $className() {}
+                    """.trimIndent())
+            }
         }
     }
 
