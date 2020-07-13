@@ -43,7 +43,7 @@ repositories {
 dependencies {
     // We do not specify a version here because `kotlin-compile-testing` is an included build and gradle will use the
     // main module of the main project as the dependency.
-    api("com.github.tschuchortdev:kotlin-compile-testing")
+    api("com.github.tschuchortdev:kotlin-compile-testing:$VERSION_NAME")
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jetbrains.kotlin:kotlin-symbol-processing-api:$ksp_version"
     implementation "org.jetbrains.kotlin:kotlin-ksp:$ksp_version"
