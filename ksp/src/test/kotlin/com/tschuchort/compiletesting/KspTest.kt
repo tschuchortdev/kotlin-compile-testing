@@ -38,7 +38,7 @@ class KspTest {
         }.compile()
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
         instance.inOrder {
-            verify().init(any(), any(), any())
+            verify().init(any(), any(), any(), any())
             verify().process(any())
             verify().finish()
         }
@@ -140,7 +140,7 @@ class KspTest {
             it.isFile
         }.toList()
         assertThat(generatedSources).containsExactly(
-            compilation.kspSourcesDir.resolve("generated/Gen.kt")
+            compilation.kspSourcesDir.resolve("kotlin/generated/Gen.kt")
         )
     }
 

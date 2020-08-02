@@ -3,12 +3,16 @@
  */
 package com.tschuchort.compiletesting
 
+import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
+import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ksp.AbstractKotlinSymbolProcessingExtension
 import org.jetbrains.kotlin.ksp.KspOptions
+import org.jetbrains.kotlin.ksp.processing.KSPLogger
 import org.jetbrains.kotlin.ksp.processing.SymbolProcessor
+import org.jetbrains.kotlin.ksp.processing.impl.MessageCollectorBasedKSPLogger
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import java.io.File
@@ -30,6 +34,14 @@ var KotlinCompilation.symbolProcessors: List<SymbolProcessor>
 val KotlinCompilation.kspSourcesDir: File
     get() = kspWorkingDir.resolve("sources")
 
+private val KotlinCompilation.kspJavaSourceDir: File
+    get() = kspSourcesDir.resolve("java")
+
+private val KotlinCompilation.kspKotlinSourceDir: File
+    get() = kspSourcesDir.resolve("kotlin")
+
+private val KotlinCompilation.kspResourceDir: File
+    get() = kspSourcesDir.resolve("resource")
 /**
  * The working directory for KSP
  */
@@ -51,9 +63,11 @@ private val KotlinCompilation.kspClassesDir: File
  */
 private class KspTestExtension(
     options: KspOptions,
-    private val processors: List<SymbolProcessor>
+    private val processors: List<SymbolProcessor>,
+    logger: KSPLogger
 ) : AbstractKotlinSymbolProcessingExtension(
     options = options,
+    logger = logger,
     testMode = false
 ) {
     override fun loadProcessors() = processors
@@ -71,16 +85,27 @@ private class KspCompileTestingComponentRegistrar(
             return
         }
         val options = KspOptions.Builder().apply {
-            this.classesOutputDir = compilation.kspClassesDir.also {
+            this.classOutputDir = compilation.kspClassesDir.also {
                 it.deleteRecursively()
                 it.mkdirs()
             }
-            this.sourcesOutputDir = compilation.kspSourcesDir.also {
+            this.javaOutputDir = compilation.kspJavaSourceDir.also {
+                it.deleteRecursively()
+                it.mkdirs()
+            }
+            this.kotlinOutputDir = compilation.kspKotlinSourceDir.also {
+                it.deleteRecursively()
+                it.mkdirs()
+            }
+            this.resourceOutputDir = compilation.kspResourceDir.also {
                 it.deleteRecursively()
                 it.mkdirs()
             }
         }.build()
-        val registrar = KspTestExtension(options, processors)
+        // TODO: replace with KotlinCompilation.internalMessageStream
+        val registrar = KspTestExtension(options, processors, MessageCollectorBasedKSPLogger(
+                PrintingMessageCollector(System.err, MessageRenderer.GRADLE_STYLE, compilation.verbose)
+        ))
         AnalysisHandlerExtension.registerExtension(project, registrar)
     }
 }
