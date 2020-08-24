@@ -1,4 +1,0 @@
-includeBuild("../.") {
-    name("kotlin-compile-testing")
-}
-rootProject.name = 'kotlin-compile-testing-ksp'

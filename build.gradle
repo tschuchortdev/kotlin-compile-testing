@@ -3,86 +3,136 @@ buildscript {
 
     repositories {
         mavenCentral()
+        jcenter()
         maven { url 'https://jitpack.io' }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+        google()
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.8.0'
-
+        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.12.0'
     }
 }
 
 plugins {
-    id 'java'
-    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version"
-    id "com.github.gmazzo.buildconfig" version "2.0.1"
+    id 'io.codearte.nexus-staging' version '0.22.0' //can only be applied to root project
 }
 
-apply plugin: 'kotlin'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'idea'
-apply plugin: 'maven'
-apply plugin: 'com.vanniktech.maven.publish'
 
-sourceCompatibility = 1.8
+allprojects {
+    group 'com.github.tschuchortdev'
 
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-    maven { url 'https://kotlin.bintray.com/kotlinx' }
-    jcenter()
-}
+    buildscript {
+        ext.kotlin_version = '1.4.0'
 
-idea {
-    module {
-        sourceDirs += files('build/generated/source/kapt/main', 'build/generated/source/kaptKotlin/main')
-        generatedSourceDirs += files('build/generated/source/kapt/main', 'build/generated/source/kaptKotlin/main')
+        repositories {
+            mavenCentral()
+            jcenter()
+            maven { url 'https://jitpack.io' }
+            maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+            google()
+        }
     }
-}
 
-buildConfig {
-    className = "BuildConfig"
-    packageName = "com.tschuchort.compiletesting"
-    sourceSets {
-        test {
-            buildConfigField 'String', 'KOTLIN_VERSION', "\"$kotlin_version\""
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://kotlin.bintray.com/kotlinx' }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+        google()
+        jcenter()
+    }
+
+    apply plugin: 'kotlin'
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'maven-publish'
+
+    if (JavaVersion.current().isJava8Compatible()) {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
         }
     }
 }
 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
+subprojects {
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        //noinspection GroovyAccessibility // alternatively replace this with archiveClassifier.set('...')
+        archiveClassifier = 'sources'
+        from sourceSets.main.allSource, 'build/generated/source/kapt/main', 'build/generated/source/kaptKotlin/main'
+    }
 
-    compileOnly "com.google.auto.service:auto-service:1.0-rc7"
-    kapt "com.google.auto.service:auto-service:1.0-rc7"
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        //noinspection GroovyAccessibility //alternatively replace this with archiveClassifier.set('...')
+        archiveClassifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                pom {
+                    groupId = GROUP
+                    artifactId = POM_ARTIFACT_ID
+                    version = VERSION_NAME
 
-    testImplementation "org.assertj:assertj-core:3.11.1"
-    testImplementation "org.mockito:mockito-core:3.2.4"
-    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
+                    name = POM_NAME
+                    packaging = POM_PACKAGING
+                    description = POM_DESCRIPTION
+                    url = POM_URL
 
-    testImplementation 'com.squareup:kotlinpoet:1.4.0'
-    testImplementation 'com.squareup:javapoet:1.11.1'
+                    from components.java
+                    artifact sourcesJar
+                    artifact javadocJar
 
-    implementation "com.squareup.okio:okio:2.1.0"
-    implementation 'io.github.classgraph:classgraph:4.8.86'
+                    scm {
+                        url = POM_SCM_URL
+                        connection = POM_SCM_CONNECTION
+                        developerConnection = POM_SCM_DEV_CONNECTION
+                    }
+                    licenses {
+                        license {
+                            name = POM_LICENCE_NAME
+                            url = POM_LICENCE_URL
+                            distribution = POM_LICENCE_DIST
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = POM_DEVELOPER_ID
+                            name = POM_DEVELOPER_NAME
+                        }
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                credentials {
+                    username "$System.env.SONATYPE_NEXUS_USERNAME"
+                    password "$System.env.SONATYPE_NEXUS_PASSWORD"
+                }
+                url = VERSION_NAME.endsWith('SNAPSHOT') ? SNAPSHOT_REPOSITORY : RELEASE_REPOSITORY
+            }
+        }
+    }
 
-    // This dependency is only needed as a "sample" compiler plugin to test that
-    // running compiler plugins passed via the pluginClasspath CLI option works
-    testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlin_version"
+    dependencies {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
-    // The Kotlin compiler should be near the end of the list because its .jar file includes
-    // an obsolete version of Guava
-    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
-    implementation "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable:$kotlin_version"
-}
+        testImplementation group: 'junit', name: 'junit', version: '4.12'
+        testImplementation "org.mockito:mockito-core:3.2.4"
+        testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
+        testImplementation "org.assertj:assertj-core:3.11.1"
+    }
 
-compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
+    sourceCompatibility = 1.8
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
 }

@@ -36,11 +36,9 @@ before_install:
 
 install:
   - ./gradlew assemble --info --no-daemon
-  - ./gradlew -p ksp assemble --info --no-daemon
 
 script:
-  - ./gradlew check --info --no-daemon
-  - ./gradlew -p ksp check --info --no-daemon
+  - ./gradlew --info --no-daemon
 
 notifications:
   email: false

@@ -1,62 +1,12 @@
+
 buildscript {
-    ext.kotlin_version = '1.4.0-rc'
     ext.ksp_version='1.4.0-rc-dev-experimental-20200731'
-    // copy properties from the main project's properties file
-    def mainProjectProperties = new File(
-            gradle.includedBuild("kotlin-compile-testing").projectDir,
-            "gradle.properties"
-    )
-    def props = new Properties()
-    mainProjectProperties.newInputStream().withStream {
-        props.load(it)
-    }
-    props.forEach { key, value ->
-        rootProject.extensions.putAt(key, value)
-    }
-    repositories {
-        mavenCentral()
-        jcenter()
-        maven { url 'https://jitpack.io' }
-        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.8.0'
-    }
-}
-apply plugin: 'kotlin'
-apply plugin: 'maven'
-apply plugin: 'com.vanniktech.maven.publish'
-
-group 'com.github.tschuchortdev'
-
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-    maven { url 'https://kotlin.bintray.com/kotlinx' }
-    jcenter()
-    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
-    google()
 }
 
 dependencies {
-    // We do not specify a version here because `kotlin-compile-testing` is an included build and gradle will use the
-    // main module of the main project as the dependency.
-    api("com.github.tschuchortdev:kotlin-compile-testing:$VERSION_NAME")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    api project(':core')
     implementation "org.jetbrains.kotlin:kotlin-symbol-processing-api:$ksp_version"
     implementation "org.jetbrains.kotlin:kotlin-ksp:$ksp_version"
     implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
-
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
-    testImplementation "org.assertj:assertj-core:3.11.1"
-    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
 }
 
-compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
