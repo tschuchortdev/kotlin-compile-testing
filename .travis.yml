@@ -32,7 +32,6 @@ cache:
 
 before_install:
   - chmod +x gradlew
-  - chmod +x ksp/gradlew
 
 install:
   - ./gradlew assemble --info --no-daemon
