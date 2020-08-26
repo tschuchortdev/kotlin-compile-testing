@@ -87,6 +87,9 @@ tags
 .idea/**/sqlDataSources.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
+.idea/misc.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
 
 # Gradle:
 .idea/**/gradle.xml
