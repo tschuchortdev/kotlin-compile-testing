@@ -97,7 +97,7 @@ Add dependency to your module's `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.2.9'
+	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.2.10'
 }
 ```
 
@@ -109,7 +109,7 @@ Kotlin-Compile-Testing is compatible with all _local_ compiler versions. It does
 
 However, if your project or any of its dependencies depend directly on compiler artifacts such as `kotlin-compiler-embeddable` or `kotlin-annotation-processing-embeddable` then they have to be the same version as the one used by Kotlin-Compile-Testing or there will be a transitive dependency conflict.
 
-- Current `kotlin-compiler-embeddable` version: `1.3.72`
+- Current `kotlin-compiler-embeddable` version: `1.4.0`
 
 Because the internal APIs of the Kotlin compiler often change between versions, we can only support one `kotlin-compiler-embeddable` version at a time. 
 
@@ -117,14 +117,11 @@ Because the internal APIs of the Kotlin compiler often change between versions, 
 [Kotlin Symbol Processing (KSP)](https://goo.gle/ksp) is a new annotation processing pipeline that builds on top of the
 plugin architecture of the Kotlin Compiler, instead of delegating to javac as `kapt` does.
 
-**Note:** KSP is currently in active development and requires Kotlin 1.4 hence its support is kept separate from the
-main project until it becomes stable. All KSP releases are experimental. 
-
 To test KSP processors, you need to use the KSP dependency:
 
 ```Groovy
 dependencies {
-    implementation 'com.github.tschuchortdev:kotlin-compile-testing-ksp:1.2.9'
+    implementation 'com.github.tschuchortdev:kotlin-compile-testing-ksp:1.2.10'
 }
 ```
 
