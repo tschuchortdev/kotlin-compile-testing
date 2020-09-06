@@ -32,6 +32,9 @@ dependencies {
     // running compiler plugins passed via the pluginClasspath CLI option works
     testRuntime "org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlin_version"
 
+    // Include Kotlin/JS standard library in test classpath for auto loading
+    testRuntime "org.jetbrains.kotlin:kotlin-stdlib-js"
+
     // The Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
     implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"

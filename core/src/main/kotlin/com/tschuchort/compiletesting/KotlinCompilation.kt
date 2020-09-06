@@ -22,7 +22,6 @@ import okio.Buffer
 import org.jetbrains.kotlin.base.kapt3.AptMode
 import org.jetbrains.kotlin.base.kapt3.KaptFlag
 import org.jetbrains.kotlin.base.kapt3.KaptOptions
-import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
 import org.jetbrains.kotlin.cli.common.arguments.validateArguments
@@ -331,11 +330,6 @@ class KotlinCompilation {
 
 	val kaptStubsDir get() = kaptBaseDir.resolve("stubs")
 	val kaptIncrementalDataDir get() = kaptBaseDir.resolve("incrementalData")
-
-    /** ExitCode of the entire Kotlin compilation process */
-    enum class ExitCode {
-        OK, INTERNAL_ERROR, COMPILATION_ERROR, SCRIPT_EXECUTION_ERROR
-    }
 
 	/** Result of the compilation */
 	inner class Result(
@@ -906,19 +900,12 @@ class KotlinCompilation {
     }
 }
 
-private fun kotlinDependencyRegex(prefix:String): Regex {
+internal fun kotlinDependencyRegex(prefix:String): Regex {
 	return Regex("$prefix(-[0-9]+\\.[0-9]+(\\.[0-9]+)?)([-0-9a-zA-Z]+)?\\.jar")
 }
 
-private fun convertKotlinExitCode(code: ExitCode) = when(code) {
-    ExitCode.OK -> KotlinCompilation.ExitCode.OK
-    ExitCode.INTERNAL_ERROR -> KotlinCompilation.ExitCode.INTERNAL_ERROR
-    ExitCode.COMPILATION_ERROR -> KotlinCompilation.ExitCode.COMPILATION_ERROR
-    ExitCode.SCRIPT_EXECUTION_ERROR -> KotlinCompilation.ExitCode.SCRIPT_EXECUTION_ERROR
-}
-
 /** Returns the files on the classloader's classpath and modulepath */
-private fun getHostClasspaths(): List<File> {
+internal fun getHostClasspaths(): List<File> {
 	val classGraph = ClassGraph()
 		.enableSystemJarsAndModules()
 		.removeTemporaryFilesAfterScan()

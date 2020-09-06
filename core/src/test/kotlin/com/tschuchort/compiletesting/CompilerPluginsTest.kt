@@ -27,7 +27,7 @@ class CompilerPluginsTest {
 
         verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
-        Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+        Assertions.assertThat(result.exitCode).isEqualTo(ExitCode.OK)
     }
 
     @Test
@@ -66,6 +66,20 @@ class CompilerPluginsTest {
 
         verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
-        Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+        Assertions.assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+    }
+
+    @Test
+    fun `when JS compiler plugins are added they get executed`() {
+        val mockPlugin = Mockito.mock(ComponentRegistrar::class.java)
+
+        val result = defaultJsCompilerConfig().apply {
+            sources = listOf(SourceFile.new("emptyKotlinFile.kt", ""))
+            compilerPlugins = listOf(mockPlugin)
+            inheritClassPath = true
+        }.compile()
+
+        verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
+        Assertions.assertThat(result.exitCode).isEqualTo(ExitCode.OK)
     }
 }
