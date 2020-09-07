@@ -27,7 +27,7 @@ class CompilerPluginsTest {
 
         verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
-        Assertions.assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+        Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
     @Test
@@ -66,7 +66,7 @@ class CompilerPluginsTest {
 
         verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
-        Assertions.assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+        Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
     @Test
@@ -80,6 +80,6 @@ class CompilerPluginsTest {
         }.compile()
 
         verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
-        Assertions.assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+        Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 }
