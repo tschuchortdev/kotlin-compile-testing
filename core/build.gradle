@@ -39,9 +39,11 @@ dependencies {
 }
 
 compileKotlin {
+    kotlinOptions.freeCompilerArgs += ["-Xno-optimized-callable-references"]
     kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
 }
 
 compileTestKotlin {
+    kotlinOptions.freeCompilerArgs += ["-Xno-optimized-callable-references"]
     kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
 }
