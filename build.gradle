@@ -127,6 +127,9 @@ subprojects {
     }
 
     signing {
+        // Skip signing if publishing to mavenLocal and credentials are not available
+        // so that jitpack works correctly
+        required { !gradle.taskGraph.hasTask("publishToMavenLocal") }
         sign publishing.publications.mavenJava
     }
 

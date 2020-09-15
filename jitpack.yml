@@ -1,2 +1,2 @@
 install:
-   - ./gradlew publishToMavenLocal --info --no-daemon
+   - ./gradlew build publishToMavenLocal --info --no-daemon
