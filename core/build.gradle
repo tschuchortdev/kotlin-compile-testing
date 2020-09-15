@@ -39,11 +39,13 @@ dependencies {
 }
 
 compileKotlin {
+    // https://github.com/tschuchortdev/kotlin-compile-testing/pull/63
     kotlinOptions.freeCompilerArgs += ["-Xno-optimized-callable-references"]
     kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
 }
 
 compileTestKotlin {
+    // https://github.com/tschuchortdev/kotlin-compile-testing/pull/63
     kotlinOptions.freeCompilerArgs += ["-Xno-optimized-callable-references"]
     kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
 }
