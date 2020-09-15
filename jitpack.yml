@@ -1,4 +1,2 @@
 install:
-   - ./gradlew install --info --no-daemon
-   - ./gradlew -p ksp install --info --no-daemon
-
+   - ./gradlew publishToMavenLocal --info --no-daemon
