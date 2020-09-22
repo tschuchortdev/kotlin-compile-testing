@@ -77,6 +77,10 @@ subprojects {
         from javadoc.destinationDir
     }
 
+    afterEvaluate {
+        archivesBaseName = POM_ARTIFACT_ID
+    }
+
     publishing {
         publications {
             mavenJava(MavenPublication) {
