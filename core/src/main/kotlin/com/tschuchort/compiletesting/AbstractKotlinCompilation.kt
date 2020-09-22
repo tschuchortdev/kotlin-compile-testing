@@ -22,7 +22,12 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
 
-abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> {
+/**
+ * Base compilation class for sharing common compiler arguments and
+ * functionality. Should not be used outside of this library as it is an
+ * implementation detail.
+ */
+abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal constructor() {
     /** Working directory for the compilation */
     var workingDir: File by default {
         val path = Files.createTempDirectory("Kotlin-Compilation")

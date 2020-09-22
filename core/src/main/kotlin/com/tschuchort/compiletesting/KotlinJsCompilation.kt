@@ -68,7 +68,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
 
 
   // setup common arguments for the two kotlinc calls
-  private fun commonK2JSArgs() = commonArguments(K2JSCompilerArguments()) { args ->
+  private fun jsArgs() = commonArguments(K2JSCompilerArguments()) { args ->
     // the compiler should never look for stdlib or reflect in the
     // kotlinHome directory (which is null anyway). We will put them
     // in the classpath manually if they're needed
@@ -76,7 +76,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
 
     args.moduleKind = "commonjs"
     args.outputFile = File(outputDir, outputFileName).absolutePath
-    args.sourceMapBaseDirs = commonClasspaths().joinToString(separator = File.pathSeparator)
+    args.sourceMapBaseDirs = jsClasspath().joinToString(separator = File.pathSeparator)
     args.libraries = listOfNotNull(kotlinStdLibJsJar).joinToString(separator = ":")
 
     args.irProduceKlibDir = irProduceKlibDir
@@ -114,7 +114,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     */
     withSystemProperty("idea.use.native.fs.for.win", "false") {
       // step 1: compile Kotlin files
-      return makeResult(compileKotlin(sourceFiles, K2JSCompiler(), commonK2JSArgs()))
+      return makeResult(compileKotlin(sourceFiles, K2JSCompiler(), jsArgs()))
     }
   }
 
@@ -127,7 +127,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     return Result(exitCode, messages)
   }
 
-  private fun commonClasspaths() = mutableListOf<File>().apply {
+  private fun jsClasspath() = mutableListOf<File>().apply {
     addAll(classpaths)
     addAll(listOfNotNull(kotlinStdLibCommonJar, kotlinStdLibJsJar))
 
