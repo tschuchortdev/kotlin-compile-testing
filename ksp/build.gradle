@@ -1,12 +1,12 @@
 
 buildscript {
-    ext.ksp_version='1.4.0-rc-dev-experimental-20200828'
+    ext.ksp_version='1.4.10-dev-experimental-20200924'
 }
 
 dependencies {
     api project(':core')
-    implementation "org.jetbrains.kotlin:kotlin-symbol-processing-api:$ksp_version"
-    implementation "org.jetbrains.kotlin:kotlin-ksp:$ksp_version"
+    implementation "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
+    implementation "com.google.devtools.ksp:symbol-processing:$ksp_version"
     implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
 }
 
