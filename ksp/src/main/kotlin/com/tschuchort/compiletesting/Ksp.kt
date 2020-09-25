@@ -34,6 +34,16 @@ var KotlinCompilation.symbolProcessors: List<SymbolProcessor>
 val KotlinCompilation.kspSourcesDir: File
     get() = kspWorkingDir.resolve("sources")
 
+/**
+ * Arbitrary arguments to be passed to ksp
+ */
+var KotlinCompilation.kspArgs: MutableMap<String, String>
+    get() = getKspRegistrar().options
+    set(value) {
+        val registrar = getKspRegistrar()
+        registrar.options = value
+    }
+
 private val KotlinCompilation.kspJavaSourceDir: File
     get() = kspSourcesDir.resolve("java")
 
@@ -42,6 +52,7 @@ private val KotlinCompilation.kspKotlinSourceDir: File
 
 private val KotlinCompilation.kspResourceDir: File
     get() = kspSourcesDir.resolve("resource")
+
 /**
  * The working directory for KSP
  */
@@ -80,11 +91,16 @@ private class KspCompileTestingComponentRegistrar(
     private val compilation: KotlinCompilation
 ) : ComponentRegistrar {
     var processors = emptyList<SymbolProcessor>()
+
+    var options: MutableMap<String, String> = mutableMapOf()
+
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (processors.isEmpty()) {
             return
         }
         val options = KspOptions.Builder().apply {
+            this.processingOptions.putAll(compilation.kspArgs)
+
             this.classOutputDir = compilation.kspClassesDir.also {
                 it.deleteRecursively()
                 it.mkdirs()
@@ -103,9 +119,11 @@ private class KspCompileTestingComponentRegistrar(
             }
         }.build()
         // TODO: replace with KotlinCompilation.internalMessageStream
-        val registrar = KspTestExtension(options, processors, MessageCollectorBasedKSPLogger(
+        val registrar = KspTestExtension(
+            options, processors, MessageCollectorBasedKSPLogger(
                 PrintingMessageCollector(System.err, MessageRenderer.GRADLE_STYLE, compilation.verbose)
-        ))
+            )
+        )
         AnalysisHandlerExtension.registerExtension(project, registrar)
     }
 }
