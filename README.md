@@ -7,6 +7,7 @@
 ![GitHub](https://img.shields.io/github/license/tschuchortdev/kotlin-compile-testing.svg?color=green&style=popout)
 ![Maintenance](https://img.shields.io/maintenance/yes/2020.svg?style=popout)
 [![Generic badge](https://img.shields.io/badge/contributions-welcome-green.svg)](https://shields.io/)
+[![Build Status](https://github.com/tschuchortdev/kotlin-compile-testing/workflows/Test/badge.svg)](https://github.com/tschuchortdev/kotlin-compile-testing/actions)
 
 A library for in-process compilation of Kotlin and Java code, in the spirit of [Google Compile Testing](https://github.com/google/compile-testing). For example, you can use this library to test your annotation processor or compiler plugin.
 
