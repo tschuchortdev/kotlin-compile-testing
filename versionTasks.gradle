@@ -1,0 +1,67 @@
+private def setVersionName(newVersionName) {
+    ant.propertyfile(file: 'gradle.properties') {
+        entry(key: "VERSION_NAME", value: newVersionName)
+    }
+}
+
+task incrementPatchVersion {
+    group 'publishing'
+
+    doLast {
+        def (_,majorStr, minorStr, patchStr, snapshotStr) = (VERSION_NAME =~ /^(\d+)\.(\d+)\.(\d+)(-SNAPSHOT)?/)[0]
+        def newVersionName = majorStr + "." + minorStr + "." + (Integer.parseInt(patchStr) + 1) +
+                ((snapshotStr != null) ? snapshotStr : "")
+        setVersionName(newVersionName)
+    }
+}
+
+task incrementMinorVersion {
+    group 'publishing'
+
+    doLast {
+        def (_, majorStr, minorStr, patchStr, snapshotStr) = (VERSION_NAME =~ /^(\d+)\.(\d+)\.(\d+)(-SNAPSHOT)?/)[0]
+        def newVersionName = majorStr + "." + (Integer.parseInt(minorStr) + 1) + "." + patchStr +
+                ((snapshotStr != null) ? snapshotStr : "")
+        setVersionName(newVersionName)
+    }
+}
+
+task incrementMajorVersion {
+    group 'publishing'
+
+    doLast {
+        def (_, majorStr, minorStr, patchStr, snapshotStr) = (VERSION_NAME =~ /^(\d+)\.(\d+)\.(\d+)(-SNAPSHOT)?/)[0]
+        def newVersionName = (Integer.parseInt(majorStr) + 1) + "." + minorStr + "." + patchStr +
+                ((snapshotStr != null) ? snapshotStr : "")
+        setVersionName(newVersionName)
+    }
+}
+
+task setSnapshotVersionSuffix {
+    group 'publishing'
+
+    doLast {
+        def (_, versionPrefix, snapshotStr) = (VERSION_NAME =~ /^(\d+\.\d+\.\d+)(-SNAPSHOT)?/)[0]
+        if (snapshotStr == null) {
+            setVersionName(versionPrefix + "-SNAPSHOT")
+        }
+    }
+}
+
+task removeSnapshotVersionSuffix {
+    group 'publishing'
+
+    doLast {
+        def (_, versionPrefix, snapshotStr) = (VERSION_NAME =~ /^(\d+\.\d+\.\d+)(-SNAPSHOT)?/)[0]
+        if (snapshotStr != null) {
+            setVersionName(versionPrefix)
+        }
+    }
+}
+
+task printVersionName {
+    group 'publishing'
+    doLast {
+        println VERSION_NAME
+    }
+}
