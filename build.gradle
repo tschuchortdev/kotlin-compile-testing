@@ -134,8 +134,18 @@ subprojects {
 
     signing {
         // Skip signing if publishing to mavenLocal and credentials are not available
-        // so that jitpack works correctly
-        required { !gradle.taskGraph.hasTask("publishToMavenLocal") }
+        required { !gradle.taskGraph.hasTask("publishToMavenLocal") && project.hasProperty("signing.keyId") }
+
+        if (!project.hasProperty("signing.secretKeyRingFile") && !project.hasProperty("signing.password")) {
+            /* If in CI, the signing password and signing key are defined in the environment variables
+             ORG_GRADLE_PROJECT_signingPassword and ORG_GRADLE_PROJECT_signingKey
+             (https://blog.solidsoft.pl/2020/06/03/simpler-and-safer-artifact-signing-on-ci-server-with-gradle/,
+             https://stackoverflow.com/questions/57921325/gradle-signarchives-unable-to-read-secret-key).
+             Otherwise they are defined in the user's home directory gradle.properties.
+             */
+            useInMemoryPgpKeys(findProperty("signingKey"), findProperty("signingPassword"))
+        }
+
         sign publishing.publications.mavenJava
     }
 
