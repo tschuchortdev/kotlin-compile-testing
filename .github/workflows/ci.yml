@@ -134,9 +134,9 @@ jobs:
         if: ${{ env.IS_SNAPSHOT_VERSION == 'false' }}
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: $VERSION_NAME
+          automatic_release_tag: ${{ env.VERSION_NAME }}
           prerelease: false
-          title: $VERSION_NAME
+          title: ${{ env.VERSION_NAME }}
           files: |
             LICENSE
             core/build/libs/*.*
