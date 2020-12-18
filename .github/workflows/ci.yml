@@ -145,7 +145,8 @@ jobs:
         if: ${{ env.IS_SNAPSHOT_VERSION == 'false' }}
         run: |
           echo "Setting next snapshot version"
-          ./gradlew incrementPatchVersion setSnapshotVersionSuffix --info
+          ./gradlew incrementPatchVersion --info
+          ./gradlew setSnapshotVersionSuffix --info
           git add gradle.properties
           git commit -m "Setting next snapshot version [skip ci]"
           git push https://x-access-token:${GH_PERSONAL_ACCESS_TOKEN}@github.com/${GITHUB_REPOSITORY}.git --follow-tags
