@@ -1,5 +1,5 @@
 name: Continuous Integration
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 jobs:
   check_duplicate_workflows:
     name: Check for duplicate workflows
@@ -77,8 +77,11 @@ jobs:
       # https://stackoverflow.com/questions/57921325/gradle-signarchives-unable-to-read-secret-key
       ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SONATYPE_SIGNING_KEY_PASSWORD }}
       ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SONATYPE_SIGNING_PRIVATE_KEY }}
+      GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          persist-credentials: false # without this, all access tokens set later on will be ignored
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
@@ -113,7 +116,7 @@ jobs:
             exit 1
           fi
       - name: Make github snapshot release
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: marvinpinto/action-automatic-releases@latest
         if: ${{ env.IS_SNAPSHOT_VERSION == 'true' }}
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -125,7 +128,7 @@ jobs:
             core/build/libs/*.*
             ksp/build/libs/*.*
       - name: Make github release
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: marvinpinto/action-automatic-releases@latest
         if: ${{ env.IS_SNAPSHOT_VERSION == 'false' }}
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -143,4 +146,4 @@ jobs:
           ./gradlew incrementPatchVersion setSnapshotVersionSuffix --info
           git add gradle.properties
           git commit -m "Setting next snapshot version [skip ci]"
-          git push
+          git push https://x-access-token:${GH_PERSONAL_ACCESS_TOKEN}@github.com/${GITHUB_REPOSITORY}.git --follow-tags
