@@ -120,17 +120,6 @@ jobs:
             echo "IS_SNAPSHOT_VERSION has unknown value: $IS_SNAPSHOT_VERSION"
             exit 1
           fi
-      - name: Update latest prerelease on Github
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Latest snapshot (${{ env.VERSION_NAME }})"
-          files: |
-            LICENSE
-            core/build/libs/*.*
-            ksp/build/libs/*.*
       - name: Make release on Github
         uses: marvinpinto/action-automatic-releases@latest
         if: ${{ env.IS_SNAPSHOT_VERSION == 'false' }}
