@@ -153,7 +153,7 @@ subprojects {
         testImplementation group: 'junit', name: 'junit', version: '4.12'
         testImplementation "org.mockito:mockito-core:3.6.28"
         testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
-        testImplementation "org.assertj:assertj-core:3.11.1"
+        testImplementation "org.assertj:assertj-core:3.18.1"
     }
 
     sourceCompatibility = 1.8
