@@ -20,7 +20,7 @@ dependencies {
     kapt "com.google.auto.service:auto-service:1.0-rc7"
 
 
-    testImplementation 'com.squareup:kotlinpoet:1.4.0'
+    testImplementation 'com.squareup:kotlinpoet:1.7.2'
     testImplementation 'com.squareup:javapoet:1.11.1'
 
     implementation "com.squareup.okio:okio:2.9.0"
