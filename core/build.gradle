@@ -21,7 +21,7 @@ dependencies {
 
 
     testImplementation 'com.squareup:kotlinpoet:1.7.2'
-    testImplementation 'com.squareup:javapoet:1.11.1'
+    testImplementation 'com.squareup:javapoet:1.13.0'
 
     implementation "com.squareup.okio:okio:2.9.0"
     implementation 'io.github.classgraph:classgraph:4.8.86'
