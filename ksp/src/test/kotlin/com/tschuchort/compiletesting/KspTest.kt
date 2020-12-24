@@ -1,5 +1,6 @@
 package com.tschuchort.compiletesting
 
+import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -75,6 +76,7 @@ class KspTest {
                 val genPackage = "${qName.getQualifier()}.generated"
                 val genClassName = "${qName.getShortName()}_Gen"
                 codeGenerator.createNewFile(
+                    dependencies = Dependencies.ALL_FILES,
                     packageName = genPackage,
                     fileName = genClassName
                 ).bufferedWriter(Charsets.UTF_8).use {
@@ -150,7 +152,11 @@ class KspTest {
     ) : AbstractTestSymbolProcessor() {
         override fun process(resolver: Resolver) {
             super.process(resolver)
-            codeGenerator.createNewFile(packageName, className).bufferedWriter(Charsets.UTF_8).use {
+            codeGenerator.createNewFile(
+                dependencies = Dependencies.ALL_FILES,
+                packageName = packageName,
+                fileName = className
+            ).bufferedWriter(Charsets.UTF_8).use {
                 it.write("""
                     package $packageName
                     class $className() {}
