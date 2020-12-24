@@ -29,7 +29,7 @@ var KotlinCompilation.symbolProcessors: List<SymbolProcessor>
     }
 
 /**
- * The directory where generates KSP sources are written
+ * The directory where generated KSP sources are written
  */
 val KotlinCompilation.kspSourcesDir: File
     get() = kspWorkingDir.resolve("sources")
@@ -69,6 +69,12 @@ private val KotlinCompilation.kspClassesDir: File
     get() = kspWorkingDir.resolve("classes")
 
 /**
+ * The directory where compiled KSP caches are written
+ */
+private val KotlinCompilation.kspCachesDir: File
+    get() = kspWorkingDir.resolve("caches")
+
+/**
  * Custom subclass of [AbstractKotlinSymbolProcessingExtension] where processors are pre-defined instead of being
  * loaded via ServiceLocator.
  */
@@ -99,8 +105,18 @@ private class KspCompileTestingComponentRegistrar(
             return
         }
         val options = KspOptions.Builder().apply {
+            this.projectBaseDir = compilation.kspWorkingDir
+
             this.processingOptions.putAll(compilation.kspArgs)
 
+            this.cachesDir = compilation.kspCachesDir.also {
+                it.deleteRecursively()
+                it.mkdirs()
+            }
+            this.kspOutputDir = compilation.kspSourcesDir.also {
+                it.deleteRecursively()
+                it.mkdirs()
+            }
             this.classOutputDir = compilation.kspClassesDir.also {
                 it.deleteRecursively()
                 it.mkdirs()
