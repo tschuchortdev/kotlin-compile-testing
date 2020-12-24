@@ -134,12 +134,17 @@ private class KspCompileTestingComponentRegistrar(
                 it.mkdirs()
             }
         }.build()
-        // TODO: replace with KotlinCompilation.internalMessageStream
-        val registrar = KspTestExtension(
-            options, processors, MessageCollectorBasedKSPLogger(
-                PrintingMessageCollector(System.err, MessageRenderer.GRADLE_STYLE, compilation.verbose)
+
+        // Temporary until friend-paths is fully supported https://youtrack.jetbrains.com/issue/KT-34102
+        @Suppress("invisible_member")
+        val messageCollectorBasedKSPLogger = MessageCollectorBasedKSPLogger(
+            PrintingMessageCollector(
+                compilation.internalMessageStreamAccess,
+                MessageRenderer.GRADLE_STYLE,
+                compilation.verbose
             )
         )
+        val registrar = KspTestExtension(options, processors, messageCollectorBasedKSPLogger)
         AnalysisHandlerExtension.registerExtension(project, registrar)
     }
 }

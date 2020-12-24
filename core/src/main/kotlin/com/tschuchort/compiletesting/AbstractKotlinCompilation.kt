@@ -262,6 +262,8 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
 
     protected fun warn(s: String) = internalMessageStream.println("warning: $s")
     protected fun error(s: String) = internalMessageStream.println("error: $s")
+
+    internal val internalMessageStreamAccess: PrintStream get() = internalMessageStream
 }
 
 internal fun kotlinDependencyRegex(prefix:String): Regex {
