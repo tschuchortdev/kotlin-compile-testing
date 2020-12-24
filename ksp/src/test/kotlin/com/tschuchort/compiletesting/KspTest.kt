@@ -131,6 +131,19 @@ class KspTest {
     }
 
     @Test
+    fun incremental() {
+        KotlinCompilation().apply {
+            // Disabled by default
+            assertThat(kspIncremental).isFalse()
+            assertThat(kspIncrementalLog).isFalse()
+            kspIncremental = true
+            assertThat(kspIncremental).isTrue()
+            kspIncrementalLog = true
+            assertThat(kspIncrementalLog).isTrue()
+        }
+    }
+
+    @Test
     fun outputDirectoryContents() {
         val compilation = KotlinCompilation().apply {
             sources = listOf(DUMMY_KOTLIN_SRC)
