@@ -44,6 +44,26 @@ var KotlinCompilation.kspArgs: MutableMap<String, String>
         registrar.options = value
     }
 
+/**
+ * Controls for enabling incremental processing in KSP.
+ */
+var KotlinCompilation.kspIncremental: Boolean
+    get() = getKspRegistrar().incremental
+    set(value) {
+        val registrar = getKspRegistrar()
+        registrar.incremental = value
+    }
+
+/**
+ * Controls for enabling incremental processing logs in KSP.
+ */
+var KotlinCompilation.kspIncrementalLog: Boolean
+    get() = getKspRegistrar().incrementalLog
+    set(value) {
+        val registrar = getKspRegistrar()
+        registrar.incrementalLog = value
+    }
+
 private val KotlinCompilation.kspJavaSourceDir: File
     get() = kspSourcesDir.resolve("java")
 
@@ -100,6 +120,9 @@ private class KspCompileTestingComponentRegistrar(
 
     var options: MutableMap<String, String> = mutableMapOf()
 
+    var incremental: Boolean = false
+    var incrementalLog: Boolean = false
+
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (processors.isEmpty()) {
             return
@@ -108,6 +131,9 @@ private class KspCompileTestingComponentRegistrar(
             this.projectBaseDir = compilation.kspWorkingDir
 
             this.processingOptions.putAll(compilation.kspArgs)
+
+            this.incremental = this@KspCompileTestingComponentRegistrar.incremental
+            this.incrementalLog = this@KspCompileTestingComponentRegistrar.incrementalLog
 
             this.cachesDir = compilation.kspCachesDir.also {
                 it.deleteRecursively()
