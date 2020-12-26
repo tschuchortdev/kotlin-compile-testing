@@ -165,6 +165,42 @@ class KspTest {
         }
     }
 
+    @Test
+    fun messagesAreReadable() {
+        val annotation = SourceFile.kotlin(
+            "TestAnnotation.kt", """
+            package foo.bar
+            annotation class TestAnnotation
+        """.trimIndent()
+        )
+        val targetClass = SourceFile.kotlin(
+            "AppCode.kt", """
+            package foo.bar
+            @TestAnnotation
+            class AppCode
+        """.trimIndent()
+        )
+        val processor = object : AbstractTestSymbolProcessor() {
+            override fun process(resolver: Resolver) {
+                logger.logging("This is a log message")
+                logger.info("This is an info message")
+                logger.warn("This is an warn message")
+                logger.error("This is an error message")
+                logger.exception(Throwable("This is a failure"))
+            }
+        }
+        val result = KotlinCompilation().apply {
+            sources = listOf(annotation, targetClass)
+            symbolProcessors = listOf(processor)
+        }.compile()
+        assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+        assertThat(result.messages).contains("This is a log message")
+        assertThat(result.messages).contains("This is an info message")
+        assertThat(result.messages).contains("This is an warn message")
+        assertThat(result.messages).contains("This is an error message")
+        assertThat(result.messages).contains("This is a failure")
+    }
+
     companion object {
         private val DUMMY_KOTLIN_SRC = SourceFile.kotlin(
             "foo.bar.Dummy.kt", """
