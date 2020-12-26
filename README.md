@@ -96,7 +96,7 @@ Add dependency to your module's `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.3.3'
+	implementation 'com.github.tschuchortdev:kotlin-compile-testing:1.3.4'
 }
 ```
 
@@ -120,7 +120,7 @@ To test KSP processors, you need to use the KSP dependency:
 
 ```Groovy
 dependencies {
-    implementation 'com.github.tschuchortdev:kotlin-compile-testing-ksp:1.3.3'
+    implementation 'com.github.tschuchortdev:kotlin-compile-testing-ksp:1.3.4'
 }
 ```
 
