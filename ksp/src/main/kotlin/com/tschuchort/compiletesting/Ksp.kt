@@ -70,8 +70,8 @@ private val KotlinCompilation.kspJavaSourceDir: File
 private val KotlinCompilation.kspKotlinSourceDir: File
     get() = kspSourcesDir.resolve("kotlin")
 
-private val KotlinCompilation.kspResourceDir: File
-    get() = kspSourcesDir.resolve("resource")
+private val KotlinCompilation.kspResources: File
+    get() = kspSourcesDir.resolve("resources")
 
 /**
  * The working directory for KSP
@@ -155,7 +155,7 @@ private class KspCompileTestingComponentRegistrar(
                 it.deleteRecursively()
                 it.mkdirs()
             }
-            this.resourceOutputDir = compilation.kspResourceDir.also {
+            this.resourceOutputDir = compilation.kspResources.also {
                 it.deleteRecursively()
                 it.mkdirs()
             }
