@@ -1,6 +1,5 @@
-
 buildscript {
-    ext.ksp_version='1.4.20-dev-experimental-20201222'
+    ext.ksp_version='1.4.20-dev-experimental-20210107'
 }
 
 dependencies {
@@ -9,4 +8,3 @@ dependencies {
     implementation "com.google.devtools.ksp:symbol-processing:$ksp_version"
     implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
 }
-
