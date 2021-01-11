@@ -151,7 +151,7 @@ subprojects {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
         testImplementation group: 'junit', name: 'junit', version: '4.13.1'
-        testImplementation "org.mockito:mockito-core:3.6.28"
+        testImplementation "org.mockito:mockito-core:3.7.0"
         testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
         testImplementation "org.assertj:assertj-core:3.18.1"
     }
