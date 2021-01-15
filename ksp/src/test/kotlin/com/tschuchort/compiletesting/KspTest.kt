@@ -159,6 +159,43 @@ class KspTest {
         )
     }
 
+    @Test
+    fun canFindSymbols() {
+        val javaSource = SourceFile.java(
+            "JavaSubject.java",
+            """
+            @${SuppressWarnings::class.qualifiedName}("")
+            class JavaSubject {}
+            """.trimIndent()
+        )
+        val kotlinSource = SourceFile.kotlin(
+            "KotlinSubject.kt",
+            """
+            @${SuppressWarnings::class.qualifiedName}("")
+            class KotlinSubject {}
+            """.trimIndent()
+        )
+        val result = mutableListOf<String>()
+        val processor = object: AbstractTestSymbolProcessor() {
+            override fun process(resolver: Resolver) {
+                resolver.getSymbolsWithAnnotation(
+                    SuppressWarnings::class.java.canonicalName
+                ).filterIsInstance<KSClassDeclaration>()
+                    .forEach{
+                    result.add(it.qualifiedName!!.asString())
+                }
+            }
+        }
+        val compilation = KotlinCompilation().apply {
+            sources = listOf(javaSource, kotlinSource)
+            symbolProcessors += processor
+        }
+        compilation.compile()
+        assertThat(result).containsExactly(
+            "JavaSubject", "KotlinSubject"
+        )
+    }
+
     internal open class ClassGeneratingProcessor(
         private val packageName: String,
         private val className: String
