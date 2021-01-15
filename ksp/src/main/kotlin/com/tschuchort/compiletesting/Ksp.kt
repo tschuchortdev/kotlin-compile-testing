@@ -8,8 +8,10 @@ import com.google.devtools.ksp.KspOptions
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.impl.MessageCollectorBasedKSPLogger
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
+import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -159,6 +161,12 @@ private class KspCompileTestingComponentRegistrar(
                 it.deleteRecursively()
                 it.mkdirs()
             }
+            configuration[CLIConfigurationKeys.CONTENT_ROOTS]
+                ?.filterIsInstance<JavaSourceRoot>()
+                ?.forEach {
+                    this.javaSourceRoots.add(it.file)
+                }
+
         }.build()
 
         // Temporary until friend-paths is fully supported https://youtrack.jetbrains.com/issue/KT-34102

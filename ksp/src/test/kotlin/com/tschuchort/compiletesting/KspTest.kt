@@ -160,7 +160,7 @@ class KspTest {
     }
 
     @Test
-    fun canFindSymbols() {
+    fun findSymbols() {
         val javaSource = SourceFile.java(
             "JavaSubject.java",
             """
@@ -176,14 +176,14 @@ class KspTest {
             """.trimIndent()
         )
         val result = mutableListOf<String>()
-        val processor = object: AbstractTestSymbolProcessor() {
+        val processor = object : AbstractTestSymbolProcessor() {
             override fun process(resolver: Resolver) {
                 resolver.getSymbolsWithAnnotation(
                     SuppressWarnings::class.java.canonicalName
                 ).filterIsInstance<KSClassDeclaration>()
-                    .forEach{
-                    result.add(it.qualifiedName!!.asString())
-                }
+                    .forEach {
+                        result.add(it.qualifiedName!!.asString())
+                    }
             }
         }
         val compilation = KotlinCompilation().apply {
@@ -191,7 +191,7 @@ class KspTest {
             symbolProcessors += processor
         }
         compilation.compile()
-        assertThat(result).containsExactly(
+        assertThat(result).containsExactlyInAnyOrder(
             "JavaSubject", "KotlinSubject"
         )
     }
