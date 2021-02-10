@@ -3,6 +3,7 @@ package com.tschuchort.compiletesting
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.inOrder
@@ -67,7 +68,7 @@ class KspTest {
         """.trimIndent()
         )
         val processor = object : AbstractTestSymbolProcessor() {
-            override fun process(resolver: Resolver) {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
                 val symbols = resolver.getSymbolsWithAnnotation("foo.bar.TestAnnotation")
                 assertThat(symbols.size).isEqualTo(1)
                 val klass = symbols.first()
@@ -85,6 +86,7 @@ class KspTest {
                         class $genClassName() {}
                     """.trimIndent())
                 }
+                return emptyList()
             }
         }
         val result = KotlinCompilation().apply {
@@ -177,13 +179,14 @@ class KspTest {
         )
         val result = mutableListOf<String>()
         val processor = object : AbstractTestSymbolProcessor() {
-            override fun process(resolver: Resolver) {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
                 resolver.getSymbolsWithAnnotation(
                     SuppressWarnings::class.java.canonicalName
                 ).filterIsInstance<KSClassDeclaration>()
                     .forEach {
                         result.add(it.qualifiedName!!.asString())
                     }
+                return emptyList()
             }
         }
         val compilation = KotlinCompilation().apply {
@@ -200,7 +203,7 @@ class KspTest {
         private val packageName: String,
         private val className: String
     ) : AbstractTestSymbolProcessor() {
-        override fun process(resolver: Resolver) {
+        override fun process(resolver: Resolver): List<KSAnnotated> {
             super.process(resolver)
             codeGenerator.createNewFile(
                 dependencies = Dependencies.ALL_FILES,
@@ -212,6 +215,7 @@ class KspTest {
                     class $className() {}
                     """.trimIndent())
             }
+            return emptyList()
         }
     }
 
@@ -231,12 +235,13 @@ class KspTest {
         """.trimIndent()
         )
         val processor = object : AbstractTestSymbolProcessor() {
-            override fun process(resolver: Resolver) {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
                 logger.logging("This is a log message")
                 logger.info("This is an info message")
                 logger.warn("This is an warn message")
                 logger.error("This is an error message")
                 logger.exception(Throwable("This is a failure"))
+                return emptyList()
             }
         }
         val result = KotlinCompilation().apply {
