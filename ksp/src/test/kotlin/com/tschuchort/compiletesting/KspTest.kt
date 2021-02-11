@@ -14,6 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.Mockito.`when`
+import java.util.concurrent.atomic.AtomicInteger
 
 @RunWith(JUnit4::class)
 class KspTest {
@@ -70,21 +71,23 @@ class KspTest {
         val processor = object : AbstractTestSymbolProcessor() {
             override fun process(resolver: Resolver): List<KSAnnotated> {
                 val symbols = resolver.getSymbolsWithAnnotation("foo.bar.TestAnnotation")
-                assertThat(symbols.size).isEqualTo(1)
-                val klass = symbols.first()
-                check(klass is KSClassDeclaration)
-                val qName = klass.qualifiedName ?: error("should've found qualified name")
-                val genPackage = "${qName.getQualifier()}.generated"
-                val genClassName = "${qName.getShortName()}_Gen"
-                codeGenerator.createNewFile(
-                    dependencies = Dependencies.ALL_FILES,
-                    packageName = genPackage,
-                    fileName = genClassName
-                ).bufferedWriter(Charsets.UTF_8).use {
-                    it.write("""
-                        package $genPackage
-                        class $genClassName() {}
-                    """.trimIndent())
+                if (symbols.isNotEmpty())  {
+                    assertThat(symbols.size).isEqualTo(1)
+                    val klass = symbols.first()
+                    check(klass is KSClassDeclaration)
+                    val qName = klass.qualifiedName ?: error("should've found qualified name")
+                    val genPackage = "${qName.getQualifier()}.generated"
+                    val genClassName = "${qName.getShortName()}_Gen"
+                    codeGenerator.createNewFile(
+                        dependencies = Dependencies.ALL_FILES,
+                        packageName = genPackage,
+                        fileName = genClassName
+                    ).bufferedWriter(Charsets.UTF_8).use {
+                        it.write("""
+                            package $genPackage
+                            class $genClassName() {}
+                        """.trimIndent())
+                    }
                 }
                 return emptyList()
             }
@@ -201,19 +204,23 @@ class KspTest {
 
     internal open class ClassGeneratingProcessor(
         private val packageName: String,
-        private val className: String
+        private val className: String,
+        times: Int = 1
     ) : AbstractTestSymbolProcessor() {
+        val times = AtomicInteger(times)
         override fun process(resolver: Resolver): List<KSAnnotated> {
             super.process(resolver)
-            codeGenerator.createNewFile(
-                dependencies = Dependencies.ALL_FILES,
-                packageName = packageName,
-                fileName = className
-            ).bufferedWriter(Charsets.UTF_8).use {
-                it.write("""
-                    package $packageName
-                    class $className() {}
-                    """.trimIndent())
+            if (times.decrementAndGet() == 0) {
+                codeGenerator.createNewFile(
+                    dependencies = Dependencies.ALL_FILES,
+                    packageName = packageName,
+                    fileName = className
+                ).bufferedWriter(Charsets.UTF_8).use {
+                    it.write("""
+                        package $packageName
+                        class $className() {}
+                        """.trimIndent())
+                }
             }
             return emptyList()
         }
