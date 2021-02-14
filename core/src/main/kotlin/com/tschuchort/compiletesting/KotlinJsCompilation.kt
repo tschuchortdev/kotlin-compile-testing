@@ -42,8 +42,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
    * process' classpaths
    */
   var kotlinStdLibJsJar: File? by default {
-    findInHostClasspath(hostClasspaths, "kotlin-stdlib-js.jar",
-      kotlinDependencyRegex("kotlin-stdlib-js"))
+    HostEnvironment.kotlinStdLibJsJar
   }
 
   // *.class files, Jars and resources (non-temporary) that are created by the

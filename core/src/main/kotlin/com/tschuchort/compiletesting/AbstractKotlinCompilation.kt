@@ -1,6 +1,5 @@
 package com.tschuchort.compiletesting
 
-import io.github.classgraph.ClassGraph
 import okio.Buffer
 import org.jetbrains.kotlin.base.kapt3.KaptOptions
 import org.jetbrains.kotlin.cli.common.CLICompiler
@@ -97,8 +96,7 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
      * process' classpaths
      */
     var kotlinStdLibCommonJar: File? by default {
-        findInHostClasspath(hostClasspaths, "kotlin-stdlib-common.jar",
-            kotlinDependencyRegex("kotlin-stdlib-common"))
+        HostEnvironment.kotlinStdLibCommonJar
     }
 
     // Directory for input source files
@@ -221,22 +219,7 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
         }
     }
 
-    /** Tries to find a file matching the given [regex] in the host process' classpath */
-    protected fun findInHostClasspath(hostClasspaths: List<File>, simpleName: String, regex: Regex): File? {
-        val jarFile = hostClasspaths.firstOrNull { classpath ->
-            classpath.name.matches(regex)
-            //TODO("check that jar file actually contains the right classes")
-        }
-
-        if (jarFile == null)
-            log("Searched host classpaths for $simpleName and found no match")
-        else
-            log("Searched host classpaths for $simpleName and found ${jarFile.path}")
-
-        return jarFile
-    }
-
-    protected val hostClasspaths by lazy { getHostClasspaths() }
+    protected val hostClasspaths by lazy { HostEnvironment.classpath }
 
     /* This internal buffer and stream is used so it can be easily converted to a string
     that is put into the [Result] object, in addition to printing immediately to the user's
@@ -264,22 +247,6 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     protected fun error(s: String) = internalMessageStream.println("error: $s")
 
     internal val internalMessageStreamAccess: PrintStream get() = internalMessageStream
-}
-
-internal fun kotlinDependencyRegex(prefix:String): Regex {
-    return Regex("$prefix(-[0-9]+\\.[0-9]+(\\.[0-9]+)?)([-0-9a-zA-Z]+)?\\.jar")
-}
-
-/** Returns the files on the classloader's classpath and modulepath */
-internal fun getHostClasspaths(): List<File> {
-    val classGraph = ClassGraph()
-        .enableSystemJarsAndModules()
-        .removeTemporaryFilesAfterScan()
-
-    val classpaths = classGraph.classpathFiles
-    val modules = classGraph.modules.mapNotNull { it.locationFile }
-
-    return (classpaths + modules).distinctBy(File::getAbsolutePath)
 }
 
 internal fun convertKotlinExitCode(code: ExitCode) = when(code) {
