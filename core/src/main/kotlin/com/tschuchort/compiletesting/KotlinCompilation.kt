@@ -178,8 +178,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 * process' classpaths
 	 */
 	var kotlinStdLibJar: File? by default {
-		findInHostClasspath(hostClasspaths, "kotlin-stdlib.jar",
-			kotlinDependencyRegex("(kotlin-stdlib|kotlin-runtime)"))
+		HostEnvironment.kotlinStdLibJar
 	}
 
 	/**
@@ -188,8 +187,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 * process' classpaths
 	 */
 	var kotlinStdLibJdkJar: File? by default {
-		findInHostClasspath(hostClasspaths, "kotlin-stdlib-jdk*.jar",
-			kotlinDependencyRegex("kotlin-stdlib-jdk[0-9]+"))
+		HostEnvironment.kotlinStdLibJdkJar
 	}
 
 	/**
@@ -198,8 +196,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 * process' classpaths
 	 */
 	var kotlinReflectJar: File? by default {
-		findInHostClasspath(hostClasspaths, "kotlin-reflect.jar",
-			kotlinDependencyRegex("kotlin-reflect"))
+		HostEnvironment.kotlinReflectJar
 	}
 
 	/**
@@ -208,8 +205,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 * process' classpaths
 	 */
 	var kotlinScriptRuntimeJar: File? by default {
-		findInHostClasspath(hostClasspaths, "kotlin-script-runtime.jar",
-			kotlinDependencyRegex("kotlin-script-runtime"))
+		HostEnvironment.kotlinScriptRuntimeJar
 	}
 
 	/**
@@ -221,7 +217,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var toolsJar: File? by default {
         if (!isJdk9OrLater())
             jdkHome?.let { findToolsJarFromJdk(it) }
-            ?: findInHostClasspath(hostClasspaths, "tools.jar", Regex("tools.jar"))
+            ?: HostEnvironment.toolsJar
         else
             null
 	}
