@@ -170,7 +170,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 * (on JDK8) or --system none (on JDK9+). This can be useful if all
 	 * the JDK classes you need are already on the (inherited) classpath.
 	 * */
-	var jdkHome: File? by default { getJdkHome() }
+	var jdkHome: File? by default { processJdkHome }
 
 	/**
 	 * Path to the kotlin-stdlib.jar
@@ -503,11 +503,11 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		if(javaSources.isEmpty())
 			return ExitCode.OK
 
-        if(jdkHome != null) {
+        if(jdkHome != null && jdkHome!!.canonicalPath != processJdkHome.canonicalPath) {
             /* If a JDK home is given, try to run javac from there so it uses the same JDK
                as K2JVMCompiler. Changing the JDK of the system java compiler via the
                "--system" and "-bootclasspath" options is not so easy. */
-
+            log("compiling java in a sub-process because a jdkHome is specified")
             val jdkBinFile = File(jdkHome, "bin")
             check(jdkBinFile.exists()) { "No JDK bin folder found at: ${jdkBinFile.toPath()}" }
 
@@ -531,21 +531,22 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
             }
         }
         else {
-            /*  If no JDK is given, we will use the host process' system java compiler
-                and erase the bootclasspath. The user is then on their own to somehow
+            /*  If no JDK is given, we will use the host process' system java compiler.
+                If it is set to `null`, we will erase the bootclasspath. The user is then on their own to somehow
                 provide the JDK classes via the regular classpath because javac won't
                 work at all without them */
-
+			log("jdkHome is not specified. Using system java compiler of the host process.")
 			val isJavac9OrLater = isJdk9OrLater()
 			val javacArgs = baseJavacArgs(isJavac9OrLater).apply {
-				// erase bootclasspath or JDK path because no JDK was specified
-				if (isJavac9OrLater)
-					addAll("--system", "none")
-				else
-					addAll("-bootclasspath", "")
+				if (jdkHome == null) {
+				    log("jdkHome is set to null, removing booth classpath from java compilation")
+					// erase bootclasspath or JDK path because no JDK was specified
+					if (isJavac9OrLater)
+						addAll("--system", "none")
+					else
+						addAll("-bootclasspath", "")
+				}
 			}
-
-            log("jdkHome is null. Using system java compiler of the host process.")
 
             val javac = SynchronizedToolProvider.systemJavaCompiler
             val javaFileManager = javac.getStandardFileManager(null, null, null)

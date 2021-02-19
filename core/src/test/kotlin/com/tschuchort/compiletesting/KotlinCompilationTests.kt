@@ -7,10 +7,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
-import org.jetbrains.kotlin.compiler.plugin.PluginCliOptionProcessingException
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
@@ -183,6 +183,9 @@ class KotlinCompilationTests {
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
 		assertThat(result.messages).contains("Unable to find package java.lang")
+		assertThat(result.messages).contains(
+			"jdkHome is set to null, removing booth classpath from java compilation"
+		)
 	}
 
 	@Test
@@ -807,6 +810,53 @@ class KotlinCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 		assertThat(result.outputDirectory.listFilesRecursively().map { it.name })
 				.contains("JSource.class", "KSource.class")
+	}
+
+	@Test
+	fun `java compilation runs in process when no jdk is specified`() {
+		val source = SourceFile.java("JSource.java",
+			"""
+				class JSource {}
+			""".trimIndent())
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(source)
+		}.compile()
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.messages).contains(
+			"jdkHome is not specified. Using system java compiler of the host process."
+		)
+		assertThat(result.messages).doesNotContain(
+			"jdkHome is set to null, removing booth classpath from java compilation"
+		)
+	}
+
+	@Test
+	fun `java compilation runs in a sub-process when jdk is specified`() {
+		val source = SourceFile.java("JSource.java",
+			"""
+			class JSource {}
+			""".trimIndent())
+		val fakeJdkHome = temporaryFolder.newFolder("fake-jdk-home")
+		fakeJdkHome.resolve("bin").mkdirs()
+		val logsStream = ByteArrayOutputStream()
+		val compiler = defaultCompilerConfig().apply {
+			sources = listOf(source)
+			jdkHome = fakeJdkHome
+			messageOutputStream = logsStream
+		}
+		val compilation = runCatching {
+			// jdk is fake so it won't compile
+			compiler.compile()
+		}
+		// it should fail since we are passing a fake jdk
+		assertThat(compilation.isFailure).isTrue()
+		val logs = logsStream.toString(Charsets.UTF_8)
+		assertThat(logs).contains(
+			"compiling java in a sub-process because a jdkHome is specified"
+		)
+		assertThat(logs).doesNotContain(
+			"jdkHome is set to null, removing booth classpath from java compilation"
+		)
 	}
 	
 	class InheritedClass {}
