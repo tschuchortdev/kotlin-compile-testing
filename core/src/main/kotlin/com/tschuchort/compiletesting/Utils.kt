@@ -19,11 +19,12 @@ internal fun getJavaHome(): File {
     return File(path).also { check(it.isDirectory) }
 }
 
-internal fun getJdkHome()
-    = if(isJdk9OrLater())
+internal val processJdkHome by lazy {
+    if(isJdk9OrLater())
         getJavaHome()
     else
         getJavaHome().parentFile
+}
 
 /** Checks if the JDK of the host process is version 9 or later */
 internal fun isJdk9OrLater(): Boolean
