@@ -850,7 +850,7 @@ class KotlinCompilationTests {
 		}
 		// it should fail since we are passing a fake jdk
 		assertThat(compilation.isFailure).isTrue()
-		val logs = logsStream.toString(Charsets.UTF_8)
+		val logs = logsStream.toString("utf-8")// use string charset for jdk 8 compatibility
 		assertThat(logs).contains(
 			"compiling java in a sub-process because a jdkHome is specified"
 		)
