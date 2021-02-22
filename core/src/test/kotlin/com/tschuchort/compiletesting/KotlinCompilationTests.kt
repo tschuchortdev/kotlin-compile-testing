@@ -184,7 +184,7 @@ class KotlinCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
 		assertThat(result.messages).contains("Unable to find package java.lang")
 		assertThat(result.messages).contains(
-			"jdkHome is set to null, removing booth classpath from java compilation"
+			"jdkHome is set to null, removing boot classpath from java compilation"
 		)
 	}
 
@@ -826,7 +826,7 @@ class KotlinCompilationTests {
 			"jdkHome is not specified. Using system java compiler of the host process."
 		)
 		assertThat(result.messages).doesNotContain(
-			"jdkHome is set to null, removing booth classpath from java compilation"
+			"jdkHome is set to null, removing boot classpath from java compilation"
 		)
 	}
 
@@ -855,7 +855,7 @@ class KotlinCompilationTests {
 			"compiling java in a sub-process because a jdkHome is specified"
 		)
 		assertThat(logs).doesNotContain(
-			"jdkHome is set to null, removing booth classpath from java compilation"
+			"jdkHome is set to null, removing boot classpath from java compilation"
 		)
 	}
 	

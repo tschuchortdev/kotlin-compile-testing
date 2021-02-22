@@ -506,7 +506,10 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
         if(jdkHome != null && jdkHome!!.canonicalPath != processJdkHome.canonicalPath) {
             /* If a JDK home is given, try to run javac from there so it uses the same JDK
                as K2JVMCompiler. Changing the JDK of the system java compiler via the
-               "--system" and "-bootclasspath" options is not so easy. */
+               "--system" and "-bootclasspath" options is not so easy.
+               If the jdkHome is the same as the current process, we still run an in process compilation because it is
+               expensive to fork a process to compile.
+               */
             log("compiling java in a sub-process because a jdkHome is specified")
             val jdkBinFile = File(jdkHome, "bin")
             check(jdkBinFile.exists()) { "No JDK bin folder found at: ${jdkBinFile.toPath()}" }
@@ -539,7 +542,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 			val isJavac9OrLater = isJdk9OrLater()
 			val javacArgs = baseJavacArgs(isJavac9OrLater).apply {
 				if (jdkHome == null) {
-				    log("jdkHome is set to null, removing booth classpath from java compilation")
+				    log("jdkHome is set to null, removing boot classpath from java compilation")
 					// erase bootclasspath or JDK path because no JDK was specified
 					if (isJavac9OrLater)
 						addAll("--system", "none")
