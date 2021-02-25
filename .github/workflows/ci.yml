@@ -122,12 +122,26 @@ jobs:
             echo "IS_SNAPSHOT_VERSION has unknown value: $IS_SNAPSHOT_VERSION"
             exit 1
           fi
+      - name: Make draft release on Github
+        uses: marvinpinto/action-automatic-releases@latest
+        if: ${{ env.IS_SNAPSHOT_VERSION == 'true' }}
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: ${{ env.VERSION_NAME }}
+          draft: true
+          prerelease: false
+          title: ${{ env.VERSION_NAME }}
+          files: |
+            LICENSE
+            core/build/libs/*.*
+            ksp/build/libs/*.*
       - name: Make release on Github
         uses: marvinpinto/action-automatic-releases@latest
         if: ${{ env.IS_SNAPSHOT_VERSION == 'false' }}
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: ${{ env.VERSION_NAME }}
+          draft: false
           prerelease: false
           title: ${{ env.VERSION_NAME }}
           files: |
