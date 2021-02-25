@@ -16,14 +16,18 @@ buildscript {
 }
 
 plugins {
-    id 'io.codearte.nexus-staging' version '0.30.0' //can only be applied to root project
+    id "io.github.gradle-nexus.publish-plugin" version "1.0.0" //can only be applied to root project
 }
 
 apply from: 'versionTasks.gradle'
 
-nexusStaging {
-    username = "$System.env.SONATYPE_NEXUS_USERNAME"
-    password = "$System.env.SONATYPE_NEXUS_PASSWORD"
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = "$System.env.SONATYPE_NEXUS_USERNAME"
+            password = "$System.env.SONATYPE_NEXUS_PASSWORD"
+        }
+    }
 }
 
 allprojects {
