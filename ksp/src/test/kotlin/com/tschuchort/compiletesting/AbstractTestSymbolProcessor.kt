@@ -12,8 +12,6 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 internal open class AbstractTestSymbolProcessor : SymbolProcessor {
     protected lateinit var codeGenerator: CodeGenerator
     protected lateinit var logger: KSPLogger
-    override fun finish() {
-    }
 
     override fun init(options: Map<String, String>, kotlinVersion: KotlinVersion, codeGenerator: CodeGenerator, logger: KSPLogger) {
         this.codeGenerator = codeGenerator
