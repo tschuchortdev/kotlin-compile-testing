@@ -227,7 +227,7 @@ class KspTest {
     }
 
     @Test
-    fun messagesAreReadable() {
+    fun nonErrorMessagesAreReadable() {
         val annotation = SourceFile.kotlin(
             "TestAnnotation.kt", """
             package foo.bar
@@ -246,8 +246,6 @@ class KspTest {
                 logger.logging("This is a log message")
                 logger.info("This is an info message")
                 logger.warn("This is an warn message")
-                logger.error("This is an error message")
-                logger.exception(Throwable("This is a failure"))
                 return emptyList()
             }
         }
@@ -259,6 +257,35 @@ class KspTest {
         assertThat(result.messages).contains("This is a log message")
         assertThat(result.messages).contains("This is an info message")
         assertThat(result.messages).contains("This is an warn message")
+    }
+
+    @Test
+    fun errorMessagesAreReadable() {
+        val annotation = SourceFile.kotlin(
+            "TestAnnotation.kt", """
+            package foo.bar
+            annotation class TestAnnotation
+        """.trimIndent()
+        )
+        val targetClass = SourceFile.kotlin(
+            "AppCode.kt", """
+            package foo.bar
+            @TestAnnotation
+            class AppCode
+        """.trimIndent()
+        )
+        val processor = object : AbstractTestSymbolProcessor() {
+            override fun process(resolver: Resolver): List<KSAnnotated> {
+                logger.error("This is an error message")
+                logger.exception(Throwable("This is a failure"))
+                return emptyList()
+            }
+        }
+        val result = KotlinCompilation().apply {
+            sources = listOf(annotation, targetClass)
+            symbolProcessors = listOf(processor)
+        }.compile()
+        assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
         assertThat(result.messages).contains("This is an error message")
         assertThat(result.messages).contains("This is a failure")
     }
