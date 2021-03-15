@@ -70,6 +70,9 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	/** Use the IR backend */
 	var useIR: Boolean = false
 
+	/** Use the old JVM backend */
+	var useOldBackend: Boolean = false
+
 	/** Paths where to find Java 9+ modules */
 	var javaModulePath: Path? = null
 
@@ -313,6 +316,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		args.jvmTarget = jvmTarget
 		args.javaParameters = javaParameters
 		args.useIR = useIR
+		args.useOldBackend = useOldBackend
 
 		if(javaModulePath != null)
 			args.javaModulePath = javaModulePath!!.toString()
