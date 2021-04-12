@@ -1,5 +1,5 @@
 buildscript {
-    ext.ksp_version='1.4.30-1.0.0-alpha04'
+    ext.ksp_version='1.4.32-1.0.0-alpha07'
 }
 
 dependencies {
