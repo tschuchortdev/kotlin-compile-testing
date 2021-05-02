@@ -28,7 +28,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK ${{ matrix.java }}
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v2
       with:
         java-version: ${{ matrix.java }}
     - name: Cache Gradle packages
@@ -55,7 +55,7 @@ jobs:
       - name: Gradle wrapper validation
         uses: gradle/wrapper-validation-action@v1
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
       - name: Cache Gradle packages
@@ -88,7 +88,7 @@ jobs:
         with:
           persist-credentials: false # without this, all access tokens set later on will be ignored
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: 11
       - name: Cache Gradle packages
