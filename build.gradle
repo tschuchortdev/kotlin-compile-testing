@@ -32,7 +32,12 @@ nexusPublishing {
 }
 
 allprojects {
-    group 'com.github.tschuchortdev'
+    // The maven-publish plugin seems to be able to find the group and version name by itself
+    // but the gradle-nexus publish-plugin can not do this. It is very important to set
+    // group and version on the _root_ project or the version name used for publishing
+    // to sonatype will be undefined
+    group = GROUP
+    version = VERSION_NAME
 
     buildscript {
         repositories {
@@ -123,15 +128,6 @@ subprojects {
                         }
                     }
                 }
-            }
-        }
-        repositories {
-            maven {
-                credentials {
-                    username "$System.env.SONATYPE_NEXUS_USERNAME"
-                    password "$System.env.SONATYPE_NEXUS_PASSWORD"
-                }
-                url = VERSION_NAME.endsWith('SNAPSHOT') ? SNAPSHOT_REPOSITORY : RELEASE_REPOSITORY
             }
         }
     }
