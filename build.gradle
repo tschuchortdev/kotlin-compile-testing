@@ -26,6 +26,7 @@ nexusPublishing {
         sonatype {
             username = "$System.env.SONATYPE_NEXUS_USERNAME"
             password = "$System.env.SONATYPE_NEXUS_PASSWORD"
+            stagingProfileId = SONATYPE_STAGING_PROFILE_ID
         }
     }
 }
