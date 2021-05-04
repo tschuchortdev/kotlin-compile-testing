@@ -3,7 +3,6 @@
 
 # Kotlin Compile Testing
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.tschuchortdev/kotlin-compile-testing/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.tschuchortdev/kotlin-compile-testing)
-[![](https://jitpack.io/v/tschuchortdev/kotlin-compile-testing.svg)](https://jitpack.io/#tschuchortdev/kotlin-compile-testing)
 ![GitHub](https://img.shields.io/github/license/tschuchortdev/kotlin-compile-testing.svg?color=green&style=popout)
 ![Maintenance](https://img.shields.io/maintenance/yes/2020.svg?style=popout)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-green.svg)](https://shields.io/)
@@ -89,7 +88,7 @@ Assert results
 
 ## Installation <img src="https://i.imgur.com/iV36acM.png" width="23">
 
-The package is available on mavenCentral and jitpack.
+The package is available on Maven Central.
 
 Add dependency to your module's `build.gradle` file:
 
