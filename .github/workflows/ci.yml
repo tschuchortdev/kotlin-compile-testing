@@ -114,13 +114,16 @@ jobs:
         run: |
           # --max-workers 1 limits Gradle to a single thread even if parallel builds are enabled in the hopes
           # of making the the upload to Sonatype Nexus less flaky
-          ./gradlew publishToSonatype --info --max-workers 1
 
           if [[ "$IS_SNAPSHOT_VERSION" == "true" ]]; then
             echo "Version is a snapshot. No closing of the repository is necessary."
+           ./gradlew publishToSonatype --info --max-workers 1
           elif [[ "$IS_SNAPSHOT_VERSION" == "false" ]]; then
             echo "Version is not a snapshot. Trying to close and release repository."
-            ./gradlew closeAndReleaseStagingRepository --info --max-workers 1
+            # Note: Until https://github.com/gradle-nexus/publish-plugin/issues/19 is fixed
+            # publish and close/release always have to be executed in the same Gradle call
+            # or closing will fail with error 'No staging repository with name sonatype created'.
+            ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository --info --max-workers 1
           else
             echo "IS_SNAPSHOT_VERSION has unknown value: $IS_SNAPSHOT_VERSION"
             exit 1
