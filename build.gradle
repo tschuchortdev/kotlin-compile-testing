@@ -3,6 +3,7 @@ buildscript {
 
     repositories {
         mavenCentral()
+        jcenter()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://jitpack.io' }
         maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
@@ -41,6 +42,7 @@ allprojects {
     buildscript {
         repositories {
             mavenCentral()
+            jcenter()
             maven { url 'https://jitpack.io' }
             maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
             google()
@@ -53,6 +55,7 @@ allprojects {
         maven { url 'https://kotlin.bintray.com/kotlinx' }
         maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
         google()
+        jcenter()
     }
 
     apply plugin: 'kotlin'
