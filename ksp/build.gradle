@@ -4,7 +4,6 @@ buildscript {
 
 dependencies {
     api project(':core')
-    implementation "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
+    api "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
     implementation "com.google.devtools.ksp:symbol-processing:$ksp_version"
-    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
 }
