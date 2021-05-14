@@ -77,7 +77,7 @@ class KspTest {
             symbolProcessorProviders = listOf(processorProviderOf { _, _, codeGenerator, logger ->
                 object : AbstractTestSymbolProcessor(codeGenerator) {
                     override fun process(resolver: Resolver): List<KSAnnotated> {
-                        val symbols = resolver.getSymbolsWithAnnotation("foo.bar.TestAnnotation")
+                        val symbols = resolver.getSymbolsWithAnnotation("foo.bar.TestAnnotation").toList()
                         if (symbols.isNotEmpty())  {
                             assertThat(symbols.size).isEqualTo(1)
                             val klass = symbols.first()
