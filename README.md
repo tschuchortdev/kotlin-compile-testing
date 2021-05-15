@@ -106,7 +106,7 @@ Kotlin-Compile-Testing is compatible with all _local_ compiler versions. It does
 
 However, if your project or any of its dependencies depend directly on compiler artifacts such as `kotlin-compiler-embeddable` or `kotlin-annotation-processing-embeddable` then they have to be the same version as the one used by Kotlin-Compile-Testing or there will be a transitive dependency conflict.
 
-- Current `kotlin-compiler-embeddable` version: `1.4.32`
+- Current `kotlin-compiler-embeddable` version: `1.5.0`
 
 Because the internal APIs of the Kotlin compiler often change between versions, we can only support one `kotlin-compiler-embeddable` version at a time. 
 
@@ -125,12 +125,12 @@ dependencies {
 This module adds a new function to the `KotlinCompilation` to specify KSP processors:
 
 ```Kotlin
-class MySymbolProcessor : SymbolProcessor {
-    // implementation of the SymbolProcessor from the KSP API
+class MySymbolProcessorProvider : SymbolProcessorProvider {
+    // implementation of the SymbolProcessorProvider from the KSP API
 }
 val compilation = KotlinCompilation().apply {
     sources = listOf(source)
-    symbolProcessors = listOf(MySymbolProcessor())
+    symbolProcessorProviders = listOf(MySymbolProcessorProvider())
 }
 val result = compilation.compile()
 ```
