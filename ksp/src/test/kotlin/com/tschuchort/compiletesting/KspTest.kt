@@ -52,6 +52,25 @@ class KspTest {
     }
 
     @Test
+    fun allProcessorMethodsAreCalledWhenOnlyJavaFilesArePresent() {
+        val instance = mock<SymbolProcessor>()
+        val providerInstance = mock<SymbolProcessorProvider>()
+        `when`(providerInstance.create(any(), any(), any(), any())).thenReturn(instance)
+        val result = KotlinCompilation().apply {
+            sources = listOf(DUMMY_JAVA_SRC)
+            symbolProcessorProviders = listOf(providerInstance)
+        }.compile()
+        assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+        providerInstance.inOrder {
+            verify().create(any(), any(), any(), any())
+        }
+        instance.inOrder {
+            verify().process(any())
+            verify().finish()
+        }
+    }
+
+    @Test
     fun processorGeneratedCodeIsVisible() {
         val annotation = SourceFile.kotlin(
             "TestAnnotation.kt", """
@@ -306,6 +325,12 @@ class KspTest {
         private val DUMMY_KOTLIN_SRC = SourceFile.kotlin(
             "foo.bar.Dummy.kt", """
             class Dummy {}
+        """.trimIndent()
+        )
+
+        private val DUMMY_JAVA_SRC = SourceFile.java(
+            "foo.bar.DummyJava.java", """
+            class DummyJava {}
         """.trimIndent()
         )
     }
