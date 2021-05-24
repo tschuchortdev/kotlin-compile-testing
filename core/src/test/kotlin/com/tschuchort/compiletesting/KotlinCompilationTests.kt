@@ -7,11 +7,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Files
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
@@ -830,26 +832,24 @@ class KotlinCompilationTests {
 		)
 	}
 
+	@Ignore // Ignored because symlinks can't be created on Windows 7 without admin rights
 	@Test
 	fun `java compilation runs in a sub-process when jdk is specified`() {
 		val source = SourceFile.java("JSource.java",
 			"""
 			class JSource {}
 			""".trimIndent())
-		val fakeJdkHome = temporaryFolder.newFolder("fake-jdk-home")
-		fakeJdkHome.resolve("bin").mkdirs()
+		val fakeJdkHome = temporaryFolder.newFolder("jdk-copy")
+		fakeJdkHome.mkdirs()
+		Files.createLink(fakeJdkHome.resolve("bin").toPath(), processJdkHome.toPath())
 		val logsStream = ByteArrayOutputStream()
 		val compiler = defaultCompilerConfig().apply {
 			sources = listOf(source)
 			jdkHome = fakeJdkHome
 			messageOutputStream = logsStream
 		}
-		val compilation = runCatching {
-			// jdk is fake so it won't compile
-			compiler.compile()
-		}
-		// it should fail since we are passing a fake jdk
-		assertThat(compilation.isFailure).isTrue()
+		val result = compiler.compile()
+		assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
 		val logs = logsStream.toString("utf-8")// use string charset for jdk 8 compatibility
 		assertThat(logs).contains(
 			"compiling java in a sub-process because a jdkHome is specified"
@@ -857,6 +857,7 @@ class KotlinCompilationTests {
 		assertThat(logs).doesNotContain(
 			"jdkHome is set to null, removing boot classpath from java compilation"
 		)
+		fakeJdkHome.delete()
 	}
 	
 	class InheritedClass {}
