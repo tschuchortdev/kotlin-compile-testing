@@ -16,21 +16,13 @@ internal open class AbstractTestSymbolProcessor(
 
 // Would be nice if SymbolProcessorProvider was a fun interface
 internal fun processorProviderOf(
-    body: (
-        options: Map<String, String>,
-        kotlinVersion: KotlinVersion,
-        codeGenerator: CodeGenerator,
-        logger: KSPLogger
-    ) -> SymbolProcessor
+    body: (environment: SymbolProcessorEnvironment) -> SymbolProcessor
 ): SymbolProcessorProvider {
     return object : SymbolProcessorProvider {
         override fun create(
-            options: Map<String, String>,
-            kotlinVersion: KotlinVersion,
-            codeGenerator: CodeGenerator,
-            logger: KSPLogger
+            environment: SymbolProcessorEnvironment
         ): SymbolProcessor {
-            return body(options, kotlinVersion, codeGenerator, logger)
+            return body(environment)
         }
     }
 }
