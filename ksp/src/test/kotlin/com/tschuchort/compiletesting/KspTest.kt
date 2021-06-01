@@ -20,7 +20,7 @@ class KspTest {
     fun failedKspTest() {
         val instance = mock<SymbolProcessor>()
         val providerInstance = mock<SymbolProcessorProvider>()
-        `when`(providerInstance.create(any(), any(), any(), any())).thenReturn(instance)
+        `when`(providerInstance.create(any())).thenReturn(instance)
         `when`(instance.process(any())).thenThrow(
             RuntimeException("intentional fail")
         )
@@ -36,14 +36,14 @@ class KspTest {
     fun allProcessorMethodsAreCalled() {
         val instance = mock<SymbolProcessor>()
         val providerInstance = mock<SymbolProcessorProvider>()
-        `when`(providerInstance.create(any(), any(), any(), any())).thenReturn(instance)
+        `when`(providerInstance.create(any())).thenReturn(instance)
         val result = KotlinCompilation().apply {
             sources = listOf(DUMMY_KOTLIN_SRC)
             symbolProcessorProviders = listOf(providerInstance)
         }.compile()
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
         providerInstance.inOrder {
-            verify().create(any(), any(), any(), any())
+            verify().create(any())
         }
         instance.inOrder {
             verify().process(any())
@@ -55,14 +55,14 @@ class KspTest {
     fun allProcessorMethodsAreCalledWhenOnlyJavaFilesArePresent() {
         val instance = mock<SymbolProcessor>()
         val providerInstance = mock<SymbolProcessorProvider>()
-        `when`(providerInstance.create(any(), any(), any(), any())).thenReturn(instance)
+        `when`(providerInstance.create(any())).thenReturn(instance)
         val result = KotlinCompilation().apply {
             sources = listOf(DUMMY_JAVA_SRC)
             symbolProcessorProviders = listOf(providerInstance)
         }.compile()
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
         providerInstance.inOrder {
-            verify().create(any(), any(), any(), any())
+            verify().create(any())
         }
         instance.inOrder {
             verify().process(any())
@@ -93,8 +93,8 @@ class KspTest {
         )
         val result = KotlinCompilation().apply {
             sources = listOf(annotation, targetClass)
-            symbolProcessorProviders = listOf(processorProviderOf { _, _, codeGenerator, logger ->
-                object : AbstractTestSymbolProcessor(codeGenerator) {
+            symbolProcessorProviders = listOf(processorProviderOf { env ->
+                object : AbstractTestSymbolProcessor(env.codeGenerator) {
                     override fun process(resolver: Resolver): List<KSAnnotated> {
                         val symbols = resolver.getSymbolsWithAnnotation("foo.bar.TestAnnotation").toList()
                         if (symbols.isNotEmpty())  {
@@ -138,10 +138,10 @@ class KspTest {
         val result = KotlinCompilation().apply {
             sources = listOf(source)
             symbolProcessorProviders = listOf(
-                processorProviderOf { _, _, codeGenerator, logger -> ClassGeneratingProcessor(codeGenerator, "generated", "A") },
-                processorProviderOf { _, _, codeGenerator, logger -> ClassGeneratingProcessor(codeGenerator, "generated", "B") })
+                processorProviderOf { env -> ClassGeneratingProcessor(env.codeGenerator, "generated", "A") },
+                processorProviderOf { env -> ClassGeneratingProcessor(env.codeGenerator, "generated", "B") })
             symbolProcessorProviders = symbolProcessorProviders +
-                    processorProviderOf { _, _, codeGenerator, logger -> ClassGeneratingProcessor(codeGenerator, "generated", "C") }
+                    processorProviderOf { env -> ClassGeneratingProcessor(env.codeGenerator, "generated", "C") }
         }.compile()
         assertThat(result.exitCode).isEqualTo(ExitCode.OK)
     }
@@ -177,8 +177,8 @@ class KspTest {
     fun outputDirectoryContents() {
         val compilation = KotlinCompilation().apply {
             sources = listOf(DUMMY_KOTLIN_SRC)
-            symbolProcessorProviders = listOf(processorProviderOf { _, _, codeGenerator, logger ->
-                ClassGeneratingProcessor(codeGenerator, "generated", "Gen")
+            symbolProcessorProviders = listOf(processorProviderOf { env ->
+                ClassGeneratingProcessor(env.codeGenerator, "generated", "Gen")
             })
         }
         val result = compilation.compile()
@@ -210,8 +210,8 @@ class KspTest {
         val result = mutableListOf<String>()
         val compilation = KotlinCompilation().apply {
             sources = listOf(javaSource, kotlinSource)
-            symbolProcessorProviders += processorProviderOf { _, _, codeGenerator, logger ->
-                object : AbstractTestSymbolProcessor(codeGenerator) {
+            symbolProcessorProviders += processorProviderOf { env ->
+                object : AbstractTestSymbolProcessor(env.codeGenerator) {
                     override fun process(resolver: Resolver): List<KSAnnotated> {
                         resolver.getSymbolsWithAnnotation(
                             SuppressWarnings::class.java.canonicalName
@@ -272,12 +272,12 @@ class KspTest {
         )
         val result = KotlinCompilation().apply {
             sources = listOf(annotation, targetClass)
-            symbolProcessorProviders = listOf(processorProviderOf { _, _, codeGenerator, logger ->
-                object : AbstractTestSymbolProcessor(codeGenerator) {
+            symbolProcessorProviders = listOf(processorProviderOf { env ->
+                object : AbstractTestSymbolProcessor(env.codeGenerator) {
                     override fun process(resolver: Resolver): List<KSAnnotated> {
-                        logger.logging("This is a log message")
-                        logger.info("This is an info message")
-                        logger.warn("This is an warn message")
+                        env.logger.logging("This is a log message")
+                        env.logger.info("This is an info message")
+                        env.logger.warn("This is an warn message")
                         return emptyList()
                     }
                 }
@@ -306,11 +306,11 @@ class KspTest {
         )
         val result = KotlinCompilation().apply {
             sources = listOf(annotation, targetClass)
-            symbolProcessorProviders = listOf(processorProviderOf { _, _, codeGenerator, logger ->
-                object : AbstractTestSymbolProcessor(codeGenerator) {
+            symbolProcessorProviders = listOf(processorProviderOf { env ->
+                object : AbstractTestSymbolProcessor(env.codeGenerator) {
                     override fun process(resolver: Resolver): List<KSAnnotated> {
-                        logger.error("This is an error message")
-                        logger.exception(Throwable("This is a failure"))
+                        env.logger.error("This is an error message")
+                        env.logger.exception(Throwable("This is a failure"))
                         return emptyList()
                     }
                 }
