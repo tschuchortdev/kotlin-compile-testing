@@ -24,7 +24,7 @@ dependencies {
     testImplementation 'com.squareup:javapoet:1.13.0'
 
     implementation "com.squareup.okio:okio:2.10.0"
-    implementation 'io.github.classgraph:classgraph:4.8.106'
+    implementation 'io.github.classgraph:classgraph:4.8.108'
 
     // This dependency is only needed as a "sample" compiler plugin to test that
     // running compiler plugins passed via the pluginClasspath CLI option works
