@@ -520,7 +520,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 			val javacCommand = jdkBinFile.absolutePath + File.separatorChar + "javac"
 
-			val isJavac9OrLater = isJavac9OrLater(getJavacVersionString(javacCommand))
+			val isJavac9OrLater = isJavac9OrLater()
 			val javacArgs = baseJavacArgs(isJavac9OrLater)
 
             val javacProc = ProcessBuilder(listOf(javacCommand) + javacArgs + javaSources.map(File::getAbsolutePath))
