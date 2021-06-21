@@ -1,6 +1,6 @@
 
 plugins {
-    id "com.github.gmazzo.buildconfig" version "3.0.0"
+    id "com.github.gmazzo.buildconfig" version "3.0.1"
 }
 
 apply plugin: 'kotlin-kapt'
