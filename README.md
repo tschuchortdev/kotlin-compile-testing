@@ -40,6 +40,7 @@ fun `test my annotation processor`() {
                 // compiled Kotlin classes are visible to Java sources
                 KClass kClass = new KClass(); 
             }
+	}
     """)
 ```
 Configure compilation
