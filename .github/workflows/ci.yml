@@ -42,8 +42,7 @@ jobs:
       run: java -version
     - name: Set JVM options for JDK 16
       if: ${{ matrix.java == 16 }}
-      run: echo org.gradle.jvmargs="--illegal-access=permit \
-        --add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
+      run: echo org.gradle.jvmargs="--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
         --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
         --add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED \
         --add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED \
@@ -81,8 +80,7 @@ jobs:
         run: java -version
       - name: Set JVM options for JDK 16
         if: ${{ matrix.java == 16 }}
-        run: echo org.gradle.jvmargs="--illegal-access=permit \
-          --add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
+        run: echo org.gradle.jvmargs="--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED \
           --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
           --add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED \
           --add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED \
