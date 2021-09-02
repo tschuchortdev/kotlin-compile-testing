@@ -25,22 +25,25 @@ class TestEnvClass {}
 
 @Test
 fun `test my annotation processor`() {
-    val kotlinSource = SourceFile.kotlin("KClass.kt", """
+  val kotlinSource = SourceFile.kotlin(
+    "KClass.kt", """
         class KClass {
             fun foo() {
                 // Classes from the test environment are visible to the compiled sources
                 val testEnvClass = TestEnvClass() 
             }
         }
-    """)   
-      
-    val javaSource = SourceFile.java("JClass.java", """
+    """
+  )
+
+  val javaSource = SourceFile.java(
+    "JClass.java", """
         public class JClass {
             public void bar() {
                 // compiled Kotlin classes are visible to Java sources
                 KClass kClass = new KClass(); 
             }
-	}
+	    }
     """)
 ```
 Configure compilation
@@ -95,7 +98,7 @@ Add dependency to your module's `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	testImplementation 'com.github.tschuchortdev:kotlin-compile-testing:1.4.3'
+	testImplementation 'com.github.tschuchortdev:kotlin-compile-testing:1.4.4'
 }
 ```
 
@@ -107,7 +110,7 @@ Kotlin-Compile-Testing is compatible with all _local_ compiler versions. It does
 
 However, if your project or any of its dependencies depend directly on compiler artifacts such as `kotlin-compiler-embeddable` or `kotlin-annotation-processing-embeddable` then they have to be the same version as the one used by Kotlin-Compile-Testing or there will be a transitive dependency conflict.
 
-- Current `kotlin-compiler-embeddable` version: `1.5.21`
+- Current `kotlin-compiler-embeddable` version: `1.5.30`
 
 Because the internal APIs of the Kotlin compiler often change between versions, we can only support one `kotlin-compiler-embeddable` version at a time. 
 
@@ -119,7 +122,7 @@ To test KSP processors, you need to use the KSP dependency:
 
 ```Groovy
 dependencies {
-    testImplementation 'com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.3'
+    testImplementation 'com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.4'
 }
 ```
 
