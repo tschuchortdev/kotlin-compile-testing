@@ -32,12 +32,7 @@ jobs:
       with:
         distribution: 'adopt'
         java-version: ${{ matrix.java }}
-    - name: Cache Gradle packages
-      uses: actions/cache@v2.1.6
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-        restore-keys: ${{ runner.os }}-gradle
+        cache: 'gradle'
     - name: print Java version
       run: java -version
     - name: Set JVM options for JDK 16
@@ -70,12 +65,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
-      - name: Cache Gradle packages
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          cache: 'gradle'
       - name: print Java version
         run: java -version
       - name: Set JVM options for JDK 16
@@ -114,12 +104,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: 11
-      - name: Cache Gradle packages
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          cache: 'gradle'
       - name: Set git config
         run: |
           git config user.name github-actions
