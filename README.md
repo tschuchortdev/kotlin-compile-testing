@@ -3,7 +3,6 @@
 # Kotlin Compile Testing
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.tschuchortdev/kotlin-compile-testing/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.tschuchortdev/kotlin-compile-testing)
 ![GitHub](https://img.shields.io/github/license/tschuchortdev/kotlin-compile-testing.svg?color=green&style=popout)
-![Maintenance](https://img.shields.io/maintenance/yes/2020.svg?style=popout)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-green.svg)](https://shields.io/)
 [![Build Status](https://github.com/tschuchortdev/kotlin-compile-testing/workflows/Continuous%20Integration/badge.svg)](https://github.com/tschuchortdev/kotlin-compile-testing/actions)
 
