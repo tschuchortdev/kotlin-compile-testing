@@ -45,6 +45,11 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     HostEnvironment.kotlinStdLibJsJar
   }
 
+  /**
+   * Generate TypeScript declarations .d.ts file alongside JS file. Available in IR backend only
+   */
+  var generateDts: Boolean = false
+
   // *.class files, Jars and resources (non-temporary) that are created by the
   // compilation will land here
   val outputDir get() = workingDir.resolve("output")
@@ -86,6 +91,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.irDcePrintReachabilityInfo = irDcePrintReachabilityInfo
     args.irOnly = irOnly
     args.irModuleName = irModuleName
+    args.generateDts = generateDts
   }
 
   /** Runs the compilation task */
