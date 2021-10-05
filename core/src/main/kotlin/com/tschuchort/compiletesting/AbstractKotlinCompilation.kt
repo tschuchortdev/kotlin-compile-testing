@@ -83,6 +83,7 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     /** Report on performance of the compilation */
     var reportPerformance: Boolean = false
 
+    var languageVersion: String? = null
 
     /** Additional string arguments to the Kotlin compiler */
     var kotlincArguments: List<String> = emptyList()
@@ -111,6 +112,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
         args.allWarningsAsErrors = allWarningsAsErrors
         args.reportOutputFiles = reportOutputFiles
         args.reportPerf = reportPerformance
+
+        if (languageVersion != null)
+            args.languageVersion = this.languageVersion
 
         configuration(args)
 
