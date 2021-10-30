@@ -859,6 +859,50 @@ class KotlinCompilationTests {
 		)
 		fakeJdkHome.delete()
 	}
-	
+
+	@Test
+	fun `the classLoader from a 2nd compilation can load classes from the first compilation`() {
+		val kSource1 = SourceFile.kotlin(
+			"KSource1.kt", """
+				package com.tschuchort.compiletesting
+			
+				interface KSource1
+				"""
+		)
+
+		val result = defaultCompilerConfig()
+			.apply {
+				sources = listOf(kSource1)
+				inheritClassPath = true
+			}
+			.compile()
+			.apply {
+				assertThat(exitCode).isEqualTo(ExitCode.OK)
+				assertThat(outputDirectory.listFilesRecursively().map { it.name }).contains("KSource1.class")
+			}
+
+
+		val kSource2 = SourceFile.kotlin(
+			"KSource2.kt", """
+				package com.tschuchort.compiletesting
+			
+				interface KSource2 : KSource1
+				"""
+		)
+
+		defaultCompilerConfig()
+			.apply {
+				sources = listOf(kSource2)
+				inheritClassPath = true
+				classpaths += result.outputDirectory
+			}
+			.compile()
+			.apply {
+				assertThat(exitCode).isEqualTo(ExitCode.OK)
+				assertThat(outputDirectory.listFilesRecursively().map { it.name }).contains("KSource2.class")
+				assertThat(classLoader.loadClass("com.tschuchort.compiletesting.KSource2")).isNotNull
+			}
+	}
+
 	class InheritedClass {}
 }

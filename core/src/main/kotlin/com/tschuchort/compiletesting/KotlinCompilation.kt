@@ -259,8 +259,11 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		val messages: String
 	) {
 		/** class loader to load the compile classes */
-		val classLoader = URLClassLoader(arrayOf(outputDirectory.toURI().toURL()),
-			this::class.java.classLoader)
+		val classLoader = URLClassLoader(
+			// Include the original classpaths and the output directory to be able to load classes from dependencies.
+			classpaths.plus(outputDirectory).map { it.toURI().toURL() }.toTypedArray(),
+			this::class.java.classLoader
+		)
 
 		/** The directory where only the final output class and resources files will be */
 		val outputDirectory: File get() = classesDir
