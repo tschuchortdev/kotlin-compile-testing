@@ -681,3 +681,15 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		const val OPTION_KAPT_KOTLIN_GENERATED = "kapt.kotlin.generated"
     }
 }
+
+/**
+ * Adds the output directory of [previousResult] to the classpath of this compilation. This is a convenience for
+ * ```
+ * this.classpaths += previousResult.outputDirectory
+ * ```
+ */
+fun KotlinCompilation.addPreviousResultToClasspath(
+	previousResult: KotlinCompilation.Result
+): KotlinCompilation = apply {
+	classpaths += previousResult.outputDirectory
+}
