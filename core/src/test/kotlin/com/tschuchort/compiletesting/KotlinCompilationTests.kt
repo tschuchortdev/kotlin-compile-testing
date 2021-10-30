@@ -894,8 +894,8 @@ class KotlinCompilationTests {
 			.apply {
 				sources = listOf(kSource2)
 				inheritClassPath = true
-				classpaths += result.outputDirectory
 			}
+			.addPreviousResultToClasspath(result)
 			.compile()
 			.apply {
 				assertThat(exitCode).isEqualTo(ExitCode.OK)
