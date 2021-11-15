@@ -72,7 +72,7 @@ var KotlinCompilation.kspIncrementalLog: Boolean
 /**
  * Controls for enabling all warnings as errors in KSP.
  */
-var KotlinCompilation.allWarningsAsErrors: Boolean
+var KotlinCompilation.kspAllWarningsAsErrors: Boolean
     get() = getKspRegistrar().allWarningsAsErrors
     set(value) {
         val registrar = getKspRegistrar()
