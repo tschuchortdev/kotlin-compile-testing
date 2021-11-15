@@ -69,6 +69,16 @@ var KotlinCompilation.kspIncrementalLog: Boolean
         registrar.incrementalLog = value
     }
 
+/**
+ * Controls for enabling all warnings as errors in KSP.
+ */
+var KotlinCompilation.allWarningsAsErrors: Boolean
+    get() = getKspRegistrar().allWarningsAsErrors
+    set(value) {
+        val registrar = getKspRegistrar()
+        registrar.allWarningsAsErrors = value
+    }
+
 private val KotlinCompilation.kspJavaSourceDir: File
     get() = kspSourcesDir.resolve("java")
 
@@ -129,6 +139,7 @@ private class KspCompileTestingComponentRegistrar(
 
     var incremental: Boolean = false
     var incrementalLog: Boolean = false
+    var allWarningsAsErrors: Boolean = false
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (providers.isEmpty()) {
@@ -141,6 +152,7 @@ private class KspCompileTestingComponentRegistrar(
 
             this.incremental = this@KspCompileTestingComponentRegistrar.incremental
             this.incrementalLog = this@KspCompileTestingComponentRegistrar.incrementalLog
+            this.allWarningsAsErrors = this@KspCompileTestingComponentRegistrar.allWarningsAsErrors
 
             this.cachesDir = compilation.kspCachesDir.also {
                 it.deleteRecursively()
@@ -181,7 +193,8 @@ private class KspCompileTestingComponentRegistrar(
                 compilation.internalMessageStreamAccess,
                 MessageRenderer.GRADLE_STYLE,
                 compilation.verbose
-            )
+            ),
+            allWarningsAsErrors
         )
         val registrar = KspTestExtension(options, providers, messageCollectorBasedKSPLogger)
         AnalysisHandlerExtension.registerExtension(project, registrar)
