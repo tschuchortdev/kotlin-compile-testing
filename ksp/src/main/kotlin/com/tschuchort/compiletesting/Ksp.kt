@@ -188,13 +188,15 @@ private class KspCompileTestingComponentRegistrar(
 
         // Temporary until friend-paths is fully supported https://youtrack.jetbrains.com/issue/KT-34102
         @Suppress("invisible_member")
+        val messageCollector = PrintingMessageCollector(
+            compilation.internalMessageStreamAccess,
+            MessageRenderer.GRADLE_STYLE,
+            compilation.verbose
+        )
         val messageCollectorBasedKSPLogger = MessageCollectorBasedKSPLogger(
-            PrintingMessageCollector(
-                compilation.internalMessageStreamAccess,
-                MessageRenderer.GRADLE_STYLE,
-                compilation.verbose
-            ),
-            allWarningsAsErrors
+            messageCollector = messageCollector,
+            wrappedMessageCollector = messageCollector,
+            allWarningsAsErrors = allWarningsAsErrors
         )
         val registrar = KspTestExtension(options, providers, messageCollectorBasedKSPLogger)
         AnalysisHandlerExtension.registerExtension(project, registrar)
