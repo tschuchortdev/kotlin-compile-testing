@@ -79,6 +79,17 @@ var KotlinCompilation.kspAllWarningsAsErrors: Boolean
         registrar.allWarningsAsErrors = value
     }
 
+/**
+ * Run processors and compilation in a single compiler invocation if true.
+ * See [com.google.devtools.ksp.KspCliOption.WITH_COMPILATION_OPTION].
+ */
+var KotlinCompilation.kspWithCompilation: Boolean
+    get() = getKspRegistrar().withCompilation
+    set(value) {
+        val registrar = getKspRegistrar()
+        registrar.withCompilation = value
+    }
+
 private val KotlinCompilation.kspJavaSourceDir: File
     get() = kspSourcesDir.resolve("java")
 
@@ -140,6 +151,7 @@ private class KspCompileTestingComponentRegistrar(
     var incremental: Boolean = false
     var incrementalLog: Boolean = false
     var allWarningsAsErrors: Boolean = false
+    var withCompilation: Boolean = false
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (providers.isEmpty()) {
@@ -153,6 +165,7 @@ private class KspCompileTestingComponentRegistrar(
             this.incremental = this@KspCompileTestingComponentRegistrar.incremental
             this.incrementalLog = this@KspCompileTestingComponentRegistrar.incrementalLog
             this.allWarningsAsErrors = this@KspCompileTestingComponentRegistrar.allWarningsAsErrors
+            this.withCompilation = this@KspCompileTestingComponentRegistrar.withCompilation
 
             this.cachesDir = compilation.kspCachesDir.also {
                 it.deleteRecursively()
