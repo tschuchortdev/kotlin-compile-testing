@@ -92,7 +92,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var noParamAssertions: Boolean = false
 
 	/** Generate nullability assertions for non-null Java expressions */
-	var strictJavaNullabilityAssertions: Boolean = false
+	var strictJavaNullabilityAssertions: Boolean? = null
 
 	/** Disable optimizations */
 	var noOptimize: Boolean = false
@@ -328,7 +328,9 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		args.noCallAssertions = noCallAssertions
 		args.noParamAssertions = noParamAssertions
 		args.noReceiverAssertions = noReceiverAssertions
-		args.strictJavaNullabilityAssertions = strictJavaNullabilityAssertions
+                strictJavaNullabilityAssertions?.let {
+                    args.strictJavaNullabilityAssertions = it
+		}
 		args.noOptimize = noOptimize
 
 		if(constructorCallNormalizationMode != null)
