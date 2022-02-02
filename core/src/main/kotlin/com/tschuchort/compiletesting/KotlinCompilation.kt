@@ -92,6 +92,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var noParamAssertions: Boolean = false
 
 	/** Generate nullability assertions for non-null Java expressions */
+	@Deprecated("Removed in latest Kotlin version")
 	var strictJavaNullabilityAssertions: Boolean? = null
 
 	/** Disable optimizations */
@@ -103,6 +104,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 *
 	 * {disable|enable}
 	 */
+	@Deprecated("Removed in latest Kotlin version")
 	var constructorCallNormalizationMode: String? = null
 
 	/** Assert calls behaviour {always-enable|always-disable|jvm|legacy} */
@@ -118,7 +120,8 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var useTypeTable: Boolean = false
 
 	/** Allow Kotlin runtime libraries of incompatible versions in the classpath */
-	var skipRuntimeVersionCheck: Boolean = false
+	@Deprecated("Removed in latest Kotlin version")
+	var skipRuntimeVersionCheck: Boolean? = null
 
 	/** Path to JSON file to dump Java to Kotlin declaration mappings */
 	var declarationsOutputPath: File? = null
@@ -145,7 +148,8 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var supportCompatqualCheckerFrameworkAnnotations: String? = null
 
 	/** Do not throw NPE on explicit 'equals' call for null receiver of platform boxed primitive type */
-	var noExceptionOnExplicitEqualsForBoxedNull: Boolean = false
+	@Deprecated("Removed in latest Kotlin version")
+	var noExceptionOnExplicitEqualsForBoxedNull: Boolean? = null
 
 	/** Allow to use '@JvmDefault' annotation for JVM default method support.
 	 * {disable|enable|compatibility}
@@ -328,13 +332,17 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		args.noCallAssertions = noCallAssertions
 		args.noParamAssertions = noParamAssertions
 		args.noReceiverAssertions = noReceiverAssertions
-                strictJavaNullabilityAssertions?.let {
-                    args.strictJavaNullabilityAssertions = it
-		}
+
+		// TODO: Remove after kotlin 1.6.30
+		if(strictJavaNullabilityAssertions != null)
+			args.trySetDeprecatedOption("strictJavaNullabilityAssertions", strictJavaNullabilityAssertions)
+
 		args.noOptimize = noOptimize
 
+		// TODO: Remove after kotlin 1.6.30
 		if(constructorCallNormalizationMode != null)
-			args.constructorCallNormalizationMode = constructorCallNormalizationMode
+			args.trySetDeprecatedOption("constructorCallNormalizationMode", constructorCallNormalizationMode)
+
 
 		if(assertionsMode != null)
 			args.assertionsMode = assertionsMode
@@ -366,8 +374,14 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		if(scriptResolverEnvironment.isNotEmpty())
 			args.scriptResolverEnvironment = scriptResolverEnvironment.map { (key, value) -> "$key=\"$value\"" }.toTypedArray()
 
-		args.noExceptionOnExplicitEqualsForBoxedNull = noExceptionOnExplicitEqualsForBoxedNull
-		args.skipRuntimeVersionCheck = skipRuntimeVersionCheck
+		// TODO: Remove after kotlin 1.6.30
+		if(noExceptionOnExplicitEqualsForBoxedNull != null)
+			args.trySetDeprecatedOption("noExceptionOnExplicitEqualsForBoxedNull", noExceptionOnExplicitEqualsForBoxedNull)
+
+		// TODO: Remove after kotlin 1.6.30
+		if(skipRuntimeVersionCheck != null)
+			args.trySetDeprecatedOption("skipRuntimeVersionCheck", skipRuntimeVersionCheck)
+
         args.javaPackagePrefix = javaPackagePrefix
         args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
 	}
