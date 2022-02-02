@@ -7,7 +7,6 @@ import java.io.File
 fun defaultCompilerConfig(): KotlinCompilation {
     return KotlinCompilation( ).apply {
         inheritClassPath = false
-        skipRuntimeVersionCheck = true
         correctErrorTypes = true
         verbose = true
         reportOutputFiles = false

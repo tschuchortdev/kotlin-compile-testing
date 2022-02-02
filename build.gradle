@@ -1,5 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.6.10'
+    ext.embedded_kotlin_version =  '1.6.20-dev-7317'//'1.6.20-M1-1.0.2'
 
     repositories {
         mavenCentral()
@@ -41,13 +42,14 @@ allprojects {
             mavenCentral()
             maven { url "https://plugins.gradle.org/m2/" }
             google()
+            maven { url 'https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap' }
         }
     }
 
     repositories {
         mavenCentral()
         google()
-        jcenter()
+        maven { url 'https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap' }
     }
 
     apply plugin: 'kotlin'

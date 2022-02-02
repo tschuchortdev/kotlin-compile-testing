@@ -14,9 +14,12 @@ import org.jetbrains.kotlin.cli.jvm.plugins.ServiceLoaderLite
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.Services
+import org.jetbrains.kotlin.load.java.JvmAbi
 import java.io.File
 import java.io.OutputStream
 import java.io.PrintStream
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.ReflectPermission
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -102,6 +105,17 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
 
     // Directory for input source files
     protected val sourcesDir get() = workingDir.resolve("sources")
+
+    protected inline fun <reified T> CommonCompilerArguments.trySetDeprecatedOption(optionSimpleName: String, value: T) {
+        try {
+            this.javaClass.getMethod(JvmAbi.setterName(optionSimpleName), T::class.java).invoke(this, value)
+        } catch (e: ReflectiveOperationException) {
+            throw IllegalArgumentException(
+                "The deprecated option $optionSimpleName is no longer available in the kotlin version you are using",
+                e
+            )
+        }
+    }
 
     protected fun commonArguments(args: A, configuration: (args: A) -> Unit): A {
         args.pluginClasspaths = pluginClasspaths.map(File::getAbsolutePath).toTypedArray()
