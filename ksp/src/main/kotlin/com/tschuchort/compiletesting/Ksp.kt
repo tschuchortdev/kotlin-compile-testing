@@ -199,19 +199,14 @@ private class KspCompileTestingComponentRegistrar(
 
         }.build()
 
-        // Temporary until friend-paths is fully supported https://youtrack.jetbrains.com/issue/KT-34102
-        @Suppress("invisible_member")
-        val messageCollector = PrintingMessageCollector(
-            compilation.internalMessageStreamAccess,
-            MessageRenderer.GRADLE_STYLE,
-            compilation.verbose
+        val messageCollector = configuration.get(CLIConfigurationKeys.ORIGINAL_MESSAGE_COLLECTOR_KEY)
+            ?: throw IllegalStateException("ksp: message collector not found!")
+        val wrappedMessageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
+            ?: throw IllegalStateException("ksp: message collector not found!")
+        val logger = MessageCollectorBasedKSPLogger(
+            messageCollector, wrappedMessageCollector, options.allWarningsAsErrors
         )
-        val messageCollectorBasedKSPLogger = MessageCollectorBasedKSPLogger(
-            messageCollector = messageCollector,
-            wrappedMessageCollector = messageCollector,
-            allWarningsAsErrors = allWarningsAsErrors
-        )
-        val registrar = KspTestExtension(options, providers, messageCollectorBasedKSPLogger)
+        val registrar = KspTestExtension(options, providers, logger)
         AnalysisHandlerExtension.registerExtension(project, registrar)
         // Dummy extension point; Required by dropPsiCaches().
         CoreApplicationEnvironment.registerExtensionPoint(project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java)
