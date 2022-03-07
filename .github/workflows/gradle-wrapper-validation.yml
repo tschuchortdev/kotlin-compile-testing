@@ -23,5 +23,5 @@ jobs:
     needs: [check_duplicate_workflows]
     if: ${{ needs.check_duplicate_workflows.outputs.should_skip != 'true' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
