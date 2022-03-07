@@ -26,7 +26,7 @@ jobs:
         java: [ '8', '11', '16' ]
         platform: ['windows-latest', 'ubuntu-latest']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up JDK ${{ matrix.java }}
       uses: actions/setup-java@v2
       with:
@@ -57,7 +57,7 @@ jobs:
         java: [ '8', '11', '16' ]
         platform: ['windows-latest', 'ubuntu-latest']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Gradle wrapper validation
         uses: gradle/wrapper-validation-action@v1
       - name: Set up JDK
@@ -96,7 +96,7 @@ jobs:
       ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SONATYPE_SIGNING_PRIVATE_KEY }}
       GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false # without this, all access tokens set later on will be ignored
       - name: Set up JDK
