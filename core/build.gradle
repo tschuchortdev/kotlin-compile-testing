@@ -23,7 +23,7 @@ dependencies {
     testImplementation 'com.squareup:kotlinpoet:1.11.0'
     testImplementation 'com.squareup:javapoet:1.13.0'
 
-    implementation "com.squareup.okio:okio:3.0.0"
+    implementation "com.squareup.okio:okio:3.1.0"
     implementation 'io.github.classgraph:classgraph:4.8.146'
 
     // This dependency is only needed as a "sample" compiler plugin to test that
