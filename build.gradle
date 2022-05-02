@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.6.21'
-    ext.embedded_kotlin_version =  '1.6.21'
+    ext.embedded_kotlin_version =  '1.7.0-dev-3025'
 
     repositories {
         mavenCentral()
@@ -50,6 +50,9 @@ allprojects {
         mavenCentral()
         google()
         maven { url 'https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+        maven { url 'https://www.jetbrains.com/intellij-repository/snapshots' }
+        maven { url 'https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/' }
     }
 
     apply plugin: 'kotlin'
