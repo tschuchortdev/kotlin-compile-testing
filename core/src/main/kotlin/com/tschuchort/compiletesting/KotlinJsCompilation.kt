@@ -24,9 +24,6 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   /** Perform experimental dead code elimination */
   var irDce: Boolean = false
 
-  /** Perform a more experimental faster dead code elimination */
-  var irDceDriven: Boolean = false
-
   /** Print declarations' reachability info to stdout during performing DCE */
   var irDcePrintReachabilityInfo: Boolean = false
 
@@ -87,7 +84,6 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.irProduceKlibFile = irProduceKlibFile
     args.irProduceJs = irProduceJs
     args.irDce = irDce
-    args.irDceDriven = irDceDriven
     args.irDcePrintReachabilityInfo = irDcePrintReachabilityInfo
     args.irOnly = irOnly
     args.irModuleName = irModuleName
