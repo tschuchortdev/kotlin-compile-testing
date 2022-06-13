@@ -20,11 +20,11 @@ dependencies {
     kapt "com.google.auto.service:auto-service:1.0.1"
 
 
-    testImplementation 'com.squareup:kotlinpoet:1.10.2'
+    testImplementation 'com.squareup:kotlinpoet:1.11.0'
     testImplementation 'com.squareup:javapoet:1.13.0'
 
-    implementation "com.squareup.okio:okio:3.0.0"
-    implementation 'io.github.classgraph:classgraph:4.8.141'
+    implementation "com.squareup.okio:okio:3.1.0"
+    implementation 'io.github.classgraph:classgraph:4.8.147'
 
     // This dependency is only needed as a "sample" compiler plugin to test that
     // running compiler plugins passed via the pluginClasspath CLI option works
