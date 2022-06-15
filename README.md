@@ -174,7 +174,7 @@ With the release of Java 16 the access control of the new Jigsaw module system i
 java.lang.IllegalAccessError: class org.jetbrains.kotlin.kapt3.base.KaptContext (in unnamed module @0x43b6aa9d) cannot access class com.sun.tools.javac.util.Context (in module jdk.compiler) because module jdk.compiler does not export com.sun.tools.javac.util to unnamed module @0x43b6aa9d
 ```
 To mitigate this problem, you have to add the following code to your module's `build.gradle` file:
-```
+```groovy
 if (JavaVersion.current() >= JavaVersion.VERSION_16) {
     test {
         jvmArgs(
@@ -188,6 +188,27 @@ if (JavaVersion.current() >= JavaVersion.VERSION_16) {
           "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
           "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
           "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+        )
+    }
+}
+```
+
+or for Kotlin DSL
+
+```kotlin
+if (JavaVersion.current() >= JavaVersion.VERSION_16) {
+    tasks.withType<Test>().all {
+        jvmArgs(
+            "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
         )
     }
 }
