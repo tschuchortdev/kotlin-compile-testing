@@ -47,7 +47,7 @@ internal class MainComponentRegistrar : ComponentRegistrar {
     companion object {
         /** This compiler plugin is instantiated by K2JVMCompiler using
          *  a service locator. So we can't just pass parameters to it easily.
-         *  Instead we need to use a thread-local global variable to pass
+         *  Instead, we need to use a thread-local global variable to pass
          *  any parameters that change between compilations
          */
         val threadLocalParameters: ThreadLocal<ThreadLocalParameters> = ThreadLocal()

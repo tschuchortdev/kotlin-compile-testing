@@ -904,5 +904,18 @@ class KotlinCompilationTests {
 			}
 	}
 
+	@Test
+	fun `runs the K2 compiler without compiler plugins`() {
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
+			compilerPlugins = emptyList()
+			pluginClasspaths = emptyList()
+			useK2 = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "KSource")
+	}
+
 	class InheritedClass {}
 }
