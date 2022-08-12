@@ -26,6 +26,9 @@ import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 @AutoService(ComponentRegistrar::class)
 internal class MainComponentRegistrar : ComponentRegistrar {
 
+    override val supportsK2: Boolean
+        get() = true
+
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         val parameters = threadLocalParameters.get()
 
@@ -40,6 +43,7 @@ internal class MainComponentRegistrar : ComponentRegistrar {
             componentRegistrar.registerProjectComponents(project,configuration)
         }
 
+        // Will no-op if `parameters.processors` is empty
         KaptComponentRegistrar(parameters.processors, parameters.kaptOptions)
                 .registerProjectComponents(project,configuration)
     }
