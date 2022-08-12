@@ -91,6 +91,15 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     /** Use the new experimental K2 compiler */
     var useK2: Boolean by default { false }
 
+    /** Enable experimental multiplatform support */
+    var multiplatform: Boolean = false
+
+    /** Do not check presence of 'actual' modifier in multi-platform projects */
+    var noCheckActual: Boolean = false
+
+    /** Enable usages of API that requires opt-in with an opt-in requirement marker with the given fully qualified name */
+    var optIn: List<String>? = null
+
     /** Additional string arguments to the Kotlin compiler */
     var kotlincArguments: List<String> = emptyList()
 
@@ -130,6 +139,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
         args.reportOutputFiles = reportOutputFiles
         args.reportPerf = reportPerformance
         args.useK2 = useK2
+        args.multiPlatform = multiplatform
+        args.noCheckActual = noCheckActual
+        args.optIn = optIn?.toTypedArray()
 
         if (languageVersion != null)
             args.languageVersion = this.languageVersion

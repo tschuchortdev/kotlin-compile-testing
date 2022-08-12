@@ -917,5 +917,18 @@ class KotlinCompilationTests {
 		assertClassLoadable(result, "KSource")
 	}
 
+	@Test
+	fun `can compile code with multi-platform expect modifier`() {
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(
+				SourceFile.kotlin("kSource1.kt", "expect interface MppInterface"),
+				SourceFile.kotlin("kSource2.kt", "actual interface MppInterface")
+			)
+			multiplatform = true
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+	}
+
 	class InheritedClass {}
 }
