@@ -1,9 +1,12 @@
 buildscript {
-    ext.ksp_version='1.7.10-1.0.6'
+    ext.ksp_version='1.7.20-Beta-1.0.6'
 }
 
 dependencies {
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$embedded_kotlin_version"
     api project(':core')
-    api "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
+    compileOnly "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
     implementation "com.google.devtools.ksp:symbol-processing:$ksp_version"
+    testImplementation "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$embedded_kotlin_version"
 }

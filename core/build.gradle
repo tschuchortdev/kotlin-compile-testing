@@ -16,12 +16,14 @@ buildConfig {
 }
 
 dependencies {
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:$embedded_kotlin_version"
     compileOnly "com.google.auto.service:auto-service:1.0.1"
     kapt "com.google.auto.service:auto-service:1.0.1"
 
 
     testImplementation 'com.squareup:kotlinpoet:1.12.0'
     testImplementation 'com.squareup:javapoet:1.13.0'
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$embedded_kotlin_version"
 
     implementation "com.squareup.okio:okio:3.2.0"
     implementation 'io.github.classgraph:classgraph:4.8.149'
