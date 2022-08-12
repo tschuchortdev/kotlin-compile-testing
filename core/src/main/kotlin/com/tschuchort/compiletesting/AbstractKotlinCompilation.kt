@@ -88,6 +88,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
 
     var languageVersion: String? = null
 
+    /** Use the new experimental K2 compiler */
+    var useK2: Boolean by default { false }
+
     /** Additional string arguments to the Kotlin compiler */
     var kotlincArguments: List<String> = emptyList()
 
@@ -126,6 +129,7 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
         args.allWarningsAsErrors = allWarningsAsErrors
         args.reportOutputFiles = reportOutputFiles
         args.reportPerf = reportPerformance
+        args.useK2 = useK2
 
         if (languageVersion != null)
             args.languageVersion = this.languageVersion
@@ -191,7 +195,16 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
                 } else {
                     emptyList()
                 }
-            args.pluginClasspaths = (args.pluginClasspaths ?: emptyArray()) + arrayOf(getResourcesPath())
+            args.pluginClasspaths = (args.pluginClasspaths ?: emptyArray()) +
+                    /** The resources path contains the MainComponentRegistrar and MainCommandLineProcessor which will
+                     be found by the Kotlin compiler's service loader. We add it only when the user has actually given
+                     us ComponentRegistrar instances to be loaded by the MainComponentRegistrar because the experimental
+                     K2 compiler doesn't support plugins yet. This way, users of K2 can prevent MainComponentRegistrar
+                     from being loaded and crashing K2 by setting both [compilerPlugins] and [commandLineProcessors] to
+                     the emptyList. */
+                    if (compilerPlugins.isNotEmpty() || commandLineProcessors.isNotEmpty())
+                        arrayOf(getResourcesPath())
+                    else emptyArray()
         }
 
         val compilerMessageCollector = PrintingMessageCollector(
