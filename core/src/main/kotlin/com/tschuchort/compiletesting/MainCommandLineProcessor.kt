@@ -13,14 +13,18 @@ internal class MainCommandLineProcessor : CommandLineProcessor {
 
     override val pluginOptions: Collection<AbstractCliOption>
         get() = threadLocalParameters.get()?.pluginOptions
-            ?: error("MainCommandLineProcessor::pluginOptions accessed before thread local parameters have been set")
+            ?: emptyList<AbstractCliOption>().also {
+                // Handle unset parameters gracefully because this plugin may be accidentally called by other tools that
+                // discover it on the classpath (for example the kotlin jupyter kernel).
+                System.err.println("WARNING: MainCommandLineProcessor::pluginOptions accessed before thread local parameters have been set")
+            }
 
     companion object {
         const val pluginId = "com.tschuchort.compiletesting.maincommandlineprocessor"
 
         /** This CommandLineProcessor is instantiated by K2JVMCompiler using
          *  a service locator. So we can't just pass parameters to it easily.
-         *  Instead we need to use a thread-local global variable to pass
+         *  Instead, we need to use a thread-local global variable to pass
          *  any parameters that change between compilations
          */
         val threadLocalParameters: ThreadLocal<ThreadLocalParameters> = ThreadLocal()
@@ -67,6 +71,13 @@ internal class MainCommandLineProcessor : CommandLineProcessor {
     }
 
     override fun processOption(option: AbstractCliOption, value: String, configuration: CompilerConfiguration) {
+        // Handle unset parameters gracefully because this plugin may be accidentally called by other tools that
+        // discover it on the classpath (for example the kotlin jupyter kernel).
+        if (threadLocalParameters.get() == null) {
+            System.err.println("WARNING: MainCommandLineProcessor::processOption accessed before thread local parameters have been set")
+            return
+        }
+
         val (foreignPluginId, foreignOptionName) = decodeForeignOptionName(option.optionName)
         val params = threadLocalParameters.get()
 

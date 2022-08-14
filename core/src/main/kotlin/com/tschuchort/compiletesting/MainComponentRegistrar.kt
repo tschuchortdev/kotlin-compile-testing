@@ -27,6 +27,13 @@ import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 internal class MainComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
+        // Handle unset parameters gracefully because this plugin may be accidentally called by other tools that
+        // discover it on the classpath (for example the kotlin jupyter kernel).
+        if (threadLocalParameters.get() == null) {
+            System.err.println("WARNING: MainComponentRegistrar::registerProjectComponents accessed before thread local parameters have been set")
+            return
+        }
+
         val parameters = threadLocalParameters.get()
 
         /*
