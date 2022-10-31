@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.7.10'
-    ext.embedded_kotlin_version =  '1.7.10'
+    ext.embedded_kotlin_version =  '1.8.20-mercury-607'
 
     repositories {
         mavenCentral()
