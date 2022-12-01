@@ -5,6 +5,7 @@ plugins {
     kotlin("kapt")
     alias(libs.plugins.ksp)
     alias(libs.plugins.buildconfig)
+    alias(libs.plugins.mavenPublish)
 }
 
 buildConfig {

@@ -1,7 +1,4 @@
-//import com.diffplug.gradle.spotless.KotlinExtension
-//import com.diffplug.gradle.spotless.SpotlessExtension
-//import com.vanniktech.maven.publish.MavenPublishBaseExtension
-//import io.gitlab.arturbosch.detekt.Detekt
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -41,6 +38,22 @@ subprojects {
                 "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
                 "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
             )
+        }
+    }
+
+    pluginManager.withPlugin("com.vanniktech.maven.publish") {
+        apply(plugin = "org.jetbrains.dokka")
+
+        tasks.withType<DokkaTask>().configureEach {
+            outputDirectory.set(rootDir.resolve("../docs/0.x"))
+            dokkaSourceSets.configureEach {
+                skipDeprecated.set(true)
+            }
+        }
+
+        configure<MavenPublishBaseExtension> {
+            publishToMavenCentral(automaticRelease = true)
+            signAllPublications()
         }
     }
 }
