@@ -95,7 +95,7 @@ Add dependency to your module's `build.gradle` file:
 ```Groovy
 dependencies {
         // ...
-	testImplementation("dev.zacsweers.kct:core:<version>>")
+	testImplementation("dev.zacsweers.kctfork:core:<version>>")
 }
 ```
 
@@ -115,7 +115,7 @@ To test KSP processors, you need to use the KSP dependency:
 
 ```Groovy
 dependencies {
-    testImplementation("dev.zacsweers.kct:ksp:<version>>")
+    testImplementation("dev.zacsweers.kctfork:ksp:<version>>")
 }
 ```
 
