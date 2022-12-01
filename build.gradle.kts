@@ -15,13 +15,13 @@ subprojects {
     pluginManager.withPlugin("java") {
         configure<JavaPluginExtension> { toolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 
-        tasks.withType<JavaCompile>().configureEach { options.release.set(11) }
+        tasks.withType<JavaCompile>().configureEach { options.release.set(8) }
     }
 
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         tasks.withType<KotlinCompile>().configureEach {
             kotlinOptions {
-                jvmTarget = "11"
+                jvmTarget = "1.8"
                 freeCompilerArgs = freeCompilerArgs + listOf("-progressive")
             }
         }
