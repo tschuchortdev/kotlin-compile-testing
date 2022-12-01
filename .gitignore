@@ -238,3 +238,5 @@ hs_err_pid*
 
 ksp/build
 ksp/.idea
+
+.idea/
