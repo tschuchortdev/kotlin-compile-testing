@@ -115,6 +115,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
         HostEnvironment.kotlinStdLibCommonJar
     }
 
+    /** Enable support for the new K2 compiler. */
+    var supportsK2 = false
+
     // Directory for input source files
     protected val sourcesDir get() = workingDir.resolve("sources")
 
@@ -192,7 +195,8 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
             MainComponentRegistrar.ThreadLocalParameters(
                 listOf(),
                 KaptOptions.Builder(),
-                compilerPlugins
+                compilerPlugins,
+                supportsK2
             )
         )
 

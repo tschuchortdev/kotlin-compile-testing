@@ -26,6 +26,9 @@ import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 @AutoService(ComponentRegistrar::class)
 internal class MainComponentRegistrar : ComponentRegistrar {
 
+    override val supportsK2: Boolean
+        get() = threadLocalParameters.get().supportsK2
+
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         // Handle unset parameters gracefully because this plugin may be accidentally called by other tools that
         // discover it on the classpath (for example the kotlin jupyter kernel).
@@ -63,6 +66,7 @@ internal class MainComponentRegistrar : ComponentRegistrar {
     data class ThreadLocalParameters(
         val processors: List<IncrementalProcessor>,
         val kaptOptions: KaptOptions.Builder,
-        val compilerPlugins: List<ComponentRegistrar>
+        val compilerPlugins: List<ComponentRegistrar>,
+        val supportsK2: Boolean,
     )
 }
