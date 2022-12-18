@@ -100,7 +100,7 @@ pluginManagement {
             }
         }
     }
-    plugins { id("com.gradle.enterprise") version "3.11.4" }
+    plugins { id("com.gradle.enterprise") version "3.12" }
 }
 
 rootProject.name = "kotlin-compile-testing"
