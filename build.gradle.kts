@@ -1,5 +1,6 @@
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -17,9 +18,9 @@ subprojects {
 
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         tasks.withType<KotlinCompile>().configureEach {
-            kotlinOptions {
-                jvmTarget = "1.8"
-                freeCompilerArgs = freeCompilerArgs + listOf("-progressive")
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_1_8)
+                freeCompilerArgs.add("-progressive")
             }
         }
     }

@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -74,8 +75,8 @@ class KotlinJsCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 		assertThat(result.compiledClassAndResourceFiles).hasSize(1)
 		val jsFile = result.compiledClassAndResourceFiles[0]
-		assertThat(jsFile.readText()).contains("package\$a.KSource = KSource;")
-		assertThat(jsFile.readText()).contains("package\$b.KSource = KSource_0;")
+		assertThat(jsFile.readText()).contains("function KSource() {")
+		assertThat(jsFile.readText()).contains("function KSource_0() {")
 	}
 
 	@Test

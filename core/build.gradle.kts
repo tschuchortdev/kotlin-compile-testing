@@ -46,9 +46,17 @@ dependencies {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-    // https://github.com/tschuchortdev/kotlin-compile-testing/pull/63
-    kotlinOptions.freeCompilerArgs += "-Xno-optimized-callable-references"
-    kotlinOptions.freeCompilerArgs += "-Xskip-runtime-version-check"
+    val isTest = name.contains("test", ignoreCase = true)
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            // https://github.com/tschuchortdev/kotlin-compile-testing/pull/63
+            "-Xno-optimized-callable-references",
+            "-Xskip-runtime-version-check",
+        )
+        if (isTest) {
+            freeCompilerArgs.add("-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
+        }
+    }
 }
 
 tasks.withType<Jar>().configureEach {

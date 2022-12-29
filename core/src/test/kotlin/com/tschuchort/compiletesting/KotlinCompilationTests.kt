@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -908,7 +909,7 @@ class KotlinCompilationTests {
 	fun `runs the K2 compiler without compiler plugins`() {
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
-			compilerPlugins = emptyList()
+			componentRegistrars = emptyList()
 			pluginClasspaths = emptyList()
 			useK2 = true
 		}.compile()

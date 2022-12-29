@@ -1,6 +1,6 @@
 [versions]
-kotlin = "1.7.22"
-ksp = "1.7.22-1.0.8"
+kotlin = "1.8.0"
+ksp = "1.8.0-1.0.8"
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "3.1.0" }

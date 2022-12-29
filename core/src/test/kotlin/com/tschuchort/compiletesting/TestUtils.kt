@@ -2,10 +2,11 @@ package com.tschuchort.compiletesting
 
 import io.github.classgraph.ClassGraph
 import org.assertj.core.api.Assertions
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.io.File
 
 fun defaultCompilerConfig(): KotlinCompilation {
-    return KotlinCompilation( ).apply {
+    return KotlinCompilation().apply {
         inheritClassPath = false
         correctErrorTypes = true
         verbose = true
@@ -25,13 +26,13 @@ fun defaultJsCompilerConfig(): KotlinJsCompilation {
 
 
 fun assertClassLoadable(compileResult: KotlinCompilation.Result, className: String): Class<*> {
-    try {
+    return try {
         val clazz = compileResult.classLoader.loadClass(className)
         Assertions.assertThat(clazz).isNotNull
-        return clazz
+        clazz
     }
     catch(e: ClassNotFoundException) {
-        return Assertions.fail<Nothing>("Class $className could not be loaded")
+        Assertions.fail<Nothing>("Class $className could not be loaded")
     }
 }
 

@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.com.intellij.psi.PsiTreeChangeAdapter
 import org.jetbrains.kotlin.com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
@@ -26,6 +27,7 @@ import java.io.File
  * The list of symbol processors for the kotlin compilation.
  * https://goo.gle/ksp
  */
+@OptIn(ExperimentalCompilerApi::class)
 var KotlinCompilation.symbolProcessorProviders: List<SymbolProcessorProvider>
     get() = getKspRegistrar().providers
     set(value) {
@@ -36,12 +38,14 @@ var KotlinCompilation.symbolProcessorProviders: List<SymbolProcessorProvider>
 /**
  * The directory where generated KSP sources are written
  */
+@OptIn(ExperimentalCompilerApi::class)
 val KotlinCompilation.kspSourcesDir: File
     get() = kspWorkingDir.resolve("sources")
 
 /**
  * Arbitrary arguments to be passed to ksp
  */
+@OptIn(ExperimentalCompilerApi::class)
 var KotlinCompilation.kspArgs: MutableMap<String, String>
     get() = getKspRegistrar().options
     set(value) {
@@ -52,6 +56,7 @@ var KotlinCompilation.kspArgs: MutableMap<String, String>
 /**
  * Controls for enabling incremental processing in KSP.
  */
+@OptIn(ExperimentalCompilerApi::class)
 var KotlinCompilation.kspIncremental: Boolean
     get() = getKspRegistrar().incremental
     set(value) {
@@ -62,6 +67,7 @@ var KotlinCompilation.kspIncremental: Boolean
 /**
  * Controls for enabling incremental processing logs in KSP.
  */
+@OptIn(ExperimentalCompilerApi::class)
 var KotlinCompilation.kspIncrementalLog: Boolean
     get() = getKspRegistrar().incrementalLog
     set(value) {
@@ -72,6 +78,7 @@ var KotlinCompilation.kspIncrementalLog: Boolean
 /**
  * Controls for enabling all warnings as errors in KSP.
  */
+@OptIn(ExperimentalCompilerApi::class)
 var KotlinCompilation.kspAllWarningsAsErrors: Boolean
     get() = getKspRegistrar().allWarningsAsErrors
     set(value) {
@@ -83,6 +90,7 @@ var KotlinCompilation.kspAllWarningsAsErrors: Boolean
  * Run processors and compilation in a single compiler invocation if true.
  * See [com.google.devtools.ksp.KspCliOption.WITH_COMPILATION_OPTION].
  */
+@OptIn(ExperimentalCompilerApi::class)
 var KotlinCompilation.kspWithCompilation: Boolean
     get() = getKspRegistrar().withCompilation
     set(value) {
@@ -90,18 +98,22 @@ var KotlinCompilation.kspWithCompilation: Boolean
         registrar.withCompilation = value
     }
 
+@OptIn(ExperimentalCompilerApi::class)
 private val KotlinCompilation.kspJavaSourceDir: File
     get() = kspSourcesDir.resolve("java")
 
+@OptIn(ExperimentalCompilerApi::class)
 private val KotlinCompilation.kspKotlinSourceDir: File
     get() = kspSourcesDir.resolve("kotlin")
 
+@OptIn(ExperimentalCompilerApi::class)
 private val KotlinCompilation.kspResources: File
     get() = kspSourcesDir.resolve("resources")
 
 /**
  * The working directory for KSP
  */
+@OptIn(ExperimentalCompilerApi::class)
 private val KotlinCompilation.kspWorkingDir: File
     get() = workingDir.resolve("ksp")
 
@@ -111,12 +123,14 @@ private val KotlinCompilation.kspWorkingDir: File
 // TODO this seems to be ignored by KSP and it is putting classes into regular classes directory
 //  but we still need to provide it in the KSP options builder as it is required
 //  once it works, we should make the property public.
+@OptIn(ExperimentalCompilerApi::class)
 private val KotlinCompilation.kspClassesDir: File
     get() = kspWorkingDir.resolve("classes")
 
 /**
  * The directory where compiled KSP caches are written
  */
+@OptIn(ExperimentalCompilerApi::class)
 private val KotlinCompilation.kspCachesDir: File
     get() = kspWorkingDir.resolve("caches")
 
@@ -141,6 +155,7 @@ private class KspTestExtension(
 /**
  * Registers the [KspTestExtension] to load the given list of processors.
  */
+@OptIn(ExperimentalCompilerApi::class)
 private class KspCompileTestingComponentRegistrar(
     private val compilation: KotlinCompilation
 ) : ComponentRegistrar {
@@ -221,11 +236,12 @@ private class KspCompileTestingComponentRegistrar(
 /**
  * Gets the test registrar from the plugin list or adds if it does not exist.
  */
+@OptIn(ExperimentalCompilerApi::class)
 private fun KotlinCompilation.getKspRegistrar(): KspCompileTestingComponentRegistrar {
-    compilerPlugins.firstIsInstanceOrNull<KspCompileTestingComponentRegistrar>()?.let {
+    componentRegistrars.firstIsInstanceOrNull<KspCompileTestingComponentRegistrar>()?.let {
         return it
     }
     val kspRegistrar = KspCompileTestingComponentRegistrar(this)
-    compilerPlugins = compilerPlugins + kspRegistrar
+    componentRegistrars = componentRegistrars + kspRegistrar
     return kspRegistrar
 }

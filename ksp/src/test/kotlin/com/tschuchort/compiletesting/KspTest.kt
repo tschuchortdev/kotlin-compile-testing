@@ -8,6 +8,7 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
 import org.assertj.core.api.Assertions.assertThat
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4

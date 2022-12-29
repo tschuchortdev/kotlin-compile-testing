@@ -4,9 +4,11 @@ import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import java.util.*
 
+@ExperimentalCompilerApi
 @AutoService(CommandLineProcessor::class)
 internal class MainCommandLineProcessor : CommandLineProcessor {
     override val pluginId: String = Companion.pluginId

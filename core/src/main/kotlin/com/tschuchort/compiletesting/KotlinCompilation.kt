@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.JVMAssertionsMode
 import org.jetbrains.kotlin.config.JvmDefaultMode
 import org.jetbrains.kotlin.config.JvmTarget
@@ -44,6 +45,7 @@ typealias PluginId = String
 typealias OptionName = String
 typealias OptionValue = String
 
+@ExperimentalCompilerApi
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	/** Arbitrary arguments to be passed to kapt */
@@ -92,7 +94,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var noParamAssertions: Boolean = false
 
 	/** Generate nullability assertions for non-null Java expressions */
-	@Deprecated("Removed in latest Kotlin version")
+	@Deprecated("Removed in Kotlinc, this does nothing now.")
 	var strictJavaNullabilityAssertions: Boolean? = null
 
 	/** Disable optimizations */
@@ -104,7 +106,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 *
 	 * {disable|enable}
 	 */
-	@Deprecated("Removed in latest Kotlin version")
+	@Deprecated("Removed in Kotlinc, this does nothing now.")
 	var constructorCallNormalizationMode: String? = null
 
 	/** Assert calls behaviour {always-enable|always-disable|jvm|legacy} */
@@ -120,13 +122,14 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var useTypeTable: Boolean = false
 
 	/** Allow Kotlin runtime libraries of incompatible versions in the classpath */
-	@Deprecated("Removed in latest Kotlin version")
+	@Deprecated("Removed in Kotlinc, this does nothing now.")
 	var skipRuntimeVersionCheck: Boolean? = null
 
 	/** Path to JSON file to dump Java to Kotlin declaration mappings */
 	var declarationsOutputPath: File? = null
 
 	/** Combine modules for source files and binary dependencies into a single module */
+	@Deprecated("Removed in Kotlinc, this does nothing now.")
 	var singleModule: Boolean = false
 
 	/** Suppress the \"cannot access built-in declaration\" error (useful with -no-stdlib) */
@@ -148,7 +151,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var supportCompatqualCheckerFrameworkAnnotations: String? = null
 
 	/** Do not throw NPE on explicit 'equals' call for null receiver of platform boxed primitive type */
-	@Deprecated("Removed in latest Kotlin version")
+	@Deprecated("Removed in Kotlinc, this does nothing now.")
 	var noExceptionOnExplicitEqualsForBoxedNull: Boolean? = null
 
 	/** Allow to use '@JvmDefault' annotation for JVM default method support.
@@ -333,16 +336,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		args.noParamAssertions = noParamAssertions
 		args.noReceiverAssertions = noReceiverAssertions
 
-		// TODO: Remove after kotlin 1.6.30
-		if(strictJavaNullabilityAssertions != null)
-			args.trySetDeprecatedOption("strictJavaNullabilityAssertions", strictJavaNullabilityAssertions)
-
 		args.noOptimize = noOptimize
-
-		// TODO: Remove after kotlin 1.6.30
-		if(constructorCallNormalizationMode != null)
-			args.trySetDeprecatedOption("constructorCallNormalizationMode", constructorCallNormalizationMode)
-
 
 		if(assertionsMode != null)
 			args.assertionsMode = assertionsMode
@@ -355,8 +349,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 		if(declarationsOutputPath != null)
 			args.declarationsOutputPath = declarationsOutputPath!!.toString()
-
-		args.singleModule = singleModule
 
 		if(javacArguments.isNotEmpty())
 			args.javacArguments = javacArguments.toTypedArray()
@@ -374,16 +366,8 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		if(scriptResolverEnvironment.isNotEmpty())
 			args.scriptResolverEnvironment = scriptResolverEnvironment.map { (key, value) -> "$key=\"$value\"" }.toTypedArray()
 
-		// TODO: Remove after kotlin 1.6.30
-		if(noExceptionOnExplicitEqualsForBoxedNull != null)
-			args.trySetDeprecatedOption("noExceptionOnExplicitEqualsForBoxedNull", noExceptionOnExplicitEqualsForBoxedNull)
-
-		// TODO: Remove after kotlin 1.6.30
-		if(skipRuntimeVersionCheck != null)
-			args.trySetDeprecatedOption("skipRuntimeVersionCheck", skipRuntimeVersionCheck)
-
-        args.javaPackagePrefix = javaPackagePrefix
-        args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
+		args.javaPackagePrefix = javaPackagePrefix
+		args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
 	}
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
@@ -426,7 +410,8 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 				MainComponentRegistrar.ThreadLocalParameters(
 					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL, kaptLogger) },
 					kaptOptions,
-					compilerPlugins,
+					componentRegistrars,
+					compilerPluginRegistrars,
 					supportsK2,
 				)
 		)
@@ -705,6 +690,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
  * this.classpaths += previousResult.outputDirectory
  * ```
  */
+@ExperimentalCompilerApi
 fun KotlinCompilation.addPreviousResultToClasspath(
 	previousResult: KotlinCompilation.Result
 ): KotlinCompilation = apply {
