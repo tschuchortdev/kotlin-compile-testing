@@ -126,9 +126,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	/** Path to JSON file to dump Java to Kotlin declaration mappings */
 	var declarationsOutputPath: File? = null
 
-	/** Combine modules for source files and binary dependencies into a single module */
-	var singleModule: Boolean = false
-
 	/** Suppress the \"cannot access built-in declaration\" error (useful with -no-stdlib) */
 	var suppressMissingBuiltinsError: Boolean = false
 
@@ -356,7 +353,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		if(declarationsOutputPath != null)
 			args.declarationsOutputPath = declarationsOutputPath!!.toString()
 
-		args.singleModule = singleModule
 
 		if(javacArguments.isNotEmpty())
 			args.javacArguments = javacArguments.toTypedArray()
