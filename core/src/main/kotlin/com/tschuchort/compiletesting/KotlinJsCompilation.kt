@@ -33,6 +33,9 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   /** Specify a compilation module name for IR backend */
   var irModuleName: String? = null
 
+  /** Use deprecated legacy compiler without error */
+  var useDeprecatedLegacyCompiler: Boolean = false
+
   /**
    * Path to the kotlin-stdlib-js.jar
    * If none is given, it will be searched for in the host
@@ -88,6 +91,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.irOnly = irOnly
     args.irModuleName = irModuleName
     args.generateDts = generateDts
+    args.useDeprecatedLegacyCompiler = useDeprecatedLegacyCompiler
   }
 
   /** Runs the compilation task */
