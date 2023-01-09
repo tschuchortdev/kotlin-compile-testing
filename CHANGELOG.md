@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.2.1
+-----
+
+_2023-01-09_
+
+Happy new year!
+
+- **New**: Expose the API to pass flags to KAPT. This is necessary in order to use KAPT's new JVM IR support.
+
 0.2.0
 -----
 
