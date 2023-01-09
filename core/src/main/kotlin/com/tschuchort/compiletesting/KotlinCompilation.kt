@@ -51,6 +51,9 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	/** Arbitrary arguments to be passed to kapt */
 	var kaptArgs: MutableMap<OptionName, OptionValue> = mutableMapOf()
 
+	/** Arbitrary flags to be passed to kapt */
+	var kaptFlags: MutableSet<KaptFlag> = mutableSetOf()
+
 	/** Annotation processors to be passed to kapt */
 	var annotationProcessors: List<Processor> = emptyList()
 
@@ -389,8 +392,13 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 			it.mode = AptMode.STUBS_AND_APT
 
-			if (verbose)
-				it.flags.addAll(KaptFlag.MAP_DIAGNOSTIC_LOCATIONS, KaptFlag.VERBOSE)
+			it.flags.apply {
+				addAll(kaptFlags)
+
+				if (verbose) {
+					addAll(KaptFlag.MAP_DIAGNOSTIC_LOCATIONS, KaptFlag.VERBOSE)
+				}
+			}
 		}
 
 		val compilerMessageCollector = PrintingMessageCollector(

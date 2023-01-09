@@ -38,7 +38,7 @@ dependencies {
     // The Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
     api(libs.kotlin.compilerEmbeddable)
-    implementation(libs.kotlin.annotationProcessingEmbeddable)
+    api(libs.kotlin.annotationProcessingEmbeddable)
     testImplementation(libs.kotlin.junit)
     testImplementation(libs.mockito)
     testImplementation(libs.mockitoKotlin)
