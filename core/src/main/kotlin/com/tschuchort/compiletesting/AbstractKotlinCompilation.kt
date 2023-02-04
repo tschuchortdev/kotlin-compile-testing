@@ -221,8 +221,11 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
                      K2 compiler doesn't support plugins yet. This way, users of K2 can prevent MainComponentRegistrar
                      from being loaded and crashing K2 by setting both [componentRegistrars] and [commandLineProcessors] to
                      the emptyList. */
-                    if (componentRegistrars.isNotEmpty() || commandLineProcessors.isNotEmpty())
-                        arrayOf(getResourcesPath())
+                    if (
+                        componentRegistrars.isNotEmpty() ||
+                        compilerPluginRegistrars.isNotEmpty() ||
+                        commandLineProcessors.isNotEmpty()
+                    ) arrayOf(getResourcesPath())
                     else emptyArray()
         }
 
