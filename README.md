@@ -2,7 +2,7 @@
 
 A library for in-process compilation of Kotlin and Java code, in the spirit of [Google Compile Testing](https://github.com/google/compile-testing). For example, you can use this library to test your annotation processor or compiler plugin.
 
-**NOTE** This project is a fork of the original [tschuchortdev/kotlin-compile-testing](https://github.com/github.com/tschuchortdev/kotlin-compile-testing), which itself started as a fork of [Moshi](https://github.com/square/moshi)'s compile test infra. The goal of this fork is to better track the latest Kotlin releases.
+**NOTE** This project is a fork of the original [tschuchortdev/kotlin-compile-testing](https://github.com/tschuchortdev/kotlin-compile-testing), which itself started as a fork of [Moshi](https://github.com/square/moshi)'s compile test infra. The goal of this fork is to better track the latest Kotlin releases.
 
 ## Use Cases
 
