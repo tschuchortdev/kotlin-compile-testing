@@ -73,7 +73,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var javaParameters: Boolean = false
 
 	/** Use the IR backend */
-	var useIR: Boolean = false
+	var useIR: Boolean = true
 
 	/** Use the old JVM backend */
 	var useOldBackend: Boolean = false
