@@ -53,23 +53,6 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   // compilation will land here
   val outputDir get() = workingDir.resolve("output")
 
-  /** Result of the compilation */
-  inner class Result(
-    /** The exit code of the compilation */
-    val exitCode: KotlinCompilation.ExitCode,
-    /** Messages that were printed by the compilation */
-    val messages: String
-  ) {
-    /** The directory where only the final output class and resources files will be */
-    val outputDirectory: File get() = outputDir
-
-    /**
-     * Compiled class and resource files that are the final result of the compilation.
-     */
-    val compiledClassAndResourceFiles: List<File> = outputDirectory.listFilesRecursively()
-  }
-
-
   // setup common arguments for the two kotlinc calls
   private fun jsArgs() = commonArguments(K2JSCompilerArguments()) { args ->
     // the compiler should never look for stdlib or reflect in the
@@ -93,7 +76,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   }
 
   /** Runs the compilation task */
-  fun compile(): Result {
+  fun compile(): JsCompilationResult {
     // make sure all needed directories exist
     sourcesDir.mkdirs()
     outputDir.mkdirs()
@@ -121,13 +104,13 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     }
   }
 
-  private fun makeResult(exitCode: KotlinCompilation.ExitCode): Result {
+  private fun makeResult(exitCode: KotlinCompilation.ExitCode): JsCompilationResult {
     val messages = internalMessageBuffer.readUtf8()
 
     if (exitCode != KotlinCompilation.ExitCode.OK)
       searchSystemOutForKnownErrors(messages)
 
-    return Result(exitCode, messages)
+    return JsCompilationResult(exitCode, messages, this)
   }
 
   private fun jsClasspath() = mutableListOf<File>().apply {

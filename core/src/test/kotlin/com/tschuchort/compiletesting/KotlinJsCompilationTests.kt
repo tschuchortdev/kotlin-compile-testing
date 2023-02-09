@@ -24,8 +24,8 @@ class KotlinJsCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.compiledClassAndResourceFiles).hasSize(1)
-		val jsFile = result.compiledClassAndResourceFiles[0]
+		assertThat(result.jsFiles).hasSize(1)
+		val jsFile = result.jsFiles[0]
 		assertThat(jsFile.readText()).contains("function KSource()")
 	}
 
@@ -49,8 +49,8 @@ class KotlinJsCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.compiledClassAndResourceFiles).hasSize(1)
-		val jsFile = result.compiledClassAndResourceFiles[0]
+		assertThat(result.jsFiles).hasSize(1)
+		val jsFile = result.jsFiles[0]
 		assertThat(jsFile.readText()).contains("function KSource()")
 	}
 
@@ -73,8 +73,8 @@ class KotlinJsCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.compiledClassAndResourceFiles).hasSize(1)
-		val jsFile = result.compiledClassAndResourceFiles[0]
+		assertThat(result.jsFiles).hasSize(1)
+		val jsFile = result.jsFiles[0]
 		assertThat(jsFile.readText()).contains("function KSource() {")
 		assertThat(jsFile.readText()).contains("function KSource_0() {")
 	}
@@ -94,8 +94,8 @@ fun main(addKotlincArgs: Array<String>) {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.compiledClassAndResourceFiles).hasSize(1)
-		val jsFile = result.compiledClassAndResourceFiles[0]
+		assertThat(result.jsFiles).hasSize(1)
+		val jsFile = result.jsFiles[0]
 		println(jsFile.readText())
 		assertThat(jsFile.readText()).contains("println(window.document);")
 	}

@@ -30,27 +30,9 @@ internal val processJdkHome by lazy {
 internal fun isJdk9OrLater(): Boolean
         = SourceVersion.latestSupported().compareTo(SourceVersion.RELEASE_8) > 0
 
-internal fun File.listFilesRecursively(): List<File> {
-    return listFiles().flatMap { file ->
-        if(file.isDirectory)
-            file.listFilesRecursively()
-        else
-            listOf(file)
-    }
-}
-
-internal fun Path.listFilesRecursively(): List<Path> {
-    val files = mutableListOf<Path>()
-
-    Files.walkFileTree(this, object : SimpleFileVisitor<Path>() {
-        override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-            files.add(file)
-            return FileVisitResult.CONTINUE
-        }
-    })
-
-    return files
-}
+internal fun File.listFilesRecursively(): List<File> = walkTopDown()
+    .filter { it.isFile }
+    .toList()
 
 internal fun File.hasKotlinFileExtension() = hasFileExtension(listOf("kt", "kts"))
 

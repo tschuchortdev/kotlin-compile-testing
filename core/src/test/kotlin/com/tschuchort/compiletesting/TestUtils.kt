@@ -2,7 +2,6 @@ package com.tschuchort.compiletesting
 
 import io.github.classgraph.ClassGraph
 import org.assertj.core.api.Assertions
-import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.io.File
 
 fun defaultCompilerConfig(): KotlinCompilation {
@@ -25,7 +24,7 @@ fun defaultJsCompilerConfig(): KotlinJsCompilation {
 }
 
 
-fun assertClassLoadable(compileResult: KotlinCompilation.Result, className: String): Class<*> {
+fun assertClassLoadable(compileResult: JvmCompilationResult, className: String): Class<*> {
     return try {
         val clazz = compileResult.classLoader.loadClass(className)
         Assertions.assertThat(clazz).isNotNull
