@@ -356,8 +356,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		if(declarationsOutputPath != null)
 			args.declarationsOutputPath = declarationsOutputPath!!.toString()
 
-		args.singleModule = singleModule
-
 		if(javacArguments.isNotEmpty())
 			args.javacArguments = javacArguments.toTypedArray()
 
