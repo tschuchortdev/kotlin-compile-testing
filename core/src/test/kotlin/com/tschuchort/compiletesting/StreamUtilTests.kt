@@ -1,12 +1,12 @@
 package com.tschuchort.compiletesting
 
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
 import okio.Buffer
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import java.io.OutputStream
 import java.io.PrintStream
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 
 class StreamUtilTests {
 

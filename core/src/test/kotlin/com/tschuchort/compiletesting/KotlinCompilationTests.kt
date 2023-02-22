@@ -1,6 +1,5 @@
 package com.tschuchort.compiletesting
 
-import com.nhaarman.mockitokotlin2.*
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
 import com.tschuchort.compiletesting.MockitoAdditionalMatchersKotlin.Companion.not
 import org.assertj.core.api.Assertions.assertThat
@@ -17,6 +16,7 @@ import java.nio.file.Files
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
+import org.mockito.kotlin.*
 
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinCompilationTests {
@@ -869,7 +869,6 @@ class KotlinCompilationTests {
 				interface KSource1
 				"""
 		)
-
 		val result = defaultCompilerConfig()
 			.apply {
 				sources = listOf(kSource1)

@@ -1,7 +1,7 @@
 package com.tschuchort.compiletesting
 
-import com.nhaarman.mockitokotlin2.internal.createInstance
 import org.mockito.AdditionalMatchers
+import org.mockito.kotlin.internal.createInstance
 
 class MockitoAdditionalMatchersKotlin {
     companion object {
