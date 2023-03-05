@@ -110,7 +110,7 @@ Kotlin-Compile-Testing is compatible with all _local_ compiler versions. It does
 However, if your project or any of its dependencies depend directly on compiler artifacts such as `kotlin-compiler-embeddable` or `kotlin-annotation-processing-embeddable` then they have to be the same version as the one used by Kotlin-Compile-Testing or there will be a transitive dependency conflict.
 
 
-- Current `kotlin-compiler-embeddable` version: `1.7.0`
+- Current `kotlin-compiler-embeddable` version: `1.8.0`
 
 Because the internal APIs of the Kotlin compiler often change between versions, we can only support one `kotlin-compiler-embeddable` version at a time. 
 
@@ -217,7 +217,7 @@ Since the kotlin compilation tests run in the same process as the test runner, t
 
 ## License
 
-Copyright (C) 2021 Thilo Schuchort
+Copyright (C) 2023 Thilo Schuchort
 
 Licensed under the Mozilla Public License 2.0
 
