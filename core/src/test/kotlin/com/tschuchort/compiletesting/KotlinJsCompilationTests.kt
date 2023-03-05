@@ -74,8 +74,8 @@ class KotlinJsCompilationTests {
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
 		assertThat(result.compiledClassAndResourceFiles).hasSize(1)
 		val jsFile = result.compiledClassAndResourceFiles[0]
-		assertThat(jsFile.readText()).contains("package\$a.KSource = KSource;")
-		assertThat(jsFile.readText()).contains("package\$b.KSource = KSource_0;")
+		assertThat(jsFile.readText()).contains("function KSource() {")
+		assertThat(jsFile.readText()).contains("function KSource_0() {")
 	}
 
 	@Test

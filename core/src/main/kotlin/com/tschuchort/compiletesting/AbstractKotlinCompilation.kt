@@ -11,15 +11,15 @@ import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.js.K2JSCompiler
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.Services
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.util.ServiceLoaderLite
 import java.io.File
 import java.io.OutputStream
 import java.io.PrintStream
-import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.ReflectPermission
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -29,6 +29,7 @@ import java.nio.file.Paths
  * functionality. Should not be used outside of this library as it is an
  * implementation detail.
  */
+@ExperimentalCompilerApi
 abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal constructor() {
     /** Working directory for the compilation */
     var workingDir: File by default {
@@ -49,10 +50,29 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
      */
     var pluginClasspaths: List<File> = emptyList()
 
+
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        "Renamed to componentRegistrars due to introduction of CompilerPluginRegistrar",
+        ReplaceWith("componentRegistrars"),
+        DeprecationLevel.ERROR
+    )
+    var compilerPlugins: List<ComponentRegistrar> = emptyList()
+
+
+
+    /**
+     * Legacy compiler plugins that should be added to the compilation.
+     * This option will be removed in the future; you should migrate to [CompilerPluginRegistrar].
+     */
+    @Suppress("DEPRECATION")
+    @Deprecated("Deprecated in Kotlin compiler. Migrate to compilerPluginRegistrars instead")
+    var componentRegistrars: List<ComponentRegistrar> = emptyList()
+
     /**
      * Compiler plugins that should be added to the compilation
      */
-    var compilerPlugins: List<ComponentRegistrar> = emptyList()
+    var compilerPluginRegistrars: List<CompilerPluginRegistrar> = emptyList()
 
     /**
      * Commandline processors for compiler plugins that should be added to the compilation
@@ -114,6 +134,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     var kotlinStdLibCommonJar: File? by default {
         HostEnvironment.kotlinStdLibCommonJar
     }
+
+    /** Enable support for the new K2 compiler. */
+    var supportsK2 = false
 
     // Directory for input source files
     protected val sourcesDir get() = workingDir.resolve("sources")
@@ -188,11 +211,14 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
          * To avoid that the annotation processors are executed twice,
          * the list is set to empty
          */
-        MainComponentRegistrar.threadLocalParameters.set(
-            MainComponentRegistrar.ThreadLocalParameters(
+        @Suppress("DEPRECATION")
+        MainComponentAndPluginRegistrar.threadLocalParameters.set(
+            MainComponentAndPluginRegistrar.ThreadLocalParameters(
                 listOf(),
                 KaptOptions.Builder(),
-                compilerPlugins
+                componentRegistrars,
+                compilerPluginRegistrars,
+                supportsK2
             )
         )
 
@@ -207,14 +233,15 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
                 } else {
                     emptyList()
                 }
+            @Suppress("DEPRECATION")
             args.pluginClasspaths = (args.pluginClasspaths ?: emptyArray()) +
                     /** The resources path contains the MainComponentRegistrar and MainCommandLineProcessor which will
                      be found by the Kotlin compiler's service loader. We add it only when the user has actually given
                      us ComponentRegistrar instances to be loaded by the MainComponentRegistrar because the experimental
                      K2 compiler doesn't support plugins yet. This way, users of K2 can prevent MainComponentRegistrar
-                     from being loaded and crashing K2 by setting both [compilerPlugins] and [commandLineProcessors] to
-                     the emptyList. */
-                    if (compilerPlugins.isNotEmpty() || commandLineProcessors.isNotEmpty())
+                     from being loaded and crashing K2 by setting both [componentRegistrars] and [commandLineProcessors]
+                     and [compilerPluginRegistrars] to the emptyList. */
+                    if (componentRegistrars.union(compilerPluginRegistrars).union(commandLineProcessors).isNotEmpty())
                         arrayOf(getResourcesPath())
                     else emptyArray()
         }
@@ -229,7 +256,7 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     }
 
     protected fun getResourcesPath(): String {
-        val resourceName = "META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar"
+        val resourceName = "META-INF/services/org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar"
         return this::class.java.classLoader.getResources(resourceName)
             .asSequence()
             .mapNotNull { url ->
@@ -241,9 +268,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
                 }.toAbsolutePath()
             }
             .find { resourcesPath ->
-                ServiceLoaderLite.findImplementations(ComponentRegistrar::class.java, listOf(resourcesPath.toFile()))
-                    .any { implementation -> implementation == MainComponentRegistrar::class.java.name }
-            }?.toString() ?: throw AssertionError("Could not get path to ComponentRegistrar service from META-INF")
+                ServiceLoaderLite.findImplementations(CompilerPluginRegistrar::class.java, listOf(resourcesPath.toFile()))
+                    .any { implementation -> implementation == MainComponentAndPluginRegistrar::class.java.name }
+            }?.toString() ?: throw AssertionError("Could not get path to CompilerPluginRegistrar service from META-INF")
     }
 
     /** Searches compiler log for known errors that are hard to debug for the user */
@@ -298,7 +325,6 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
 
 internal fun convertKotlinExitCode(code: ExitCode) = when(code) {
     ExitCode.OK -> KotlinCompilation.ExitCode.OK
-    ExitCode.OOM_ERROR,
     ExitCode.INTERNAL_ERROR -> KotlinCompilation.ExitCode.INTERNAL_ERROR
     ExitCode.COMPILATION_ERROR -> KotlinCompilation.ExitCode.COMPILATION_ERROR
     ExitCode.SCRIPT_EXECUTION_ERROR -> KotlinCompilation.ExitCode.SCRIPT_EXECUTION_ERROR

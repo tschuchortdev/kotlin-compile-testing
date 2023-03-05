@@ -91,21 +91,9 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	/** Don't generate not-null assertions on parameters of methods accessible from Java */
 	var noParamAssertions: Boolean = false
 
-	/** Generate nullability assertions for non-null Java expressions */
-	@Deprecated("Removed in latest Kotlin version")
-	var strictJavaNullabilityAssertions: Boolean? = null
-
 	/** Disable optimizations */
 	var noOptimize: Boolean = false
 
-	/**
-	 * Normalize constructor calls (disable: don't normalize; enable: normalize),
-	 * default is 'disable' in language version 1.2 and below, 'enable' since language version 1.3
-	 *
-	 * {disable|enable}
-	 */
-	@Deprecated("Removed in latest Kotlin version")
-	var constructorCallNormalizationMode: String? = null
 
 	/** Assert calls behaviour {always-enable|always-disable|jvm|legacy} */
 	var assertionsMode: String? = JVMAssertionsMode.DEFAULT.description
@@ -119,9 +107,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	/** Use type table in metadata serialization */
 	var useTypeTable: Boolean = false
 
-	/** Allow Kotlin runtime libraries of incompatible versions in the classpath */
-	@Deprecated("Removed in latest Kotlin version")
-	var skipRuntimeVersionCheck: Boolean? = null
 
 	/** Path to JSON file to dump Java to Kotlin declaration mappings */
 	var declarationsOutputPath: File? = null
@@ -144,9 +129,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	 */
 	var supportCompatqualCheckerFrameworkAnnotations: String? = null
 
-	/** Do not throw NPE on explicit 'equals' call for null receiver of platform boxed primitive type */
-	@Deprecated("Removed in latest Kotlin version")
-	var noExceptionOnExplicitEqualsForBoxedNull: Boolean? = null
 
 	/** Allow to use '@JvmDefault' annotation for JVM default method support.
 	 * {disable|enable|compatibility}
@@ -330,16 +312,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		args.noParamAssertions = noParamAssertions
 		args.noReceiverAssertions = noReceiverAssertions
 
-		// TODO: Remove after kotlin 1.6.30
-		if(strictJavaNullabilityAssertions != null)
-			args.trySetDeprecatedOption("strictJavaNullabilityAssertions", strictJavaNullabilityAssertions)
-
 		args.noOptimize = noOptimize
-
-		// TODO: Remove after kotlin 1.6.30
-		if(constructorCallNormalizationMode != null)
-			args.trySetDeprecatedOption("constructorCallNormalizationMode", constructorCallNormalizationMode)
-
 
 		if(assertionsMode != null)
 			args.assertionsMode = assertionsMode
@@ -369,14 +342,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 		if(scriptResolverEnvironment.isNotEmpty())
 			args.scriptResolverEnvironment = scriptResolverEnvironment.map { (key, value) -> "$key=\"$value\"" }.toTypedArray()
-
-		// TODO: Remove after kotlin 1.6.30
-		if(noExceptionOnExplicitEqualsForBoxedNull != null)
-			args.trySetDeprecatedOption("noExceptionOnExplicitEqualsForBoxedNull", noExceptionOnExplicitEqualsForBoxedNull)
-
-		// TODO: Remove after kotlin 1.6.30
-		if(skipRuntimeVersionCheck != null)
-			args.trySetDeprecatedOption("skipRuntimeVersionCheck", skipRuntimeVersionCheck)
 
         args.javaPackagePrefix = javaPackagePrefix
         args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
@@ -418,11 +383,14 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		 *  any parameters that change between compilations
 		 *
 		 */
-		MainComponentRegistrar.threadLocalParameters.set(
-				MainComponentRegistrar.ThreadLocalParameters(
+		@Suppress("DEPRECATION")
+		MainComponentAndPluginRegistrar.threadLocalParameters.set(
+				MainComponentAndPluginRegistrar.ThreadLocalParameters(
 					annotationProcessors.map { IncrementalProcessor(it, DeclaredProcType.NON_INCREMENTAL, kaptLogger) },
 					kaptOptions,
-					compilerPlugins
+					componentRegistrars,
+					compilerPluginRegistrars,
+					supportsK2
 				)
 		)
 
@@ -653,7 +621,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 					return makeResult(exitCode)
 				}
 			} finally {
-				MainComponentRegistrar.threadLocalParameters.remove()
+				MainComponentAndPluginRegistrar.threadLocalParameters.remove()
 			}
 
 			// step 3: compile Kotlin files
