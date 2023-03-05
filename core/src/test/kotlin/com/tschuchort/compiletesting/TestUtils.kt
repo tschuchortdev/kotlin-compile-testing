@@ -15,11 +15,12 @@ fun defaultCompilerConfig(): KotlinCompilation {
 }
 
 fun defaultJsCompilerConfig(): KotlinJsCompilation {
-    return KotlinJsCompilation( ).apply {
+    return KotlinJsCompilation().apply {
         inheritClassPath = false
         verbose = true
         reportOutputFiles = false
         messageOutputStream = System.out
+        useDeprecatedLegacyCompiler = true
     }
 }
 

@@ -1,6 +1,8 @@
 /**
  * Adds support for KSP (https://goo.gle/ksp).
  */
+@file:Suppress("DEPRECATION")
+
 package com.tschuchort.compiletesting
 
 import com.google.devtools.ksp.AbstractKotlinSymbolProcessingExtension
@@ -222,10 +224,10 @@ private class KspCompileTestingComponentRegistrar(
  * Gets the test registrar from the plugin list or adds if it does not exist.
  */
 private fun KotlinCompilation.getKspRegistrar(): KspCompileTestingComponentRegistrar {
-    compilerPlugins.firstIsInstanceOrNull<KspCompileTestingComponentRegistrar>()?.let {
+    componentRegistrars.firstIsInstanceOrNull<KspCompileTestingComponentRegistrar>()?.let {
         return it
     }
     val kspRegistrar = KspCompileTestingComponentRegistrar(this)
-    compilerPlugins = compilerPlugins + kspRegistrar
+    componentRegistrars = componentRegistrars + kspRegistrar
     return kspRegistrar
 }

@@ -12,21 +12,36 @@ import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
 
+@Suppress("DEPRECATION")
 class CompilerPluginsTest {
 
     @Test
-    fun `when compiler plugins are added they get executed`() {
+    fun `when ComponentRegistrar plugins are added they get executed`() {
 
         val mockPlugin = Mockito.mock(ComponentRegistrar::class.java)
 
         val result = defaultCompilerConfig().apply {
             sources = listOf(SourceFile.new("emptyKotlinFile.kt", ""))
-            compilerPlugins = listOf(mockPlugin)
+            componentRegistrars = listOf(mockPlugin)
             inheritClassPath = true
         }.compile()
 
         verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
+        Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    }
+
+    @Test
+    fun `when CompilerPluginRegistrar plugins are added they get executed`() {
+        val fakePlugin = FakeCompilerPluginRegistrar()
+
+        val result = defaultCompilerConfig().apply {
+            sources = listOf(SourceFile.new("emptyKotlinFile.kt", ""))
+            compilerPluginRegistrars = listOf(fakePlugin)
+            inheritClassPath = true
+        }.compile()
+
+        fakePlugin.assertRegistered()
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
@@ -44,7 +59,8 @@ class CompilerPluginsTest {
             }
         }
 
-        val mockPlugin = Mockito.mock(ComponentRegistrar::class.java)
+        val mockLegacyPlugin = Mockito.mock(ComponentRegistrar::class.java)
+        val fakePlugin = FakeCompilerPluginRegistrar()
 
         val jSource = SourceFile.kotlin(
             "JSource.kt", """
@@ -60,26 +76,30 @@ class CompilerPluginsTest {
         val result = defaultCompilerConfig().apply {
             sources = listOf(jSource)
             annotationProcessors = listOf(annotationProcessor)
-            compilerPlugins = listOf(mockPlugin)
+            componentRegistrars = listOf(mockLegacyPlugin)
+            compilerPluginRegistrars = listOf(fakePlugin)
             inheritClassPath = true
         }.compile()
 
-        verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
-
+        verify(mockLegacyPlugin, atLeastOnce()).registerProjectComponents(any(), any())
+        fakePlugin.assertRegistered()
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
     @Test
     fun `when JS compiler plugins are added they get executed`() {
-        val mockPlugin = Mockito.mock(ComponentRegistrar::class.java)
+        val mockLegacyPlugin = Mockito.mock(ComponentRegistrar::class.java)
+        val fakePlugin = FakeCompilerPluginRegistrar()
 
         val result = defaultJsCompilerConfig().apply {
             sources = listOf(SourceFile.new("emptyKotlinFile.kt", ""))
-            compilerPlugins = listOf(mockPlugin)
+            componentRegistrars = listOf(mockLegacyPlugin)
+            compilerPluginRegistrars = listOf(fakePlugin)
             inheritClassPath = true
         }.compile()
 
-        verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
+        verify(mockLegacyPlugin, atLeastOnce()).registerProjectComponents(any(), any())
+        fakePlugin.assertRegistered()
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 }

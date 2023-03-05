@@ -1,9 +1,13 @@
 buildscript {
-    ext.ksp_version='1.7.10-1.0.6'
+    ext.ksp_version = '1.8.0-1.0.8'
 }
 
 dependencies {
     api project(':core')
     api "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
     implementation "com.google.devtools.ksp:symbol-processing:$ksp_version"
+}
+
+compileKotlin {
+    kotlinOptions.freeCompilerArgs += ["-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi"]
 }
