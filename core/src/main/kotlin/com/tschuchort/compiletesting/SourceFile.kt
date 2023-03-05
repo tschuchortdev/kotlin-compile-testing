@@ -36,6 +36,7 @@ abstract class SourceFile {
         fun new(name: String, contents: String) = object : SourceFile() {
             override fun writeIfNeeded(dir: File): File {
                 val file = dir.resolve(name)
+                file.parentFile.mkdirs()
                 file.createNewFile()
 
                 file.sink().buffer().use {
