@@ -43,10 +43,12 @@ compileKotlin {
     // https://github.com/tschuchortdev/kotlin-compile-testing/pull/63
     kotlinOptions.freeCompilerArgs += ["-Xno-optimized-callable-references"]
     kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
+    kotlinOptions.freeCompilerArgs += ["-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi"]
 }
 
 compileTestKotlin {
     // https://github.com/tschuchortdev/kotlin-compile-testing/pull/63
     kotlinOptions.freeCompilerArgs += ["-Xno-optimized-callable-references"]
     kotlinOptions.freeCompilerArgs += ["-Xskip-runtime-version-check"]
+    kotlinOptions.freeCompilerArgs += ["-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi"]
 }

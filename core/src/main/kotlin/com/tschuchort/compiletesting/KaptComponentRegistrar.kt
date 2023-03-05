@@ -43,12 +43,14 @@ import org.jetbrains.kotlin.kapt3.base.LoadedProcessors
 import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 import org.jetbrains.kotlin.kapt3.base.util.KaptLogger
 import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
+import org.jetbrains.kotlin.kapt3.util.doOpenInternalPackagesIfRequired
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.resolve.jvm.extensions.PartialAnalysisHandlerExtension
 import java.io.File
 
+@Suppress("DEPRECATION")
 internal class KaptComponentRegistrar(
     private val processors: List<IncrementalProcessor>,
     private val kaptOptions: KaptOptions.Builder
@@ -57,6 +59,8 @@ internal class KaptComponentRegistrar(
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (processors.isEmpty())
             return
+
+        doOpenInternalPackagesIfRequired()
 
         val contentRoots = configuration[CLIConfigurationKeys.CONTENT_ROOTS] ?: emptyList()
 

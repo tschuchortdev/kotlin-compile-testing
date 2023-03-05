@@ -19,7 +19,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   var irProduceKlibFile: Boolean = false
 
   /** Generates JS file using IR backend. Also disables pre-IR backend */
-  var irProduceJs: Boolean = false
+  var irProduceJs: Boolean = true
 
   /** Perform experimental dead code elimination */
   var irDce: Boolean = false
@@ -28,10 +28,13 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   var irDcePrintReachabilityInfo: Boolean = false
 
   /** Disables pre-IR backend */
-  var irOnly: Boolean = false
+  var irOnly: Boolean = true
 
   /** Specify a compilation module name for IR backend */
   var irModuleName: String? = null
+
+  /** Use deprecated legacy compiler without error */
+  var useDeprecatedLegacyCompiler: Boolean = false
 
   /**
    * Path to the kotlin-stdlib-js.jar
@@ -88,6 +91,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.irOnly = irOnly
     args.irModuleName = irModuleName
     args.generateDts = generateDts
+    args.useDeprecatedLegacyCompiler = useDeprecatedLegacyCompiler
   }
 
   /** Runs the compilation task */
