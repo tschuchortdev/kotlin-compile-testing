@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.JVMAssertionsMode
 import org.jetbrains.kotlin.config.JvmDefaultMode
 import org.jetbrains.kotlin.config.JvmTarget
@@ -45,6 +46,7 @@ typealias OptionName = String
 typealias OptionValue = String
 
 @Suppress("MemberVisibilityCanBePrivate")
+@ExperimentalCompilerApi
 class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	/** Arbitrary arguments to be passed to kapt */
 	var kaptArgs: MutableMap<OptionName, OptionValue> = mutableMapOf()
