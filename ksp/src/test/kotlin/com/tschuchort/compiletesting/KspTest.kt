@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
 import org.assertj.core.api.Assertions.assertThat
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -15,6 +16,7 @@ import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 
 @RunWith(JUnit4::class)
+@ExperimentalCompilerApi
 class KspTest {
     @Test
     fun failedKspTest() {
