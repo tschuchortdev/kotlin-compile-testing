@@ -262,7 +262,7 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
             .mapNotNull { url ->
                 val uri = URI.create(url.toString().removeSuffix("/$resourceName"))
                 when (uri.scheme) {
-                    "jar" -> Paths.get(URI.create(uri.schemeSpecificPart.removeSuffix("!")))
+                    "jar" -> Paths.get(URI.create(encodePath(uri.schemeSpecificPart.removeSuffix("!"))))
                     "file" -> Paths.get(uri)
                     else -> return@mapNotNull null
                 }.toAbsolutePath()
