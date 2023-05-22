@@ -36,6 +36,29 @@ class KotlinCompilationTests {
 	}
 
 	@Test
+	fun `can compile annotations that may only appear in multiplatform common module sources`() {
+		val result = KotlinCompilation().apply {
+			multiplatform = true
+			sources = listOf(
+				SourceFile.kotlin(
+					"kSource.kt",
+					"""
+                    import kotlin.js.JsExport
+
+                    @JsExport
+                    fun add(a: Double, b: Double): Double {
+                    	return a + b
+                    }
+                    """.trimIndent(),
+					isMultiplatformCommonSource = true
+				)
+			)
+		}.compile()
+
+		assertThat(ExitCode.OK).isEqualTo(result.exitCode)
+	}
+
+	@Test
 	fun `runs with only java sources`() {
 		val result = defaultCompilerConfig().apply {
 			sources = listOf(SourceFile.java("JSource.java", "class JSource {}"))

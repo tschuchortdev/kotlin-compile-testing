@@ -100,9 +100,6 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     sourcesDir.mkdirs()
     outputDir.mkdirs()
 
-    // write given sources to working directory
-    val sourceFiles = sources.map { it.writeIfNeeded(sourcesDir) }
-
     pluginClasspaths.forEach { filepath ->
       if (!filepath.exists()) {
         error("Plugin $filepath not found")
@@ -119,7 +116,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     */
     withSystemProperty("idea.use.native.fs.for.win", "false") {
       // step 1: compile Kotlin files
-      return makeResult(compileKotlin(sourceFiles, K2JSCompiler(), jsArgs()))
+      return makeResult(compileKotlin(sourcesWithPath.map { it.path }, K2JSCompiler(), jsArgs()))
     }
   }
 
