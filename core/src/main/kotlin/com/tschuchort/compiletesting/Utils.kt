@@ -31,7 +31,8 @@ internal fun isJdk9OrLater(): Boolean
         = SourceVersion.latestSupported().compareTo(SourceVersion.RELEASE_8) > 0
 
 internal fun File.listFilesRecursively(): List<File> {
-    return listFiles().flatMap { file ->
+    return (listFiles() ?: throw RuntimeException("listFiles() was null. File is not a directory or I/O error occured"))
+        .flatMap { file ->
         if(file.isDirectory)
             file.listFilesRecursively()
         else
@@ -51,6 +52,10 @@ internal fun Path.listFilesRecursively(): List<Path> {
 
     return files
 }
+
+internal fun Path.hasKotlinFileExtension() = toFile().hasKotlinFileExtension()
+
+internal fun Path.hasJavaFileExtension() = toFile().hasJavaFileExtension()
 
 internal fun File.hasKotlinFileExtension() = hasFileExtension(listOf("kt", "kts"))
 

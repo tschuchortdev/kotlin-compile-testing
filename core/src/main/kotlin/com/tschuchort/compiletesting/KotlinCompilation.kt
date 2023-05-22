@@ -38,6 +38,7 @@ import java.net.URLClassLoader
 import java.nio.file.Path
 import javax.annotation.processing.Processor
 import javax.tools.*
+import kotlin.io.path.absolutePathString
 
 data class PluginOption(val pluginId: PluginId, val optionName: OptionName, val optionValue: OptionValue)
 
@@ -350,7 +351,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	}
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
-	private fun stubsAndApt(sourceFiles: List<File>): ExitCode {
+	private fun stubsAndApt(sourceFiles: List<Path>): ExitCode {
 		if(annotationProcessors.isEmpty()) {
 			log("No services were given. Not running kapt steps.")
 			return ExitCode.OK
@@ -396,10 +397,10 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 				)
 		)
 
-		val kotlinSources = sourceFiles.filter(File::hasKotlinFileExtension)
-		val javaSources = sourceFiles.filter(File::hasJavaFileExtension)
+		val kotlinSources = sourceFiles.filter(Path::hasKotlinFileExtension)
+		val javaSources = sourceFiles.filter(Path::hasJavaFileExtension)
 
-		val sourcePaths = mutableListOf<File>().apply {
+		val sourcePaths = mutableListOf<Path>().apply {
 			addAll(javaSources)
 
 			if(kotlinSources.isNotEmpty()) {
@@ -414,9 +415,9 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
                    Java files might generate Kotlin files which then need to be compiled in the
                    compileKotlin step before the compileJava step). So instead we trick K2JVMCompiler
                    by just including an empty .kt-File. */
-				add(SourceFile.new("emptyKotlinFile.kt", "").writeIfNeeded(kaptBaseDir))
+				add(SourceFile.new("emptyKotlinFile.kt", "").writeIfNeeded(kaptBaseDir).toPath())
 			}
-		}.map(File::getAbsolutePath).distinct()
+		}.map(Path::absolutePathString).distinct()
 
 		if(!isJdk9OrLater()) {
 			try {
@@ -446,10 +447,10 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	}
 
 	/** Performs the 3rd compilation step to compile Kotlin source files */
-	private fun compileJvmKotlin(sourceFiles: List<File>): ExitCode {
-		val sources = sourceFiles +
-				kaptKotlinGeneratedDir.listFilesRecursively() +
-				kaptSourceDir.listFilesRecursively()
+	private fun compileJvmKotlin(sourceFiles: List<Path>): ExitCode {
+		val sources = sourcesWithPath.map { it.path } +
+				kaptKotlinGeneratedDir.toPath().listFilesRecursively() +
+				kaptSourceDir.toPath().listFilesRecursively()
 
 		return compileKotlin(sources, K2JVMCompiler(), commonK2JVMArgs())
 	}
@@ -485,9 +486,9 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	}
 
 	/** Performs the 4th compilation step to compile Java source files */
-	private fun compileJava(sourceFiles: List<File>): ExitCode {
-		val javaSources = (sourceFiles + kaptSourceDir.listFilesRecursively())
-			    .filterNot<File>(File::hasKotlinFileExtension)
+	private fun compileJava(sourceFiles: List<Path>): ExitCode {
+		val javaSources = (sourceFiles + kaptSourceDir.toPath().listFilesRecursively())
+			    .filterNot(Path::hasKotlinFileExtension)
 
 		if(javaSources.isEmpty())
 			return ExitCode.OK
@@ -508,7 +509,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 			val isJavac9OrLater = isJavac9OrLater(getJavacVersionString(javacCommand))
 			val javacArgs = baseJavacArgs(isJavac9OrLater)
 
-            val javacProc = ProcessBuilder(listOf(javacCommand) + javacArgs + javaSources.map(File::getAbsolutePath))
+            val javacProc = ProcessBuilder(listOf(javacCommand) + javacArgs + javaSources.map(Path::absolutePathString))
 					.directory(workingDir)
 					.redirectErrorStream(true)
 					.start()
@@ -558,7 +559,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
                     OutputStreamWriter(internalMessageStream), javaFileManager,
                     diagnosticCollector, javacArgs,
                     /* classes to be annotation processed */ null,
-					javaSources.map { FileJavaFileObject(it) }
+					javaSources.map { FileJavaFileObject(it.toFile()) }
 						.filter { it.kind == JavaFileObject.Kind.SOURCE }
                 ).call()
 
@@ -591,9 +592,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		kaptIncrementalDataDir.mkdirs()
 		kaptKotlinGeneratedDir.mkdirs()
 
-		// write given sources to working directory
-		val sourceFiles = sources.map { it.writeIfNeeded(sourcesDir) }
-
 		pluginClasspaths.forEach { filepath ->
 			if (!filepath.exists()) {
 				error("Plugin $filepath not found")
@@ -618,7 +616,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		withSystemProperty("idea.use.native.fs.for.win", "false") {
 			// step 1 and 2: generate stubs and run annotation processors
 			try {
-				val exitCode = stubsAndApt(sourceFiles)
+				val exitCode = stubsAndApt(sourcesWithPath.map { it.path })
 				if (exitCode != ExitCode.OK) {
 					return makeResult(exitCode)
 				}
@@ -627,7 +625,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 			}
 
 			// step 3: compile Kotlin files
-			compileJvmKotlin(sourceFiles).let { exitCode ->
+			compileJvmKotlin(sourcesWithPath.map { it.path }).let { exitCode ->
 				if(exitCode != ExitCode.OK) {
 					return makeResult(exitCode)
 				}
@@ -635,7 +633,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		}
 
 		// step 4: compile Java files
-		return makeResult(compileJava(sourceFiles))
+		return makeResult(compileJava(sourcesWithPath.map { it.path }))
 	}
 
 	private fun makeResult(exitCode: ExitCode): Result {
