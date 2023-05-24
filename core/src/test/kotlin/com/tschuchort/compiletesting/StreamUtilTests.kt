@@ -2,7 +2,7 @@ package com.tschuchort.compiletesting
 
 import okio.Buffer
 import org.assertj.core.api.Assertions
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.io.OutputStream
 import java.io.PrintStream
 import org.mockito.kotlin.mock

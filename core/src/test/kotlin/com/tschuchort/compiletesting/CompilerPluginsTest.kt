@@ -2,8 +2,7 @@ package com.tschuchort.compiletesting
 
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
@@ -53,7 +52,7 @@ class CompilerPluginsTest {
 
             override fun process(p0: MutableSet<out TypeElement>?, p1: RoundEnvironment?): Boolean {
                 p1?.getElementsAnnotatedWith(ProcessElem::class.java)?.forEach {
-                    Assert.assertEquals("JSource", it?.simpleName.toString())
+                    Assertions.assertThat("JSource").isEqualTo(it?.simpleName.toString())
                 }
                 return false
             }
