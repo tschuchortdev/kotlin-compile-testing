@@ -3,6 +3,8 @@ package com.tschuchort.compiletesting
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.js.K2JSCompiler
 import java.io.*
+import java.nio.file.Paths
+import kotlin.io.path.nameWithoutExtension
 
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
@@ -79,7 +81,8 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.noStdlib = true
 
     args.moduleKind = "commonjs"
-    args.outputFile = File(outputDir, outputFileName).absolutePath
+    args.outputDir = outputDir.absolutePath // -ir-output-dir
+    args.moduleName = Paths.get(outputFileName).nameWithoutExtension  // -ir-output-name
     args.sourceMapBaseDirs = jsClasspath().joinToString(separator = File.pathSeparator)
     args.libraries = listOfNotNull(kotlinStdLibJsJar).joinToString(separator = ":")
 
