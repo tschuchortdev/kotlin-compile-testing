@@ -20,6 +20,7 @@ fun defaultJsCompilerConfig(): KotlinJsCompilation {
         verbose = true
         reportOutputFiles = false
         messageOutputStream = System.out
+        moduleName = "test"
     }
 }
 

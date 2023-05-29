@@ -911,7 +911,7 @@ class KotlinCompilationTests {
 			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
 			componentRegistrars = emptyList()
 			pluginClasspaths = emptyList()
-			useK2 = true
+			languageVersion = "2.0"
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)

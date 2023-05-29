@@ -35,6 +35,9 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   /** Specify a compilation module name for IR backend */
   var irModuleName: String? = null
 
+  /** Base name of generated files */
+  var moduleName: String? = null
+
   /**
    * Path to the kotlin-stdlib-js.jar
    * If none is given, it will be searched for in the host
@@ -62,6 +65,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
 
     args.moduleKind = "commonjs"
     args.outputFile = File(outputDir, outputFileName).absolutePath
+    args.outputDir = outputDir.absolutePath
     args.sourceMapBaseDirs = jsClasspath().joinToString(separator = File.pathSeparator)
     args.libraries = listOfNotNull(kotlinStdLibJsJar).joinToString(separator = ":")
 
@@ -71,6 +75,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.irDce = irDce
     args.irDcePrintReachabilityInfo = irDcePrintReachabilityInfo
     args.irOnly = irOnly
+    args.moduleName = moduleName
     args.irModuleName = irModuleName
     args.generateDts = generateDts
   }
