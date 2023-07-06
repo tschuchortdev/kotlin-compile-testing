@@ -1,6 +1,20 @@
 Changelog
 =========
 
+0.3.0
+-----
+
+_2023-07-06_
+
+- **New**: Refactor results into common `CompilationResult` hierarchy.
+- **Fix**: Missing UTF-8 encoding of logs resulting in unknown chars.
+- **Fix**: Set resources path when compilerPluginRegistrars not empty.
+- `useIR` is now enabled by default.
+- Update to Kotlin `1.9.0`.
+- Update to KSP `1.9.0-1.0.11`.
+
+Special thanks to [@SimonMarquis](https://github.com/SimonMarquis) and [@bennyhuo](https://github.com/bennyhuo) for contributing to this release!
+
 0.2.1
 -----
 
