@@ -14,6 +14,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.Mockito.`when`
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.text.Typography.ellipsis
 
 @RunWith(JUnit4::class)
 class KspTest {
@@ -320,6 +321,40 @@ class KspTest {
         assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
         assertThat(result.messages).contains("This is an error message")
         assertThat(result.messages).contains("This is a failure")
+    }
+
+    @Test
+    fun messagesAreEncodedAndDecodedWithUtf8() {
+        val annotation = SourceFile.kotlin(
+            "TestAnnotation.kt", """
+            package foo.bar
+            annotation class TestAnnotation
+        """.trimIndent()
+        )
+        val targetClass = SourceFile.kotlin(
+            "AppCode.kt", """
+            package foo.bar
+            @TestAnnotation
+            class AppCode
+        """.trimIndent()
+        )
+        val result = KotlinCompilation().apply {
+            sources = listOf(annotation, targetClass)
+            symbolProcessorProviders = listOf(processorProviderOf { env ->
+                object : AbstractTestSymbolProcessor(env.codeGenerator) {
+                    override fun process(resolver: Resolver): List<KSAnnotated> {
+                        env.logger.logging("This is a log message with ellipsis $ellipsis")
+                        env.logger.info("This is an info message with unicode \uD83D\uDCAB")
+                        env.logger.warn("This is an warn message with emoji 🔥")
+                        return emptyList()
+                    }
+                }
+            })
+        }.compile()
+        assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+        assertThat(result.messages).contains("This is a log message with ellipsis $ellipsis")
+        assertThat(result.messages).contains("This is an info message with unicode \uD83D\uDCAB")
+        assertThat(result.messages).contains("This is an warn message with emoji 🔥")
     }
 
     companion object {

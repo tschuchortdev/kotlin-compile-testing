@@ -289,7 +289,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
                 override fun close() = messageOutputStream.close()
             },
             internalMessageBuffer.outputStream()
-        )
+        ),
+        /* autoFlush = */ false,
+        /* encoding = */ "UTF-8",
     )
 
     protected fun log(s: String) {
