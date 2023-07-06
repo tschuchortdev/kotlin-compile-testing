@@ -10,7 +10,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.25.3" }
 
 [libraries]
-autoService = "com.google.auto.service:auto-service-annotations:1.1.0"
+autoService = "com.google.auto.service:auto-service-annotations:1.1.1"
 autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.0.0"
 
 classgraph = "io.github.classgraph:classgraph:4.8.161"
