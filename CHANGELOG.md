@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.3.1
+-----
+
+_2023-07-22_
+
+- **Fix**: Set required `languageVersionSettings` property in `KspOptions`.
+- Update to KSP `1.9.0-1.0.12`.
+- Update to Okio `3.4.0`.
+
 0.3.0
 -----
 
