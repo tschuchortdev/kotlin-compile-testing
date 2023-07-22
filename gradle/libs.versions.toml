@@ -1,6 +1,6 @@
 [versions]
 kotlin = "1.9.0"
-ksp = "1.9.0-1.0.11"
+ksp = "1.9.0-1.0.12"
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "3.1.0" }

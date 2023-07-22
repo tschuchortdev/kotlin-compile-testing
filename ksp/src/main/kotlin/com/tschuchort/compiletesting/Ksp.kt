@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.languageVersionSettings
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import java.io.File
@@ -206,6 +207,7 @@ private class KspCompileTestingComponentRegistrar(
                 it.deleteRecursively()
                 it.mkdirs()
             }
+            this.languageVersionSettings = configuration.languageVersionSettings
             configuration[CLIConfigurationKeys.CONTENT_ROOTS]
                 ?.filterIsInstance<JavaSourceRoot>()
                 ?.forEach {
