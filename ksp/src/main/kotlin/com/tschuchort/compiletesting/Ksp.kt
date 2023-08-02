@@ -198,6 +198,7 @@ private class KspCompileTestingComponentRegistrar(
             this.javaOutputDir = compilation.kspJavaSourceDir.also {
                 it.deleteRecursively()
                 it.mkdirs()
+                compilation.registerGeneratedSourcesDir(it)
             }
             this.kotlinOutputDir = compilation.kspKotlinSourceDir.also {
                 it.deleteRecursively()
@@ -244,6 +245,6 @@ private fun KotlinCompilation.getKspRegistrar(): KspCompileTestingComponentRegis
         return it
     }
     val kspRegistrar = KspCompileTestingComponentRegistrar(this)
-    componentRegistrars = componentRegistrars + kspRegistrar
+    componentRegistrars += kspRegistrar
     return kspRegistrar
 }

@@ -13,16 +13,3 @@ internal open class AbstractTestSymbolProcessor(
         return emptyList()
     }
 }
-
-// Would be nice if SymbolProcessorProvider was a fun interface
-internal fun processorProviderOf(
-    body: (environment: SymbolProcessorEnvironment) -> SymbolProcessor
-): SymbolProcessorProvider {
-    return object : SymbolProcessorProvider {
-        override fun create(
-            environment: SymbolProcessorEnvironment
-        ): SymbolProcessor {
-            return body(environment)
-        }
-    }
-}
