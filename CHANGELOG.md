@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.3.2
+-----
+
+_2023-08-01_
+
+- **Fix**: Include KSP-generated Java files in java compilation. This is particularly useful for KSP processors that generate Java code.
+- **Enhancement**: Print full diagnostic messages when javac compilation fails, not just the cause. The cause message alone was often not very helpful.
+
 0.3.1
 -----
 
