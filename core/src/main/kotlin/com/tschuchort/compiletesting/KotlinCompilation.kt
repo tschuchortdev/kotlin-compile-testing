@@ -350,6 +350,34 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
         args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
 	}
 
+	private fun convertJavacArgumentsListToMap(options: List<String>): Map<String, String> {
+		val result = mutableMapOf<String, String>()
+		var i = 0
+	
+		while (i < options.size) {
+			val option = options[i]
+			if (option.startsWith("-") || option.startsWith("--")) {
+				// Check if the option contains an equal sign
+				if (option.contains("=")) {
+					val (key, value) = option.split("=", limit = 2)
+					result[key] = value
+				} else {
+					// Check if the next element is a value for this option
+					val value = if (i + 1 < options.size && !options[i + 1].startsWith("-")) {
+						i++ // Increment the index to skip the value in the next iteration
+						options[i]
+					} else {
+						""
+					}
+					result[option] = value
+				}
+			}
+			i++
+		}
+	
+		return result
+	}
+
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */
 	private fun stubsAndApt(sourceFiles: List<Path>): ExitCode {
 		if(annotationProcessors.isEmpty()) {
@@ -368,6 +396,8 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 			}
 
 			it.mode = AptMode.STUBS_AND_APT
+
+			it.javacOptions.putAll(convertJavacArgumentsListToMap(javacArguments))
 
 			if (verbose)
 				it.flags.addAll(KaptFlag.MAP_DIAGNOSTIC_LOCATIONS, KaptFlag.VERBOSE)
