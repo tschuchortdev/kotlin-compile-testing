@@ -36,8 +36,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     /** Working directory for the compilation */
     var workingDir: File by default {
         val path = Files.createTempDirectory("Kotlin-Compilation")
-        log("Created temporary working directory at ${path.toAbsolutePath()}")
-        return@default path.toFile()
+        val canonicalFile = path.toFile().canonicalFile
+        log("Created temporary working directory at ${canonicalFile.canonicalPath}")
+        return@default canonicalFile
     }
 
     /**
