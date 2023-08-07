@@ -94,7 +94,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.irOnly = irOnly
     args.irModuleName = irModuleName
     args.generateDts = generateDts
-    args.useDeprecatedLegacyCompiler = useDeprecatedLegacyCompiler
+    args.forceDeprecatedLegacyCompilerUsage = useDeprecatedLegacyCompiler
   }
 
   /** Runs the compilation task */
