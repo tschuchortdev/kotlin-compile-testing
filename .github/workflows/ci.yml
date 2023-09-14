@@ -23,7 +23,7 @@ jobs:
     if: ${{ needs.check_duplicate_workflows.outputs.should_skip != 'true' }}
     strategy:
       matrix:
-        java: [ '8', '11', '16' ]
+        java: [ '8', '11', '17' ]
         platform: ['windows-latest', 'ubuntu-latest']
     steps:
     - uses: actions/checkout@v3
@@ -54,7 +54,7 @@ jobs:
     needs: [build]
     strategy:
       matrix:
-        java: [ '8', '11', '16' ]
+        java: [ '8', '11', '17' ]
         platform: ['windows-latest', 'ubuntu-latest']
     steps:
       - uses: actions/checkout@v3
