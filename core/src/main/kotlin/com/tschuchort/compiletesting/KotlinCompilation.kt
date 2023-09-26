@@ -71,6 +71,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	var javaParameters: Boolean = false
 
 	/** Use the IR backend */
+	@Deprecated("Since Kotlin 1.9.20 this option is no longer supported by the compiler. It has no effect.")
 	var useIR: Boolean = false
 
 	/** Use the old JVM backend */
@@ -304,7 +305,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 		args.jvmTarget = jvmTarget
 		args.javaParameters = javaParameters
-		args.useIR = useIR
 		args.useOldBackend = useOldBackend
 
 		if(javaModulePath != null)

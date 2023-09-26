@@ -19,7 +19,10 @@ import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.com.intellij.psi.PsiTreeChangeAdapter
 import org.jetbrains.kotlin.com.intellij.psi.PsiTreeChangeListener
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.LanguageVersion
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import java.io.File
@@ -169,6 +172,9 @@ private class KspCompileTestingComponentRegistrar(
             this.allWarningsAsErrors = this@KspCompileTestingComponentRegistrar.allWarningsAsErrors
             this.withCompilation = this@KspCompileTestingComponentRegistrar.withCompilation
 
+            this.languageVersionSettings =
+                LanguageVersionSettingsImpl(LanguageVersion.KOTLIN_1_9, ApiVersion.KOTLIN_1_9)
+
             this.cachesDir = compilation.kspCachesDir.also {
                 it.deleteRecursively()
                 it.mkdirs()
@@ -216,7 +222,11 @@ private class KspCompileTestingComponentRegistrar(
         val registrar = KspTestExtension(options, providers, messageCollectorBasedKSPLogger)
         AnalysisHandlerExtension.registerExtension(project, registrar)
         // Dummy extension point; Required by dropPsiCaches().
-        CoreApplicationEnvironment.registerExtensionPoint(project.extensionArea, PsiTreeChangeListener.EP.name, PsiTreeChangeAdapter::class.java)
+        CoreApplicationEnvironment.registerExtensionPoint(
+            project.extensionArea,
+            PsiTreeChangeListener.EP.name,
+            PsiTreeChangeAdapter::class.java
+        )
     }
 }
 

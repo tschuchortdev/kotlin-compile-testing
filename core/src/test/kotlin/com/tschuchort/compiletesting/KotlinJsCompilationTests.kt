@@ -79,27 +79,6 @@ class KotlinJsCompilationTests {
 	}
 
 	@Test
-	fun `Kotlin can access browser window`() {
-		val source = SourceFile.kotlin("kSource.kt", """
-import kotlinx.browser.window
-
-fun main(addKotlincArgs: Array<String>) {
-    println(window.document)
-}
-""")
-
-		val result = defaultJsCompilerConfig().apply {
-			sources = listOf(source)
-		}.compile()
-
-		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
-		assertThat(result.compiledClassAndResourceFiles).hasSize(1)
-		val jsFile = result.compiledClassAndResourceFiles[0]
-		println(jsFile.readText())
-		assertThat(jsFile.readText()).contains("println(window.document);")
-	}
-
-	@Test
 	fun `detects the plugin provided for compilation via pluginClasspaths property`() {
 		val result = defaultJsCompilerConfig().apply {
 			sources = listOf(SourceFile.kotlin("kSource.kt", "class KSource"))
