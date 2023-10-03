@@ -1,4 +1,5 @@
 //file:noinspection GroovyAssignabilityCheck
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
     id "com.github.gmazzo.buildconfig" version "3.1.0"
@@ -12,6 +13,18 @@ buildConfig {
     sourceSets {
         test {
             buildConfigField 'String', 'KOTLIN_VERSION', "\"$embedded_kotlin_version\""
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("org.jetbrains.kotlin:kotlin-dom-api-compat"))
+                .using variant(module("org.jetbrains.kotlin:kotlin-dom-api-compat:$embedded_kotlin_version")) {
+            attributes {
+                attribute(KotlinPlatformType.attribute, KotlinPlatformType.js)
+                attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage, "kotlin-runtime"))
+            }
         }
     }
 }
@@ -31,7 +44,9 @@ dependencies {
     // running compiler plugins passed via the pluginClasspath CLI option works
     testRuntimeOnly "org.jetbrains.kotlin:kotlin-scripting-compiler:$embedded_kotlin_version"
 
-    //testRuntimeOnly "org.jetbrains.kotlin:kotlin-stdlib-js:$embedded_kotlin_version"
+      // Include Kotlin/JS standard library in test classpath for auto loading
+    testRuntimeOnly "org.jetbrains.kotlin:kotlin-stdlib-js"
+    testRuntimeOnly "org.jetbrains.kotlin:kotlin-dom-api-compat"
 
     // The Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava
