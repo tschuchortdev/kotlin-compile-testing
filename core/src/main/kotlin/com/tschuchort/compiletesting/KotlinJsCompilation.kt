@@ -48,6 +48,15 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   }
 
   /**
+   * Path to the kotlin-dom-api-compat.klib
+   * If none is given, it will be searched for in the host
+   * process' classpaths
+   */
+  var kotlinStdLibDomApi: File? by default {
+    HostEnvironment.kotlinDomApiCompatKlib
+  }
+
+  /**
    * Generate TypeScript declarations .d.ts file alongside JS file. Available in IR backend only
    */
   var generateDts: Boolean = false
@@ -84,7 +93,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
     args.outputDir = outputDir.absolutePath // -ir-output-dir
     args.moduleName = Paths.get(outputFileName).nameWithoutExtension  // -ir-output-name
     args.sourceMapBaseDirs = jsClasspath().joinToString(separator = File.pathSeparator)
-    args.libraries = listOfNotNull(kotlinStdLibJsJar).joinToString(separator = ":")
+    args.libraries = listOfNotNull(kotlinStdLibJsJar, kotlinStdLibDomApi).joinToString(separator = File.pathSeparator)
 
     args.irProduceKlibDir = irProduceKlibDir
     args.irProduceKlibFile = irProduceKlibFile
