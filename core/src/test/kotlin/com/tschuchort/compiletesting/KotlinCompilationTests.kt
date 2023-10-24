@@ -93,6 +93,18 @@ class KotlinCompilationTests {
 	}
 
 	@Test
+	fun `runs with sources in directory`() {
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(SourceFile.kotlin("com/foo/bar/kSource.kt", """ 
+					package com.foo.bar
+					class KSource"""))
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertClassLoadable(result, "com.foo.bar.KSource")
+	}
+
+	@Test
 	fun `Kotlin can access JDK`() {
 		val source = SourceFile.kotlin("kSource.kt", """
             import javax.lang.model.SourceVersion
