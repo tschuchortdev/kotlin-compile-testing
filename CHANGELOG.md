@@ -1,6 +1,19 @@
 Changelog
 =========
 
+0.4.0
+-----
+
+_2023-10-31_
+
+- **Enhancement**: Create parent directories of `SourceFile` in compilations.
+- Update to Kotlin `1.9.20`.
+- Update to KSP `1.9.20-1.0.13`.
+- Update to ClassGraph `4.8.162`.
+- Update to Okio `3.6.0`.
+
+Special thanks to [@BraisGabin](https://github.com/BraisGabin) for contributing to this release!
+
 0.3.2
 -----
 
