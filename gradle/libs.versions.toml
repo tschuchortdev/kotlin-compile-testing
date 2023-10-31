@@ -1,11 +1,12 @@
 [versions]
-kotlin = "1.9.10"
-ksp = "1.9.10-1.0.13"
+idea = "222.4459.24" # Flamingo | 2022.2.1 (see https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html)
+kotlin = "1.9.20"
+ksp = "1.9.20-1.0.13"
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "3.1.0" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-dokka = { id = "org.jetbrains.dokka", version = "1.9.0" }
+dokka = { id = "org.jetbrains.dokka", version = "1.9.10" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.25.3" }
 
@@ -15,12 +16,14 @@ autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.1.0"
 
 classgraph = "io.github.classgraph:classgraph:4.8.162"
 
+intellij-core = { module = "com.jetbrains.intellij.platform:core", version.ref = "idea" }
+intellij-util = { module = "com.jetbrains.intellij.platform:util", version.ref = "idea" }
+
 javapoet = "com.squareup:javapoet:1.13.0"
 
 kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
 kotlin-annotationProcessingEmbeddable = { module = "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable", version.ref = "kotlin" }
 kotlin-scriptingCompiler = { module = "org.jetbrains.kotlin:kotlin-scripting-compiler", version.ref = "kotlin" }
-kotlin-stdlibJs = { module = "org.jetbrains.kotlin:kotlin-stdlib-js", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlin-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 

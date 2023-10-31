@@ -32,12 +32,14 @@ import org.jetbrains.kotlin.config.Services
 import org.jetbrains.kotlin.kapt3.base.incremental.DeclaredProcType
 import org.jetbrains.kotlin.kapt3.base.incremental.IncrementalProcessor
 import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
-import java.io.*
-import java.lang.RuntimeException
+import java.io.File
+import java.io.OutputStreamWriter
 import java.net.URLClassLoader
 import java.nio.file.Path
 import javax.annotation.processing.Processor
-import javax.tools.*
+import javax.tools.Diagnostic
+import javax.tools.DiagnosticCollector
+import javax.tools.JavaFileObject
 
 data class PluginOption(val pluginId: PluginId, val optionName: OptionName, val optionValue: OptionValue)
 
@@ -71,9 +73,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 	/** Generate metadata for Java 1.8 reflection on method parameters */
 	var javaParameters: Boolean = false
-
-	/** Use the IR backend */
-	var useIR: Boolean = true
 
 	/** Use the old JVM backend */
 	var useOldBackend: Boolean = false
@@ -294,7 +293,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 		args.jvmTarget = jvmTarget
 		args.javaParameters = javaParameters
-		args.useIR = useIR
 		args.useOldBackend = useOldBackend
 
 		if(javaModulePath != null)
@@ -337,6 +335,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
 		args.javaPackagePrefix = javaPackagePrefix
 		args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
+		args.disableStandardScript = disableStandardScript
 	}
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */

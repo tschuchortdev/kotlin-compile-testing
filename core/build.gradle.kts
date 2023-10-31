@@ -28,12 +28,11 @@ dependencies {
     implementation(libs.okio)
     implementation(libs.classgraph)
 
-    // This dependency is only needed as a "sample" compiler plugin to test that
+    // These dependencies are only needed as a "sample" compiler plugin to test that
     // running compiler plugins passed via the pluginClasspath CLI option works
     testRuntimeOnly(libs.kotlin.scriptingCompiler)
-
-    // Include Kotlin/JS standard library in test classpath for auto loading
-    testRuntimeOnly(libs.kotlin.stdlibJs)
+    testRuntimeOnly(libs.intellij.core)
+    testRuntimeOnly(libs.intellij.util)
 
     // The Kotlin compiler should be near the end of the list because its .jar file includes
     // an obsolete version of Guava

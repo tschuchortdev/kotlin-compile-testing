@@ -59,7 +59,7 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     /**
      * Legacy [ComponentRegistrar] plugins that should be added to the compilation.
      */
-    @Deprecated("Migrate to ComponentPluginRegistrar and use componentPluginRegistrars instead")
+    @Deprecated("Migrate to ComponentPluginRegistrar and use compilerPluginRegistrars instead")
     var componentRegistrars: List<ComponentRegistrar> = emptyList()
 
     /**
@@ -127,6 +127,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
 
     /** Enable support for the new K2 compiler. */
     var supportsK2 = false
+
+    /** Disables compiler scripting support. */
+    var disableStandardScript = false
 
     // Directory for input source files
     protected val sourcesDir get() = workingDir.resolve("sources")

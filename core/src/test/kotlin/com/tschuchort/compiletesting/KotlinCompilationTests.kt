@@ -7,7 +7,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
-import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -924,6 +923,8 @@ class KotlinCompilationTests {
 			componentRegistrars = emptyList()
 			pluginClasspaths = emptyList()
 			languageVersion = "2.0"
+			inheritClassPath = true
+			disableStandardScript = true
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
