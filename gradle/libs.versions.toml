@@ -1,7 +1,7 @@
 [versions]
 idea = "241.194" # Flamingo | 2022.2.1 (see https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html)
 kotlin = "1.9.20"
-ksp = "1.9.20-1.0.14"
+ksp = "1.9.22-1.0.17"
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "3.1.0" }
