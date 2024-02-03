@@ -11,7 +11,7 @@ plugins {
 
 subprojects {
     pluginManager.withPlugin("java") {
-        configure<JavaPluginExtension> { toolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
+        configure<JavaPluginExtension> { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }
 
         tasks.withType<JavaCompile>().configureEach { options.release.set(8) }
     }
@@ -20,7 +20,7 @@ subprojects {
         tasks.withType<KotlinCompile>().configureEach {
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_1_8)
-                freeCompilerArgs.add("-progressive")
+                progressiveMode.set(true)
             }
         }
     }
