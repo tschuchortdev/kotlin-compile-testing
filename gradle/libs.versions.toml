@@ -32,7 +32,7 @@ kotlinpoet = "com.squareup:kotlinpoet:1.16.0"
 ksp = { module = "com.google.devtools.ksp:symbol-processing", version.ref = "ksp" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 
-okio = "com.squareup.okio:okio:3.8.0"
+okio = "com.squareup.okio:okio:3.9.0"
 
 truth = { module = "com.google.truth:truth", version = "1.4.2" }
 junit = "junit:junit:4.13.2"
