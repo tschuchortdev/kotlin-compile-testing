@@ -8,7 +8,7 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version = "3.1.0" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.27.0" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.28.0" }
 
 [libraries]
 autoService = "com.google.auto.service:auto-service-annotations:1.1.1"
