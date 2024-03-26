@@ -12,7 +12,7 @@ _2024-03-25_
 - Update to classgraph `4.8.168`.
 - Update to Okio `3.9.0`.
 
-Special thanks to [@jbarr21](https://github.com/jbarr21).
+Special thanks to [@jbarr21](https://github.com/jbarr21) for contributing to this release!
 
 0.4.0
 -----
