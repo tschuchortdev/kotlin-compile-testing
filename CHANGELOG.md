@@ -1,6 +1,19 @@
 Changelog
 =========
 
+0.4.1
+-----
+
+_2024-03-25_
+
+- **Fix**: Fix decoding of classloader resources.
+- Update to Kotlin `1.9.23`.
+- Update to KSP `1.9.2301.0.19`.
+- Update to classgraph `4.8.168`.
+- Update to Okio `3.9.0`.
+
+Special thanks to [@jbarr21](https://github.com/jbarr21).
+
 0.4.0
 -----
 
