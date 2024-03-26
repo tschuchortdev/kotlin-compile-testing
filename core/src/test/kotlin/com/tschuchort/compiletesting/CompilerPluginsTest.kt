@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Assert
 import org.junit.Test
 import org.mockito.Mockito
+import java.net.URL
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
@@ -70,6 +71,27 @@ class CompilerPluginsTest {
         verify(mockPlugin, atLeastOnce()).registerProjectComponents(any(), any())
 
         assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    }
+
+    @Test
+    fun `convert jar url resource to path without decoding encoded path`() {
+        // path on disk has "url%3Aport" path segment, but it's encoded from classLoader.getResources()
+        val absolutePath = "jar:file:/path/to/jar/url%253Aport/core-0.4.0.jar!" +
+                "/META-INF/services/org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar"
+        val resultPath = KotlinCompilation().urlToResourcePath(URL(absolutePath)).toString()
+        assertThat(resultPath.contains("url:")).isFalse()
+        assertThat(resultPath.contains("url%25")).isFalse()
+        assertThat(resultPath.contains("url%3A")).isTrue()
+    }
+
+    @Test
+    fun `convert file url resource to path without decoding`() {
+        // path on disk has "repos%3Aoss" path segment, but it's encoded from classLoader.getResources()
+        val absolutePath = "file:/Users/user/repos%253Aoss/kotlin-compile-testing/core/build/resources/main"
+        val resultPath = KotlinCompilation().urlToResourcePath(URL(absolutePath)).toString()
+        assertThat(resultPath.contains("repos:")).isFalse()
+        assertThat(resultPath.contains("repos%25")).isFalse()
+        assertThat(resultPath.contains("repos%3A")).isTrue()
     }
 }
 
