@@ -21,6 +21,7 @@ import java.io.File
 import java.io.OutputStream
 import java.io.PrintStream
 import java.net.URI
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -61,8 +62,6 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
         DeprecationLevel.ERROR
     )
     var compilerPlugins: List<ComponentRegistrar> = emptyList()
-
-
 
     /**
      * Legacy compiler plugins that should be added to the compilation.
@@ -273,21 +272,24 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     }
 
     protected fun getResourcesPath(): String {
-        val resourceName = "META-INF/services/org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar"
         return this::class.java.classLoader.getResources(resourceName)
             .asSequence()
-            .mapNotNull { url ->
-                val uri = URI.create(url.toString().removeSuffix("/$resourceName"))
-                when (uri.scheme) {
-                    "jar" -> Paths.get(URI.create(uri.rawSchemeSpecificPart.removeSuffix("!")))
-                    "file" -> Paths.get(uri)
-                    else -> return@mapNotNull null
-                }.toAbsolutePath()
-            }
+            .mapNotNull { url -> urlToResourcePath(url) }
             .find { resourcesPath ->
                 ServiceLoaderLite.findImplementations(CompilerPluginRegistrar::class.java, listOf(resourcesPath.toFile()))
                     .any { implementation -> implementation == MainComponentAndPluginRegistrar::class.java.name }
             }?.toString() ?: throw AssertionError("Could not get path to CompilerPluginRegistrar service from META-INF")
+    }
+
+    /** Maps a URL resource for a class from a JAR or file to an absolute Path on disk  */
+    internal fun urlToResourcePath(url: URL): Path? {
+        val uri = url.toURI()
+        val uriPath = when (uri.scheme) {
+            "jar" -> uri.rawSchemeSpecificPart.removeSuffix("!/$resourceName")
+            "file" -> uri.toString().removeSuffix("/$resourceName")
+            else -> return null
+        }
+        return Paths.get(URI.create(uriPath)).toAbsolutePath()
     }
 
     /** Searches compiler log for known errors that are hard to debug for the user */
@@ -340,8 +342,11 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     protected fun error(s: String) = internalMessageStream.println("error: $s")
 
     internal val internalMessageStreamAccess: PrintStream get() = internalMessageStream
+
+    internal val resourceName = "META-INF/services/org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar"
 }
 
+@ExperimentalCompilerApi
 internal fun convertKotlinExitCode(code: ExitCode) = when(code) {
     ExitCode.OK -> KotlinCompilation.ExitCode.OK
     ExitCode.INTERNAL_ERROR -> KotlinCompilation.ExitCode.INTERNAL_ERROR
