@@ -1,7 +1,7 @@
 [versions]
 idea = "242.8057" # (see https://plugins.jetbrains.com/docs/intellij/android-studio-releases-list.html)
 kotlin = "1.9.23"
-ksp = "1.9.23-1.0.19"
+ksp = "1.9.23-1.0.20"
 
 [plugins]
 buildconfig = { id = "com.github.gmazzo.buildconfig", version = "3.1.0" }
