@@ -456,7 +456,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 	}
 
 	/** Performs the 3rd compilation step to compile Kotlin source files */
-	private fun compileJvmKotlin(sourceFiles: List<Path>): ExitCode {
+	private fun compileJvmKotlin(): ExitCode {
 		val sources = sourcesWithPath.map { it.path } +
 				kaptKotlinGeneratedDir.toPath().listFilesRecursively() +
 				kaptSourceDir.toPath().listFilesRecursively()
@@ -634,7 +634,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 			}
 
 			// step 3: compile Kotlin files
-			compileJvmKotlin(sourcesWithPath.map { it.path }).let { exitCode ->
+			compileJvmKotlin().let { exitCode ->
 				if(exitCode != ExitCode.OK) {
 					return makeResult(exitCode)
 				}
