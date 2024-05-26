@@ -122,7 +122,7 @@ To test KSP processors, you need to use the KSP dependency:
 
 ```Groovy
 dependencies {
-    testImplementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.5.0")
+    testImplementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.6.0")
 }
 ```
 
