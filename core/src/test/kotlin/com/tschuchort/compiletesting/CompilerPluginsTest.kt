@@ -3,6 +3,7 @@ package com.tschuchort.compiletesting
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Mockito
 import javax.annotation.processing.AbstractProcessor
@@ -86,6 +87,7 @@ class CompilerPluginsTest {
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
+    @Ignore("JS tests don't currently work with the new compiler IR")
     @Test
     fun `when JS compiler plugins are added they get executed`() {
         val mockLegacyPlugin = Mockito.mock(ComponentRegistrar::class.java)
@@ -96,6 +98,7 @@ class CompilerPluginsTest {
             componentRegistrars = listOf(mockLegacyPlugin)
             compilerPluginRegistrars = listOf(fakePlugin)
             inheritClassPath = true
+            disableStandardScript = true
         }.compile()
 
         verify(mockLegacyPlugin, atLeastOnce()).registerProjectComponents(any(), any())

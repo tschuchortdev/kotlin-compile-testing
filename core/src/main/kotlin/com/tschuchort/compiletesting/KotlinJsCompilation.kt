@@ -35,6 +35,11 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
   /** Specify a compilation module name for IR backend */
   var irModuleName: String? = null
 
+  /** Base name of generated files */
+  var moduleName: String? by default {
+    Paths.get(outputFileName).nameWithoutExtension
+  }
+
   /** Use deprecated legacy compiler without error */
   var useDeprecatedLegacyCompiler: Boolean = false
 
@@ -82,7 +87,7 @@ class KotlinJsCompilation : AbstractKotlinCompilation<K2JSCompilerArguments>() {
 
     args.moduleKind = "commonjs"
     args.outputDir = outputDir.absolutePath // -ir-output-dir
-    args.moduleName = Paths.get(outputFileName).nameWithoutExtension  // -ir-output-name
+    args.moduleName = moduleName  // -ir-output-name
     args.outputFile = File(outputDir, outputFileName).absolutePath
     args.sourceMapBaseDirs = jsClasspath().joinToString(separator = File.pathSeparator)
     args.libraries = listOfNotNull(kotlinStdLibJsJar).joinToString(separator = ":")

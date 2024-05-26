@@ -141,6 +141,9 @@ abstract class AbstractKotlinCompilation<A : CommonCompilerArguments> internal c
     /** Enable support for the new K2 compiler. */
     var supportsK2 = false
 
+    /** Disables compiler scripting support. */
+    var disableStandardScript = false
+
     // Directory for input source files
     protected val sourcesDir get() = workingDir.resolve("sources")
 

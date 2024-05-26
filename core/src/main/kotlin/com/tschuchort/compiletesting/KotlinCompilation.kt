@@ -348,6 +348,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 
         args.javaPackagePrefix = javaPackagePrefix
         args.suppressMissingBuiltinsError = suppressMissingBuiltinsError
+		args.disableStandardScript = disableStandardScript
 	}
 
 	/** Performs the 1st and 2nd compilation step to generate stubs and run annotation processors */

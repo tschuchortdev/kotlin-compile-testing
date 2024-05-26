@@ -946,6 +946,9 @@ class KotlinCompilationTests {
 			componentRegistrars = emptyList()
 			pluginClasspaths = emptyList()
 			useK2 = true
+			languageVersion = "2.0"
+			inheritClassPath = true
+			disableStandardScript = true
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)

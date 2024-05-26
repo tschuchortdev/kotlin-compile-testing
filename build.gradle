@@ -1,9 +1,10 @@
+//file:noinspection GroovyAssignabilityCheck
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 buildscript {
-    ext.kotlin_version = '1.9.10'
-    ext.embedded_kotlin_version = '1.9.10'
+    ext.kotlin_version = '1.9.24'
+    ext.embedded_kotlin_version = '1.9.24'
 
     repositories {
         mavenCentral()
