@@ -6,9 +6,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.tschuchort.compiletesting.KotlinCompilation.ExitCode
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import java.util.concurrent.atomic.AtomicInteger
 import org.mockito.kotlin.any
@@ -16,7 +14,6 @@ import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import kotlin.text.Typography.ellipsis
 
-@RunWith(JUnit4::class)
 @ExperimentalCompilerApi
 class KspTest {
     @Test

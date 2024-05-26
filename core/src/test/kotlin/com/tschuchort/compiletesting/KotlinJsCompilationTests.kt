@@ -6,17 +6,19 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
-import org.junit.Ignore
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import org.mockito.kotlin.*
+import java.nio.file.Path
+import kotlin.io.path.createDirectory
+import kotlin.io.path.createFile
+import kotlin.io.path.writeText
 
-@Ignore("These JS tests don't currently work with the new compiler IR")
+@Disabled("These JS tests don't currently work with the new compiler IR")
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinJsCompilationTests {
-	@Rule @JvmField val temporaryFolder = TemporaryFolder()
 
 	@Test
 	fun `runs with only kotlin sources`() {
@@ -40,13 +42,13 @@ class KotlinJsCompilationTests {
 	}
 
 	@Test
-	fun `runs with SourceFile from path`() {
-		val sourceFile = temporaryFolder.newFile("KSource.kt").apply {
+	fun `runs with SourceFile from path`(@TempDir tempDir: Path) {
+		val sourceFile = tempDir.resolve("KSource.kt").createFile().apply {
 			writeText("class KSource")
 		}
 
 		val result = defaultJsCompilerConfig().apply {
-			sources = listOf(SourceFile.fromPath(sourceFile))
+			sources = listOf(SourceFile.fromPath(sourceFile.toFile()))
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
@@ -56,21 +58,21 @@ class KotlinJsCompilationTests {
 	}
 
 	@Test
-	fun `runs with SourceFile from paths with filename conflicts`() {
-		temporaryFolder.newFolder("a")
-		val sourceFileA = temporaryFolder.newFile("a/KSource.kt").apply {
+	fun `runs with SourceFile from paths with filename conflicts`(@TempDir tempDir: Path) {
+		tempDir.resolve("a").createDirectory()
+		val sourceFileA = tempDir.resolve("a/KSource.kt").createFile().apply {
 			writeText("package a\n\nclass KSource")
 		}
 
-		temporaryFolder.newFolder("b")
-		val sourceFileB = temporaryFolder.newFile("b/KSource.kt").apply {
+		tempDir.resolve("b").createDirectory()
+		val sourceFileB = tempDir.resolve("b/KSource.kt").createFile().apply {
 			writeText("package b\n\nclass KSource")
 		}
 
 		val result = defaultJsCompilerConfig().apply {
 			sources = listOf(
-				SourceFile.fromPath(sourceFileA),
-				SourceFile.fromPath(sourceFileB))
+				SourceFile.fromPath(sourceFileA.toFile()),
+				SourceFile.fromPath(sourceFileB.toFile()))
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)

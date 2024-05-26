@@ -2,9 +2,8 @@ package com.tschuchort.compiletesting
 
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-import org.junit.Assert
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import java.net.URL
 import javax.annotation.processing.AbstractProcessor
@@ -55,7 +54,7 @@ class CompilerPluginsTest {
 
             override fun process(p0: MutableSet<out TypeElement>?, p1: RoundEnvironment?): Boolean {
                 p1?.getElementsAnnotatedWith(ProcessElem::class.java)?.forEach {
-                    Assert.assertEquals("JSource", it?.simpleName.toString())
+                    Assertions.assertThat("JSource").isEqualTo(it?.simpleName.toString())
                 }
                 return false
             }
@@ -88,7 +87,7 @@ class CompilerPluginsTest {
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
-    @Ignore("JS tests don't currently work with the new compiler IR")
+    @Disabled("JS tests don't currently work with the new compiler IR")
     @Test
     fun `when JS compiler plugins are added they get executed`() {
         val mockLegacyPlugin = Mockito.mock(ComponentRegistrar::class.java)
