@@ -16,7 +16,7 @@ import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
 import kotlin.io.path.writeText
 
-@Disabled("These JS tests don't currently work with the new compiler IR")
+//@Disabled("These JS tests don't currently work with the new compiler IR")
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinJsCompilationTests {
 

@@ -17,13 +17,30 @@ buildConfig {
     }
 }
 
+/* Multiple variants are offered of the dependencies kotlin-dom-api-compat and kotlin-stdlib-js. Usually, Gradle picks
+* them automatically based on what kind of build it is, i.e. it would look for a platform JVM variant for this JVM build.
+* Naturally, there is no JVM version for JS libraries. We need to fix the variant attributes manually so the right variant
+* will be picked for runtime use in the JS compile tests. */
 configurations.all {
     resolutionStrategy.dependencySubstitution {
         substitute(module("org.jetbrains.kotlin:kotlin-dom-api-compat"))
                 .using variant(module("org.jetbrains.kotlin:kotlin-dom-api-compat:$embedded_kotlin_version")) {
             attributes {
-                attribute(KotlinPlatformType.attribute, KotlinPlatformType.js)
+                attribute(Attribute.of("org.jetbrains.kotlin.platform.type", KotlinPlatformType.class), KotlinPlatformType.js)
                 attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage, "kotlin-runtime"))
+            }
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("org.jetbrains.kotlin:kotlin-stdlib-js"))
+                .using variant(module("org.jetbrains.kotlin:kotlin-stdlib-js:$embedded_kotlin_version")) {
+            attributes {
+                attribute(Attribute.of("org.jetbrains.kotlin.platform.type", KotlinPlatformType.class), KotlinPlatformType.js)
+                attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage, "kotlin-runtime"))
+                attribute(Attribute.of("org.jetbrains.kotlin.js.compiler", String), "ir")
             }
         }
     }
@@ -44,7 +61,7 @@ dependencies {
     // running compiler plugins passed via the pluginClasspath CLI option works
     testRuntimeOnly "org.jetbrains.kotlin:kotlin-scripting-compiler:$embedded_kotlin_version"
 
-      // Include Kotlin/JS standard library in test classpath for auto loading
+    // Include Kotlin/JS standard library in test classpath for auto loading
     testRuntimeOnly "org.jetbrains.kotlin:kotlin-stdlib-js"
     testRuntimeOnly "org.jetbrains.kotlin:kotlin-dom-api-compat"
 

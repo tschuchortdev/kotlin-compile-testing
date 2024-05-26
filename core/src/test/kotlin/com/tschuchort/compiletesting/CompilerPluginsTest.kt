@@ -87,7 +87,7 @@ class CompilerPluginsTest {
         Assertions.assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
     }
 
-    @Disabled("JS tests don't currently work with the new compiler IR")
+    //@Disabled("JS tests don't currently work with the new compiler IR")
     @Test
     fun `when JS compiler plugins are added they get executed`() {
         val mockLegacyPlugin = Mockito.mock(ComponentRegistrar::class.java)
