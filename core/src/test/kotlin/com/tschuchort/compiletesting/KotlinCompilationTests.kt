@@ -17,6 +17,7 @@ import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.TypeElement
 import org.mockito.kotlin.*
 import java.nio.file.Path
+import java.util.regex.Pattern
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
 import kotlin.io.path.writeText
@@ -966,6 +967,29 @@ class KotlinCompilationTests {
 		}.compile()
 
 		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+	}
+
+	@Test
+	fun `javac arguments are passed to kapt`() {
+		val jSource = SourceFile.java(
+			"JSource.java", """
+				package com.tschuchort.compiletesting;
+			
+				@ProcessElem
+				class JSource {
+				}
+					"""
+		)
+
+		val result = defaultCompilerConfig().apply {
+			sources = listOf(jSource)
+			annotationProcessors = listOf(kotlinTestProc)
+			inheritClassPath = true
+			javacArguments += listOf("-Xlint")
+		}.compile()
+
+		assertThat(result.exitCode).isEqualTo(ExitCode.OK)
+		assertThat(result.messages).containsPattern(Pattern.compile("\\[kapt\\] All Javac options: \\{.*?-Xlint.*?\\}"))
 	}
 
 	class InheritedClass {}

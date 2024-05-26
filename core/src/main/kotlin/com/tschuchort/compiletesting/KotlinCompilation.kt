@@ -361,7 +361,6 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
 		while (i < options.size) {
 			val option = options[i]
 			if (option.startsWith("-") || option.startsWith("--")) {
-				// Check if the option contains an equal sign
 				if (option.contains("=")) {
 					val (key, value) = option.split("=", limit = 2)
 					result[key] = value
