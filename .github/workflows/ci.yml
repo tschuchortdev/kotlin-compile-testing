@@ -74,7 +74,9 @@ jobs:
       # https://stackoverflow.com/questions/57921325/gradle-signarchives-unable-to-read-secret-key
       ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SONATYPE_SIGNING_KEY_PASSWORD }}
       ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SONATYPE_SIGNING_PRIVATE_KEY }}
-      GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -133,4 +135,4 @@ jobs:
           ./gradlew setSnapshotVersionSuffix --info
           git add gradle.properties
           git commit -m "Setting next snapshot version [skip ci]"
-          git push https://x-access-token:${GH_PERSONAL_ACCESS_TOKEN}@github.com/${GITHUB_REPOSITORY}.git --follow-tags
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git --follow-tags
