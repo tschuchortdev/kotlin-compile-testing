@@ -580,7 +580,7 @@ class KotlinCompilation : AbstractKotlinCompilation<K2JVMCompilerArguments>() {
                     ExitCode.COMPILATION_ERROR
             }
             catch (e: Exception) {
-                if(e is RuntimeException || e is IllegalArgumentException) {
+                if(e is RuntimeException) {
                     printDiagnostics()
                     error(e.toString())
                     return ExitCode.INTERNAL_ERROR
