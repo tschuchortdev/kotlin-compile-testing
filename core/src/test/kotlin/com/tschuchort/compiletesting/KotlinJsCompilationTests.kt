@@ -13,7 +13,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
-@Ignore("These no longer work with Kotlin JS IR")
 @Suppress("MemberVisibilityCanBePrivate")
 class KotlinJsCompilationTests {
 	@Rule @JvmField val temporaryFolder = TemporaryFolder()

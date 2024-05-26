@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -18,6 +19,35 @@ buildConfig {
     }
 }
 
+/* Multiple variants are offered of the dependencies kotlin-dom-api-compat and kotlin-stdlib-js. Usually, Gradle picks
+* them automatically based on what kind of build it is, i.e. it would look for a platform JVM variant for this JVM build.
+* Naturally, there is no JVM version for JS libraries. We need to fix the variant attributes manually so the right variant
+* will be picked for runtime use in the JS compile tests. */
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module(libs.kotlin.domApiCompat.get().module.toString()))
+            .using(variant(module(libs.kotlin.domApiCompat.get().toString())) {
+            attributes {
+                attribute(Attribute.of("org.jetbrains.kotlin.platform.type", KotlinPlatformType::class.java), KotlinPlatformType.js)
+                attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage::class.java, "kotlin-runtime"))
+            }
+        })
+    }
+}
+
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module(libs.kotlin.stdlibJs.get().module.toString()))
+            .using(variant(module(libs.kotlin.stdlibJs.get().toString())) {
+            attributes {
+                attribute(Attribute.of("org.jetbrains.kotlin.platform.type", KotlinPlatformType::class.java), KotlinPlatformType.js)
+                attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage::class.java, "kotlin-runtime"))
+                attribute(Attribute.of("org.jetbrains.kotlin.js.compiler", String::class.java), "ir")
+            }
+        })
+    }
+}
+
 dependencies {
     implementation(libs.autoService)
     ksp(libs.autoService.ksp)
@@ -31,6 +61,9 @@ dependencies {
     // These dependencies are only needed as a "sample" compiler plugin to test that
     // running compiler plugins passed via the pluginClasspath CLI option works
     testRuntimeOnly(libs.kotlin.scriptingCompiler)
+    // Include Kotlin/JS standard library in test classpath for auto loading
+    testRuntimeOnly(libs.kotlin.stdlibJs)
+    testRuntimeOnly(libs.kotlin.domApiCompat)
     testRuntimeOnly(libs.intellij.core)
     testRuntimeOnly(libs.intellij.util)
 

@@ -27,6 +27,11 @@ internal object HostEnvironment {
         findInClasspath(kotlinDependencyRegex("kotlin-stdlib-js"))
     }
 
+    val kotlinDomApiCompatKlib: File? by lazy {
+        findInClasspath(kotlinDependencyRegex("kotlin-dom-api-compat"))
+    }
+
+
     val kotlinReflectJar: File? by lazy {
         findInClasspath(kotlinDependencyRegex("kotlin-reflect"))
     }
@@ -40,7 +45,7 @@ internal object HostEnvironment {
     }
 
     private fun kotlinDependencyRegex(prefix: String): Regex {
-        return Regex("$prefix(-[0-9]+\\.[0-9]+(\\.[0-9]+)?)([-0-9a-zA-Z]+)?\\.jar")
+        return Regex("$prefix(-[0-9]+\\.[0-9]+(\\.[0-9]+)?)([-0-9a-zA-Z]+)?(\\.jar|\\.klib)")
     }
 
     /** Tries to find a file matching the given [regex] in the host process' classpath */
@@ -60,7 +65,11 @@ internal object HostEnvironment {
 
         val classpaths = classGraph.classpathFiles
         val modules = classGraph.modules.mapNotNull { it.locationFile }
+        val klibs = System.getProperty("java.class.path")
+            .split(File.pathSeparator)
+            .filter { it.endsWith(".klib") }
+            .map(::File)
 
-        return (classpaths + modules).distinctBy(File::getAbsolutePath)
+        return (classpaths + modules + klibs).distinctBy(File::getAbsolutePath)
     }
 }
