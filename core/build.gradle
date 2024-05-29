@@ -2,7 +2,7 @@
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
-    id "com.github.gmazzo.buildconfig" version "3.1.0"
+    id "com.github.gmazzo.buildconfig" version "5.3.5"
 }
 
 apply plugin: 'kotlin-kapt'
